@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../core/constants/assets.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key, required this.next});
 
@@ -11,56 +13,111 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   Timer? _timer;
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<double> _scale;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(milliseconds: 1400), _goNext);
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..forward();
+
+    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _scale = Tween<double>(
+      begin: 0.93,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _timer = Timer(const Duration(milliseconds: 2000), _goNext);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
   void _goNext() {
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => widget.next),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => widget.next));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Center(
-          child: Container(
-            width: 220,
-            height: 220,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFE6B550).withOpacity(0.35),
-                  blurRadius: 28,
-                  spreadRadius: 4,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(0.0, -0.2),
+            radius: 1.1,
+            colors: [Color(0xFF2A1D06), Color(0xFF0E0E0E), Color(0xFF050505)],
+            stops: [0.0, 0.55, 1.0],
+          ),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final double top = (constraints.maxHeight * 0.33).clamp(
+              180.0,
+              320.0,
+            );
+            return Stack(
+              children: [
+                Positioned(
+                  top: top + 24,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      width: 240,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFFF0BE57,
+                            ).withValues(alpha: 0.32),
+                            blurRadius: 64,
+                            spreadRadius: 8,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: top,
+                  left: 0,
+                  right: 0,
+                  child: FadeTransition(
+                    opacity: _opacity,
+                    child: ScaleTransition(
+                      scale: _scale,
+                      child: Center(
+                        child: SizedBox(
+                          width: 300,
+                          height: 266,
+                          child: Image.asset(
+                            Images.appLogo,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: Image.asset(
-                'assets/images/splash_logo.png',
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
