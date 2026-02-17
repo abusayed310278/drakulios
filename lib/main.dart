@@ -15,9 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'drakulios',
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      home: const SplashScreen(
-        next: MyHomePage(title: 'Drakulioss'),
-      ),
+      home: const SplashScreen(next: MyHomePage(title: 'Drakulioss')),
     );
   }
 }
