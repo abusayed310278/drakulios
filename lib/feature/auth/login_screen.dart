@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/assets.dart';
 import 'code_verification_screen.dart';
 import 'create_account_screen.dart';
+import '../paymentandsubscription/views/payment_and_subscription_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -161,7 +162,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const PaymentAndSubscriptionScreen(),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF3B41A),
                         foregroundColor: Colors.white,
@@ -333,8 +341,8 @@ class _SocialButton extends StatelessWidget {
         ),
         child: Center(
           child: SizedBox(
-            width: 32,
-            height: 32,
+            width: 40,
+            height: 40,
             child: Image.asset(asset, fit: BoxFit.contain),
           ),
         ),

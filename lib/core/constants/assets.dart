@@ -5,4 +5,26 @@ class Images {
   static const String welcomeImage = 'assets/images/welcome.png';
   static const String onboardingImage = 'assets/images/onboarding.png';
   static const String proFactoryImage = 'assets/images/profactory.png';
+  static const String cartImage = 'assets/images/cart.png';
+  static const String breakfastImage = 'assets/images/breakfast.png';
+  static const String dinnerImage = 'assets/images/dinner.png';
+  static const String gym1Image = 'assets/images/gym1.png';
+  static const String gym2Image = 'assets/images/gym2.png';
+  static const String gym3Image = 'assets/images/gym3.png';
+  static const String img1Image = 'assets/images/img1.png';
+  static const String img2Image = 'assets/images/img2.png';
+  static const String img3Image = 'assets/images/img3.png';
+  static const String img4Image = 'assets/images/img4.png';
+  static const String image1Image = 'assets/images/image1.png';
+  static const String image2Image = 'assets/images/image2.png';
+  static const String lunchImage = 'assets/images/lunch.png';
+  static const String whatsappImage = 'assets/images/mdi_whatsapp.png';
+  static const String paymentSuccessImage = 'assets/images/payment_success.png';
+  static const String qrcodeImage = 'assets/images/qr_code.png';
+  static const String traningImage = 'assets/images/traning.png';
+  static const String walkImage = 'assets/images/walk.png';
+  static const String whatsappsImage = 'assets/images/whatsapp.png';
+  static const String womenImage = 'assets/images/women.png';
+  static const String women1Image = 'assets/images/women1.png';
+  static const String protectImage = 'assets/images/protect.png';
 }
