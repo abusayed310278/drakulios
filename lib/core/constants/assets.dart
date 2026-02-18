@@ -31,4 +31,5 @@ class Images {
   static const String bellImage = 'assets/images/gravity-ui_bell-fill.png';
   static const String gymImage = 'assets/images/iconoir_gym.png';
   static const String profileImage = 'assets/images/profile.png';
+  static const String deleteImage = 'assets/images/delete.png';
 }

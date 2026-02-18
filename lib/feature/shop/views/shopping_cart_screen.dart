@@ -62,11 +62,7 @@ class ShoppingCartScreen extends StatelessWidget {
                     height: 48,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const PaymentMethodScreen(),
-                          ),
-                        );
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaymentMethodScreen()));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF2B31A),
@@ -99,9 +95,9 @@ class _CartItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2513),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF2B31A), width: 1.1),
+        color: const Color(0x52F3B41A),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFF3B41A), width: 0.48),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -128,29 +124,47 @@ class _CartItemCard extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(color: const Color(0xFFF2B31A), borderRadius: BorderRadius.circular(6)),
-                      child: const Icon(Icons.delete, size: 14, color: Colors.black),
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: const Color(0x33F3B41A),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFF3B41A), width: 1),
+                      ),
+                      child: Center(child: Image.asset(Images.deleteImage, width: 14, height: 14, color: Colors.white)),
                     ),
                     const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1E2024),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFF3A3F47), width: 1),
-                      ),
-                      child: Row(
-                        children: const [
-                          Text('Quantity', style: TextStyle(color: Colors.white, fontSize: 10)),
-                          SizedBox(width: 6),
-                          _QtyButton(icon: Icons.remove),
-                          SizedBox(width: 6),
-                          Text('2', style: TextStyle(color: Colors.white, fontSize: 10)),
-                          SizedBox(width: 6),
-                          _QtyButton(icon: Icons.add),
-                        ],
+                    SizedBox(
+                      width: 116,
+                      height: 28,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0x33F3B41A),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFF3B41A), width: 1),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text('Quantity:', style: TextStyle(color: Colors.white, fontSize: 10)),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Row(
+                                  children: const [
+                                    _QtyButton(icon: Icons.remove),
+                                    SizedBox(width: 6),
+                                    Text('2', style: TextStyle(color: Colors.white, fontSize: 10)),
+                                    SizedBox(width: 6),
+                                    _QtyButton(icon: Icons.add),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -174,7 +188,7 @@ class _QtyButton extends StatelessWidget {
     return Container(
       width: 18,
       height: 18,
-      decoration: BoxDecoration(color: const Color(0xFFF2B31A), borderRadius: BorderRadius.circular(5)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(5)),
       child: Icon(icon, size: 12, color: Colors.black),
     );
   }
