@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/assets.dart';
+import '../../../profile/views/member_profile_screen.dart';
 
 class ShopHeader extends StatelessWidget {
   const ShopHeader({super.key, required this.title, this.onBack, this.showIcons = true});
@@ -31,10 +32,20 @@ class ShopHeader extends StatelessWidget {
           const SizedBox(width: 12),
           Image.asset(Images.bellImage, width: 24, height: 24, color: const Color(0xFFC9CDD3)),
           const SizedBox(width: 10),
-          CircleAvatar(
-            radius: 12,
-            backgroundColor: const Color(0xFF2A2F39),
-            child: ClipOval(child: Image.asset(Images.profileImage, width: 24, height: 24, fit: BoxFit.cover)),
+          InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const MemberProfileScreen(),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: CircleAvatar(
+              radius: 12,
+              backgroundColor: const Color(0xFF2A2F39),
+              child: ClipOval(child: Image.asset(Images.profileImage, width: 24, height: 24, fit: BoxFit.cover)),
+            ),
           ),
         ],
       ],

@@ -17,55 +17,59 @@ class ShopScreen extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 50, 18, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const ShopHeader(title: 'Shop'),
-                  const SizedBox(height: 14),
-                  Container(
-                    height: 38,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                    child: Row(
-                      children: const [
-                        Icon(Icons.search, size: 18, color: Color(0xFF90959C)),
-                        SizedBox(width: 8),
-                        Text('Search', style: TextStyle(color: Color(0xFF90959C), fontSize: 13)),
-                      ],
+            child: MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(18, 50, 18, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const ShopHeader(title: 'Shop'),
+                    const SizedBox(height: 14),
+                    Container(
+                      height: 38,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.search, size: 18, color: Color(0xFF90959C)),
+                          SizedBox(width: 8),
+                          Text('Search', style: TextStyle(color: Color(0xFF90959C), fontSize: 13)),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Products',
-                    style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 34,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: const [
-                        _CategoryChip(label: 'Equipments', selected: true),
-                        SizedBox(width: 8),
-                        _CategoryChip(label: 'Apparel'),
-                        SizedBox(width: 8),
-                        _CategoryChip(label: 'Drinks'),
-                        SizedBox(width: 8),
-                        _CategoryChip(label: 'Supps'),
-                      ],
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Products',
+                      style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 14, fontWeight: FontWeight.w600),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  _DealCard(),
-                  const SizedBox(height: 12),
-                  const _ProductCard(title: 'GT5s Motorized Treadmill', price: r'$1200', image: Images.gym1Image),
-                  const SizedBox(height: 12),
-                  const _ProductCard(title: 'Magnetic Cross Trainer', price: r'$449', image: Images.gym2Image),
-                  const SizedBox(height: 12),
-                  const _ProductCard(title: 'Spinning Bike (Pro)', price: r'$259', image: Images.gym3Image),
-                ],
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 34,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: const [
+                          _CategoryChip(label: 'Equipments', selected: true),
+                          SizedBox(width: 8),
+                          _CategoryChip(label: 'Apparel'),
+                          SizedBox(width: 8),
+                          _CategoryChip(label: 'Drinks'),
+                          SizedBox(width: 8),
+                          _CategoryChip(label: 'Supps'),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _DealCard(),
+                    const SizedBox(height: 12),
+                    const _ProductCard(title: 'GT5s Motorized Treadmill', price: r'$1200', image: Images.gym1Image),
+                    const SizedBox(height: 12),
+                    const _ProductCard(title: 'Magnetic Cross Trainer', price: r'$449', image: Images.gym2Image),
+                    const SizedBox(height: 12),
+                    const _ProductCard(title: 'Spinning Bike (Pro)', price: r'$259', image: Images.gym3Image),
+                  ],
+                ),
               ),
             ),
           ),
@@ -155,11 +159,7 @@ class _ProductCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const ProductDetailScreen(),
-            ),
-          );
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProductDetailScreen()));
         },
         borderRadius: BorderRadius.circular(12),
         child: Ink(
@@ -182,12 +182,7 @@ class _ProductCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        height: 1.2,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600, height: 1.2),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -199,35 +194,23 @@ class _ProductCard extends StatelessWidget {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 price,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.0,
-                                ),
+                                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500, height: 1.0),
                               ),
                             ),
                           ),
                         ),
-                    InkWell(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ShoppingCartScreen(),
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(6),
-                      child: Ink(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF2B31A),
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShoppingCartScreen()));
+                          },
                           borderRadius: BorderRadius.circular(6),
+                          child: Ink(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(color: const Color(0xFFF2B31A), borderRadius: BorderRadius.circular(6)),
+                            child: const Icon(Icons.add, size: 14, color: Colors.black),
+                          ),
                         ),
-                        child: const Icon(Icons.add, size: 14, color: Colors.black),
-                      ),
-                    ),
                       ],
                     ),
                   ],
