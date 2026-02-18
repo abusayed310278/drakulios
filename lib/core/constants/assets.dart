@@ -27,4 +27,8 @@ class Images {
   static const String womenImage = 'assets/images/women.png';
   static const String women1Image = 'assets/images/women1.png';
   static const String protectImage = 'assets/images/protect.png';
+  static const String solarCalendarImage = 'assets/images/solar_calendar-bold.png';
+  static const String bellImage = 'assets/images/gravity-ui_bell-fill.png';
+  static const String gymImage = 'assets/images/iconoir_gym.png';
+  static const String profileImage = 'assets/images/profile.png';
 }

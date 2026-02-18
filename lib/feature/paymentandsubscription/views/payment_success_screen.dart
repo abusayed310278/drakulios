@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../home/home_menu_screen.dart';
+import '../../home/views/home_menu_screen.dart';
 
 class PaymentSuccessScreen extends StatelessWidget {
   const PaymentSuccessScreen({super.key});
