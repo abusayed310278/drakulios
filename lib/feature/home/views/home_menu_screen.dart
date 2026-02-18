@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/assets.dart';
+import '../../shop/views/shop_screen.dart';
 import 'health_profile_screen.dart';
 import 'qr_home_screen.dart';
 
@@ -52,9 +53,19 @@ class HomeMenuScreen extends StatelessWidget {
                         child: _MenuTile(title: 'Trainings', asset: Images.traningImage, onTap: () => _showTrainingDialog(context)),
                       ),
                       const SizedBox(width: 16),
-                      const Expanded(
-                        child: _MenuTile(title: 'Shop', asset: Images.cartImage),
+                    Expanded(
+                      child: _MenuTile(
+                        title: 'Shop',
+                        asset: Images.cartImage,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ShopScreen(),
+                            ),
+                          );
+                        },
                       ),
+                    ),
                     ],
                   ),
                   // const Spacer(),
