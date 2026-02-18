@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/assets.dart';
 
@@ -117,7 +118,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                         Text(
                           'Total Amount',
                           style: TextStyle(
-                            color: Color(0xFFD7D9DD),
+                            color: Color.fromARGB(255, 232, 235, 240),
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -309,10 +310,11 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        color: Color(0xFFBFC3C8),
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
+      style: GoogleFonts.poppins(
+        color: Color.fromARGB(255, 229, 235, 244),
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        height: 1.0,
       ),
     );
   }
