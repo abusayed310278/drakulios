@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/assets.dart';
 
@@ -76,9 +77,14 @@ class MemberProfileScreen extends StatelessWidget {
                                 style: TextStyle(color: Colors.white, fontSize: 12, height: 1.3),
                               ),
                               const SizedBox(height: 4),
-                              const Text(
+                              Text(
                                 'View Details',
-                                style: TextStyle(color: Color(0xFFF2B31A), fontSize: 12, fontWeight: FontWeight.w600),
+                                style: GoogleFonts.outfit(
+                                  color: const Color(0xFFF3B41A),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.2,
+                                ),
                               ),
                             ],
                           ),
@@ -96,7 +102,7 @@ class MemberProfileScreen extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(Images.whatsappImage, width: 16, height: 16, color: const Color(0xFF21C063)),
+                          Image.asset(Images.whatsappImage, width: 24, height: 24, color: const Color(0xFF21C063)),
                           const SizedBox(width: 8),
                           const Text(
                             'Contact Admin',
@@ -116,24 +122,36 @@ class MemberProfileScreen extends StatelessWidget {
                             children: [
                               const Expanded(
                                 child: Text(
-                                  'Plan Name: Online Coaching\nPrice : €149/ Month',
-                                  style: TextStyle(color: Color(0xFF1B1B1B), fontSize: 12, fontWeight: FontWeight.w600, height: 1.4),
+                                  'Plan Name: Online Coaching \nPrice : €149/ Month',
+                                  style: TextStyle(color: Color(0xFF263451), fontSize: 16, fontWeight: FontWeight.w500, height: 1.2),
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(color: const Color(0xFF46C03B), borderRadius: BorderRadius.circular(20)),
-                                child: const Text(
+                                width: 64,
+                                height: 24,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(color: const Color(0xFF47AD2A), borderRadius: BorderRadius.circular(100)),
+                                child: Text(
                                   'Active',
-                                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w400, height: 1.2),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 6),
-                          const Text(
-                            'Renewal Date: March 1st, 2026.\nPayment Method : Credit Card (paid)',
-                            style: TextStyle(color: Color(0xFF1B1B1B), fontSize: 11, height: 1.4),
+                          RichText(
+                            text: TextSpan(
+                              style: GoogleFonts.outfit(
+                                color: const Color(0xFF1E1E1E),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                height: 1.2,
+                              ),
+                              children: const [
+                                TextSpan(text: 'Renewal Date: March 1st, 2026.\nPayment Method : Credit Card '),
+                                TextSpan(text: '(paid)', style: TextStyle(color: Color(0xFF47AD2A))),
+                              ],
+                            ),
                           ),
                         ],
                       ),
