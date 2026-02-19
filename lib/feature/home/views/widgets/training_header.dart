@@ -22,6 +22,18 @@ class _TrainingHeaderState extends State<TrainingHeader> {
   String _displayName = 'Member';
   String _avatarUrl = '';
 
+  String _toCamelCase(String value) {
+    final parts = value
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return 'Member';
+    return parts
+        .map((word) => '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}')
+        .join(' ');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +47,7 @@ class _TrainingHeaderState extends State<TrainingHeader> {
       if (!mounted) return;
       setState(() {
         final name = (data['name'] ?? '').toString().trim();
-        _displayName = name.isEmpty ? 'Member' : name;
+        _displayName = _toCamelCase(name);
         _avatarUrl = (data['avatar']?['url'] ?? '').toString();
       });
       return;
@@ -43,7 +55,7 @@ class _TrainingHeaderState extends State<TrainingHeader> {
 
     final savedName = (await TokenManager.getUserName())?.trim() ?? '';
     if (!mounted) return;
-    setState(() => _displayName = savedName.isEmpty ? 'Member' : savedName);
+    setState(() => _displayName = _toCamelCase(savedName));
   }
 
   @override

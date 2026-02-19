@@ -76,13 +76,54 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     CustomSnackbar.show('Unable to open WhatsApp on this device');
   }
 
+  String _formatPhone(String raw) {
+    final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    return digits;
+  }
+
+  String _ordinalDay(int day) {
+    if (day >= 11 && day <= 13) return '${day}th';
+    switch (day % 10) {
+      case 1:
+        return '${day}st';
+      case 2:
+        return '${day}nd';
+      case 3:
+        return '${day}rd';
+      default:
+        return '${day}th';
+    }
+  }
+
+  String _formatMemberSince(String raw) {
+    final fallback = '5th January 2026';
+    if (raw.trim().isEmpty) return fallback;
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) return fallback;
+    const months = <String>[
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${_ordinalDay(parsed.day)} ${months[parsed.month - 1]} ${parsed.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final name = (_profile['name'] ?? 'Stella Jacobs').toString();
     final id = (_profile['_id'] ?? '1212').toString();
-    final phone = (_profile['phone'] ?? _profile['contact'] ?? '0000000000').toString();
+    final phone = _formatPhone((_profile['phone'] ?? _profile['contact'] ?? '').toString());
     final email = (_profile['email'] ?? 'stella1212@gmail.com').toString();
-    final since = (_profile['createdAt'] ?? '').toString();
+    final since = _formatMemberSince((_profile['createdAt'] ?? '').toString());
 
     return Scaffold(
       backgroundColor: const Color(0xFF050608),
@@ -165,7 +206,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                               Text('Contact no. : $phone', style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.3)),
                               Text('Email : $email', style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.3)),
                               Text(
-                                'Member Since : ${since.isEmpty ? '5th January 2026' : since}',
+                                'Member Since : $since',
                                 style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.3),
                               ),
                               const SizedBox(height: 4),

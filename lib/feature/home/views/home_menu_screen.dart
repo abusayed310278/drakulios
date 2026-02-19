@@ -83,7 +83,11 @@ class HomeMenuScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 16),
                       const Expanded(
-                        child: _MenuTile(title: 'Messages', asset: Images.whatsappImage),
+                        child: _MenuTile(
+                          title: 'Messages',
+                          asset: Images.whatsappImage,
+                          iconSize: 82,
+                        ),
                       ),
                     ],
                   ),
@@ -208,12 +212,12 @@ class _TrainingInfoDialog extends StatelessWidget {
 }
 
 class _MenuTile extends StatelessWidget {
-  const _MenuTile({required this.title, this.asset, this.icon, this.onTap});
+  const _MenuTile({required this.title, this.asset, this.onTap, this.iconSize = 65});
 
   final String title;
   final String? asset;
-  final IconData? icon;
   final VoidCallback? onTap;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -233,10 +237,7 @@ class _MenuTile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (asset != null)
-                Image.asset(asset!, width: 65, height: 65, color: const Color(0xFFF2B31A))
-              else
-                Icon(icon, size: 65, color: const Color(0xFFF2B31A)),
+              if (asset != null) Image.asset(asset!, width: iconSize, height: iconSize, color: const Color(0xFFF2B31A)),
               const SizedBox(height: 10),
               Text(
                 title,
