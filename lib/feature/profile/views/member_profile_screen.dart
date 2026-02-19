@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/assets.dart';
+import 'attendance_details_screen.dart';
 import 'member_profile_details_screen.dart';
+import 'purchase_history_screen.dart';
 import 'security_screen.dart';
 
 class MemberProfileScreen extends StatelessWidget {
@@ -172,9 +174,19 @@ class MemberProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    _MenuRow(title: 'View Attendance'),
+                    _MenuRow(
+                      title: 'View Attendance',
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceDetailsScreen()));
+                      },
+                    ),
                     const SizedBox(height: 10),
-                    _MenuRow(title: 'View Purchase History'),
+                    _MenuRow(
+                      title: 'View Purchase History',
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PurchaseHistoryScreen()));
+                      },
+                    ),
                     const SizedBox(height: 10),
                     _MenuRow(
                       title: 'Settings',

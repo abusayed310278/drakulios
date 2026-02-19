@@ -33,4 +33,7 @@ class Images {
   static const String profileImage = 'assets/images/profile.png';
   static const String deleteImage = 'assets/images/delete.png';
   static const String passowrdImage = 'assets/images/carbon_password.png';
+  static const String totalvisitImage = 'assets/images/fa6-solid_map-location.png';
+  static const String averageImage = 'assets/images/lets-icons_time-atack-fill.png';
+  static const String hourglassImage = 'assets/images/ri_hourglass-fill.png';
 }
