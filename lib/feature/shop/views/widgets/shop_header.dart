@@ -14,12 +14,15 @@ class ShopHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        IconButton(
-          onPressed: onBack ?? () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
-          splashRadius: 18,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+        Transform.translate(
+          offset: const Offset(-15, 0),
+          child: IconButton(
+            onPressed: onBack ?? () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
+            splashRadius: 18,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+          ),
         ),
         const SizedBox(width: 6),
         Text(
@@ -34,11 +37,7 @@ class ShopHeader extends StatelessWidget {
           const SizedBox(width: 10),
           InkWell(
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const MemberProfileScreen(),
-                ),
-              );
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MemberProfileScreen()));
             },
             borderRadius: BorderRadius.circular(12),
             child: CircleAvatar(

@@ -11,25 +11,29 @@ class MemberProfileScreen extends StatelessWidget {
       backgroundColor: const Color(0xFF050608),
       body: SafeArea(
         top: false,
-        child: Center(
+        child: Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: MediaQuery.removePadding(
               context: context,
               removeTop: true,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(18, 0, 0, 24),
+                padding: const EdgeInsets.fromLTRB(18, 50, 0, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
                       children: [
-                        IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
-                          splashRadius: 18,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                        Transform.translate(
+                          offset: const Offset(-15, 0),
+                          child: IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
+                            splashRadius: 18,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                          ),
                         ),
                         const SizedBox(width: 6),
                         const Text(

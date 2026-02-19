@@ -21,12 +21,15 @@ class HealthProfileScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
-                        splashRadius: 18,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                      Transform.translate(
+                        offset: const Offset(-15, 0),
+                        child: IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
+                          splashRadius: 18,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                        ),
                       ),
                       const SizedBox(width: 6),
                       const Text(
@@ -97,11 +100,7 @@ class HealthProfileScreen extends StatelessWidget {
                     height: 48,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const TrainingNutritionScreen(),
-                          ),
-                        );
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrainingNutritionScreen()));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF2B31A),

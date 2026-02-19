@@ -3,8 +3,29 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/assets.dart';
 import '../../paymentandsubscription/views/payment_method_screen.dart';
 
-class ShoppingCartScreen extends StatelessWidget {
+class ShoppingCartScreen extends StatefulWidget {
   const ShoppingCartScreen({super.key});
+
+  @override
+  State<ShoppingCartScreen> createState() => _ShoppingCartScreenState();
+}
+
+class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
+  final List<int> _quantities = List<int>.filled(4, 2);
+
+  void _incrementQuantity(int index) {
+    setState(() {
+      _quantities[index] += 1;
+    });
+  }
+
+  void _decrementQuantity(int index) {
+    setState(() {
+      if (_quantities[index] > 1) {
+        _quantities[index] -= 1;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,22 +33,27 @@ class ShoppingCartScreen extends StatelessWidget {
       backgroundColor: const Color(0xFF050608),
       body: SafeArea(
         top: false,
-        child: Center(
+        child: Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+              padding: const EdgeInsets.fromLTRB(18, 40, 18, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
                     children: [
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
-                        splashRadius: 18,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                      Transform.translate(
+                        offset: const Offset(-15, 0),
+                        child: IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
+                          splashRadius: 18,
+                          padding: EdgeInsets.zero,
+
+                          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                        ),
                       ),
                       const SizedBox(width: 6),
                       const Text(
@@ -36,8 +62,9 @@ class ShoppingCartScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // const SizedBox(height: 0),
+                  const SizedBox(height: 1),
                   GridView.builder(
+                    padding: const EdgeInsets.only(top: 6),
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -46,9 +73,14 @@ class ShoppingCartScreen extends StatelessWidget {
                       mainAxisSpacing: 12,
                       mainAxisExtent: 220,
                     ),
-                    itemCount: 4,
+                    itemCount: _quantities.length,
                     itemBuilder: (context, index) {
-                      return const _CartItemCard(image: Images.gym1Image);
+                      return _CartItemCard(
+                        image: Images.gym1Image,
+                        quantity: _quantities[index],
+                        onDecrease: () => _decrementQuantity(index),
+                        onIncrease: () => _incrementQuantity(index),
+                      );
                     },
                   ),
                   const SizedBox(height: 16),
@@ -87,9 +119,12 @@ class ShoppingCartScreen extends StatelessWidget {
 }
 
 class _CartItemCard extends StatelessWidget {
-  const _CartItemCard({required this.image});
+  const _CartItemCard({required this.image, required this.quantity, required this.onDecrease, required this.onIncrease});
 
   final String image;
+  final int quantity;
+  final VoidCallback onDecrease;
+  final VoidCallback onIncrease;
 
   @override
   Widget build(BuildContext context) {
@@ -153,12 +188,12 @@ class _CartItemCard extends StatelessWidget {
                                 fit: BoxFit.scaleDown,
                                 alignment: Alignment.centerRight,
                                 child: Row(
-                                  children: const [
-                                    _QtyButton(icon: Icons.remove),
-                                    SizedBox(width: 6),
-                                    Text('2', style: TextStyle(color: Colors.white, fontSize: 10)),
-                                    SizedBox(width: 6),
-                                    _QtyButton(icon: Icons.add),
+                                  children: [
+                                    _QtyButton(icon: Icons.remove, onTap: onDecrease),
+                                    const SizedBox(width: 6),
+                                    Text('$quantity', style: const TextStyle(color: Colors.white, fontSize: 10)),
+                                    const SizedBox(width: 6),
+                                    _QtyButton(icon: Icons.add, onTap: onIncrease),
                                   ],
                                 ),
                               ),
@@ -179,17 +214,22 @@ class _CartItemCard extends StatelessWidget {
 }
 
 class _QtyButton extends StatelessWidget {
-  const _QtyButton({required this.icon});
+  const _QtyButton({required this.icon, required this.onTap});
 
   final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 18,
-      height: 18,
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(5)),
-      child: Icon(icon, size: 12, color: Colors.black),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 18,
+        height: 18,
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(5)),
+        child: Icon(icon, size: 12, color: Colors.black),
+      ),
     );
   }
 }

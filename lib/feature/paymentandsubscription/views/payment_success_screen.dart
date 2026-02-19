@@ -35,7 +35,8 @@ class PaymentSuccessScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const Spacer(),
+                  // const Spacer(),
+                  const SizedBox(height: 100),
                   Center(
                     child: Stack(
                       alignment: Alignment.center,

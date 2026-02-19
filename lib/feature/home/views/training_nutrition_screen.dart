@@ -19,32 +19,49 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
       backgroundColor: const Color(0xFF050608),
       body: SafeArea(
         top: false,
-        child: Center(
+        child: Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 50, 18, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TrainingHeader(
-                    activeIndex: _tabIndex,
-                    onTabChange: (index) => setState(() => _tabIndex = index),
-                    dateTitle: _tabIndex == 0 ? 'Today\'s Challenge!' : 'Today\'s Meal!',
-                    dateValue: '3rd Feb 2026',
-                  ),
-                  if (_tabIndex == 0) ...[
-                    const SizedBox(height: 12),
-                    _TrainingCard(),
-                  ] else ...[
-                    const SizedBox(height: 12),
-                    const _MealCard(title: 'Breakfast', time: '7am - 8am', asset: Images.breakfastImage),
-                    const SizedBox(height: 10),
-                    const _MealCard(title: 'Lunch', time: '12pm - 1pm', asset: Images.lunchImage),
-                    const SizedBox(height: 10),
-                    const _MealCard(title: 'Dinner', time: '6pm - 8pm', asset: Images.dinnerImage),
+            child: MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(18, 50, 18, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // TrainingHeader(
+                    //   activeIndex: _tabIndex,
+                    //   onTabChange: (index) => setState(() => _tabIndex = index),
+                    //   dateTitle: _tabIndex == 0 ? 'Today\'s Challenge!' : 'Today\'s Meal!',
+                    //   dateValue: '3rd Feb 2026',
+                    // ),
+                    if (_tabIndex == 0) ...[
+                      TrainingHeader(
+                        activeIndex: _tabIndex,
+                        onTabChange: (index) => setState(() => _tabIndex = index),
+                        dateTitle: _tabIndex == 0 ? 'Today\'s Challenge!' : 'Today\'s Meal!',
+                        dateValue: '3rd Feb 2026',
+                      ),
+                      const SizedBox(height: 12),
+                      _TrainingCard(),
+                    ] else ...[
+                      TrainingHeader(
+                        activeIndex: _tabIndex,
+                        onTabChange: (index) => setState(() => _tabIndex = index),
+                        dateTitle: _tabIndex == 0 ? 'Today\'s Challenge!' : 'Today\'s Meal!',
+                        dateValue: '3rd Feb 2026',
+                      ),
+                      const SizedBox(height: 12),
+                      const _MealCard(title: 'Breakfast', time: '7am - 8am', asset: Images.breakfastImage),
+                      const SizedBox(height: 10),
+                      const _MealCard(title: 'Lunch', time: '12pm - 1pm', asset: Images.lunchImage),
+                      const SizedBox(height: 10),
+                      const _MealCard(title: 'Dinner', time: '6pm - 8pm', asset: Images.dinnerImage),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -53,7 +70,6 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
     );
   }
 }
-
 
 class _TrainingCard extends StatelessWidget {
   @override

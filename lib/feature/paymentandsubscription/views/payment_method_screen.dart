@@ -27,18 +27,21 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
               context: context,
               removeTop: true,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
                       children: [
-                        IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
-                          splashRadius: 18,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                        Transform.translate(
+                          offset: const Offset(-15, 0),
+                          child: IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
+                            splashRadius: 18,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                          ),
                         ),
                         const SizedBox(width: 6),
                         const Text(
