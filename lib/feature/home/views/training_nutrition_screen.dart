@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
+import '../../../core/common/widgets/custom_snackbar.dart';
 import '../../../core/constants/assets.dart';
+import '../../../core/network/api_service/training_shop_api_service.dart';
 import 'widgets/training_header.dart';
 
 class TrainingNutritionScreen extends StatefulWidget {
@@ -12,6 +15,53 @@ class TrainingNutritionScreen extends StatefulWidget {
 
 class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
   int _tabIndex = 0;
+  final TrainingShopApiService _api = TrainingShopApiService();
+  bool _loadingTraining = true;
+  bool _loadingNutrition = true;
+  List<Map<String, dynamic>> _trainings = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _nutritions = <Map<String, dynamic>>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await Future.wait([_loadTraining(), _loadNutrition()]);
+  }
+
+  Future<void> _loadTraining() async {
+    try {
+      final data = await _api.getTodayTrainings();
+      if (!mounted) return;
+      setState(() => _trainings = data);
+    } on DioException catch (e) {
+      final d = e.response?.data;
+      final msg = d is Map && d['message'] != null ? d['message'].toString() : 'Failed to load trainings';
+      CustomSnackbar.show(msg);
+    } catch (_) {
+      CustomSnackbar.show('Failed to load trainings');
+    } finally {
+      if (mounted) setState(() => _loadingTraining = false);
+    }
+  }
+
+  Future<void> _loadNutrition() async {
+    try {
+      final data = await _api.getTodayNutritions();
+      if (!mounted) return;
+      setState(() => _nutritions = data);
+    } on DioException catch (e) {
+      final d = e.response?.data;
+      final msg = d is Map && d['message'] != null ? d['message'].toString() : 'Failed to load nutritions';
+      CustomSnackbar.show(msg);
+    } catch (_) {
+      CustomSnackbar.show('Failed to load nutritions');
+    } finally {
+      if (mounted) setState(() => _loadingNutrition = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +95,12 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
                         dateValue: '3rd Feb 2026',
                       ),
                       const SizedBox(height: 12),
-                      _TrainingCard(),
+                      if (_loadingTraining)
+                        const Center(child: CircularProgressIndicator(color: Color(0xFFF3B41A)))
+                      else if (_trainings.isEmpty)
+                        const _EmptyState(text: 'No training found for today')
+                      else
+                        _TrainingCard(rows: _trainings),
                     ] else ...[
                       TrainingHeader(
                         activeIndex: _tabIndex,
@@ -54,11 +109,24 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
                         dateValue: '3rd Feb 2026',
                       ),
                       const SizedBox(height: 12),
-                      const _MealCard(title: 'Breakfast', time: '7am - 8am', asset: Images.breakfastImage),
-                      const SizedBox(height: 10),
-                      const _MealCard(title: 'Lunch', time: '12pm - 1pm', asset: Images.lunchImage),
-                      const SizedBox(height: 10),
-                      const _MealCard(title: 'Dinner', time: '6pm - 8pm', asset: Images.dinnerImage),
+                      if (_loadingNutrition)
+                        const Center(child: CircularProgressIndicator(color: Color(0xFFF3B41A)))
+                      else if (_nutritions.isEmpty)
+                        const _EmptyState(text: 'No nutrition found for today')
+                      else
+                        ...List.generate(_nutritions.length, (index) {
+                          final item = _nutritions[index];
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: index == _nutritions.length - 1 ? 0 : 10),
+                            child: _MealCard(
+                              title: (item['name'] ?? 'Meal').toString(),
+                              time: (item['time'] ?? '').toString(),
+                              subtitle:
+                                  'P: ${(item['protein'] ?? 0)}g  C: ${(item['carbs'] ?? 0)}g  F: ${(item['fat'] ?? 0)}g  ${(item['cal'] ?? 0)}cal',
+                              asset: Images.breakfastImage,
+                            ),
+                          );
+                        }),
                     ],
                   ],
                 ),
@@ -72,6 +140,10 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
 }
 
 class _TrainingCard extends StatelessWidget {
+  const _TrainingCard({required this.rows});
+
+  final List<Map<String, dynamic>> rows;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -85,15 +157,21 @@ class _TrainingCard extends StatelessWidget {
             child: Image.asset(Images.gym1Image, height: 170, fit: BoxFit.cover),
           ),
           const SizedBox(height: 12),
-          const _WorkoutRow(title: 'Dumble Squat', chips: ['3 Set', '2 kg', '10 Reps']),
-          const SizedBox(height: 8),
-          const _WorkoutRow(title: 'Bench Press', chips: ['4 Set', '2 min', '5 Reps']),
-          const SizedBox(height: 8),
-          const _WorkoutRow(title: 'Lat Pulldowns', chips: ['4 Set', '90 sec', '8 Reps']),
-          const SizedBox(height: 8),
-          const _WorkoutRow(title: 'Overhead Press', chips: ['3 Set', '90 sec', '6 Reps']),
-          const SizedBox(height: 8),
-          const _WorkoutRow(title: 'Bicep Curls', chips: ['3 Set', '45 sec', '15 Reps']),
+          ...List.generate(rows.length, (index) {
+            final item = rows[index];
+            final chips = <String>[
+              '${item['reps'] ?? '-'} Reps',
+              '${item['rest'] ?? '-'} Rest',
+              '${item['weight'] ?? '-'} kg',
+            ];
+            return Padding(
+              padding: EdgeInsets.only(bottom: index == rows.length - 1 ? 0 : 8),
+              child: _WorkoutRow(
+                title: (item['name'] ?? 'Workout').toString(),
+                chips: chips,
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -146,11 +224,12 @@ class _WorkoutRow extends StatelessWidget {
 }
 
 class _MealCard extends StatelessWidget {
-  const _MealCard({required this.title, required this.time, required this.asset});
+  const _MealCard({required this.title, required this.time, required this.asset, required this.subtitle});
 
   final String title;
   final String time;
   final String asset;
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -179,17 +258,32 @@ class _MealCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(time, style: const TextStyle(color: Colors.white, fontSize: 10)),
                 const SizedBox(height: 4),
-                const Text(
-                  'Chicken Breast (100 gm)',
-                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                Text(
+                  title,
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 2),
-                const Text('P: 31g  C: 0g  F: 3.6g  165cal', style: TextStyle(color: Colors.white, fontSize: 10)),
+                Text(subtitle, style: const TextStyle(color: Colors.white, fontSize: 10)),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      alignment: Alignment.center,
+      child: Text(text, style: const TextStyle(color: Colors.white70)),
     );
   }
 }

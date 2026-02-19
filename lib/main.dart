@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-import 'feature/onboarding/onboarding_screen.dart';
 import 'feature/splash/splash_screen.dart';
 
 void main() {
@@ -12,14 +12,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Drakulios',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF2B31A)),
         useMaterial3: true,
       ),
-      home: const SplashScreen(next: OnboardingScreen()),
+      home: const SplashScreen(),
     );
   }
 }

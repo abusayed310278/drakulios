@@ -1,6 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/assets.dart';
+import '../../core/constants/api_endpoints.dart';
+import '../../core/common/widgets/custom_snackbar.dart';
+import '../../core/network/api_service/api_client.dart';
+import '../../core/network/api_service/token_meneger.dart';
 import 'code_verification_screen.dart';
 import 'create_account_screen.dart';
 import '../paymentandsubscription/views/payment_and_subscription_screen.dart';
@@ -14,6 +19,27 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = false;
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+  late final ApiClient _apiClient;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+    _apiClient = ApiClient(ApiEndpoints.baseUrl);
+    _loadRememberedCredentials();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,26 +59,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(
-                        Icons.arrow_back_ios_new,
-                        size: 18,
-                        color: Color(0xFFC9CDD3),
-                      ),
+                      icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
                       splashRadius: 18,
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 24,
-                        minHeight: 24,
-                      ),
+                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                     ),
                   ),
                   const SizedBox(height: 10),
                   Center(
-                    child: SizedBox(
-                      width: 60,
-                      height: 53,
-                      child: Image.asset(Images.appLogo, fit: BoxFit.contain),
-                    ),
+                    child: SizedBox(width: 60, height: 53, child: Image.asset(Images.appLogo, fit: BoxFit.contain)),
                   ),
                   const SizedBox(height: 20),
                   const SizedBox(
@@ -61,13 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       'Welcome Back',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFFF5F6F8),
-                        fontSize: 19,
-                        fontWeight: FontWeight.w600,
-                        height: 1.2,
-                        letterSpacing: 0,
-                      ),
+                      style: TextStyle(color: Color(0xFFF5F6F8), fontSize: 19, fontWeight: FontWeight.w600, height: 1.2, letterSpacing: 0),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -77,26 +86,34 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       'Access your Pro Factory Club Account securely.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFFFFFFFF),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        height: 1.2,
-                        letterSpacing: 0,
-                      ),
+                      style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 12, fontWeight: FontWeight.w400, height: 1.2, letterSpacing: 0),
                     ),
                   ),
                   const SizedBox(height: 22),
-                  const _AuthTextField(
+                  _AuthTextField(
                     hint: 'Email or Phone Number',
                     icon: Icons.mail_outline,
                     keyboardType: TextInputType.emailAddress,
+                    controller: _emailController,
                   ),
                   const SizedBox(height: 12),
-                  const _AuthTextField(
+                  _AuthTextField(
                     hint: 'Password',
                     icon: Icons.lock_outline,
-                    obscureText: true,
+                    obscureText: _obscurePassword,
+                    controller: _passwordController,
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        size: 18,
+                        color: const Color(0xFFA8ADB3),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -106,55 +123,38 @@ class _LoginScreenState extends State<LoginScreen> {
                         height: 20,
                         child: Checkbox(
                           value: _rememberMe,
-                          onChanged: (value) {
+                          onChanged: (value) async {
+                            final remember = value ?? false;
                             setState(() {
-                              _rememberMe = value ?? false;
+                              _rememberMe = remember;
                             });
+                            await TokenManager.setRememberMe(remember);
+                            if (!remember) {
+                              await TokenManager.clearRememberedCredentials();
+                            }
                           },
-                          side: const BorderSide(
-                            color: Color(0xFF8B8F94),
-                            width: 1.2,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(3),
-                          ),
+                          side: const BorderSide(color: Color(0xFF8B8F94), width: 1.2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
                           activeColor: const Color(0xFFF3B41A),
                           checkColor: Colors.black,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
                       const SizedBox(width: 8),
                       const Text(
                         'Remember me',
-                        style: TextStyle(
-                          color: Color(0xFFBFC3C8),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                        ),
+                        style: TextStyle(color: Color(0xFFBFC3C8), fontSize: 14, fontWeight: FontWeight.w400),
                       ),
                       const Spacer(),
                       TextButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const CodeVerificationScreen(),
-                            ),
-                          );
-                        },
+                        onPressed: _isLoading ? null : _handleForgotPassword,
                         style: TextButton.styleFrom(
                           foregroundColor: const Color(0xFFBFC3C8),
                           padding: EdgeInsets.zero,
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text(
-                          'Forgot your password?',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
+                        child: const Text('Forgot your password?', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400)),
                       ),
                     ],
                   ),
@@ -162,59 +162,38 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const PaymentAndSubscriptionScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF3B41A),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: const SizedBox(
-                        width: 43,
-                        height: 19,
-                        child: Center(
-                          child: Text(
-                            'Log in',
-                            style: TextStyle(
-                              color: Color(0xFFFFFFFF),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                              letterSpacing: 0,
+                      child: _isLoading
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
+                          : const Text(
+                              'Log in',
+                              style: TextStyle(
+                                color: Color(0xFFFFFFFF),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                height: 1.2,
+                                letterSpacing: 0,
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
                   Row(
                     children: const [
-                      Expanded(
-                        child: Divider(color: Color(0xFF4A4F58), thickness: 1),
-                      ),
+                      Expanded(child: Divider(color: Color(0xFF4A4F58), thickness: 1)),
                       SizedBox(width: 10),
                       Text(
                         'Or continue with',
-                        style: TextStyle(
-                          color: Color(0xFFBFC3C8),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                        ),
+                        style: TextStyle(color: Color(0xFFBFC3C8), fontSize: 16, fontWeight: FontWeight.w400),
                       ),
                       SizedBox(width: 10),
-                      Expanded(
-                        child: Divider(color: Color(0xFF4A4F58), thickness: 1),
-                      ),
+                      Expanded(child: Divider(color: Color(0xFF4A4F58), thickness: 1)),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -233,27 +212,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         const Text(
                           'Don’t have an account? ',
-                          style: TextStyle(
-                            color: Color(0xFF9A9EA4),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
+                          style: TextStyle(color: Color(0xFF9A9EA4), fontSize: 14, fontWeight: FontWeight.w400),
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const CreateAccountScreen(),
-                              ),
-                            );
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CreateAccountScreen()));
                           },
                           child: const Text(
                             'Sign up',
-                            style: TextStyle(
-                              color: Color(0xFFF3B41A),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: TextStyle(color: Color(0xFFF3B41A), fontSize: 14, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
@@ -268,37 +235,164 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  Future<void> _loadRememberedCredentials() async {
+    final remember = await TokenManager.isRememberMeEnabled();
+    if (!mounted) return;
+    if (!remember) return;
+
+    final email = await TokenManager.getRememberedEmail();
+    final password = await TokenManager.getRememberedPassword();
+    if (!mounted) return;
+
+    setState(() {
+      _rememberMe = true;
+      _emailController.text = email ?? '';
+      _passwordController.text = password ?? '';
+    });
+  }
+
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Please enter email and password');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final response = await _apiClient.post(ApiEndpoints.login, data: {'email': email, 'password': password});
+      final data = response.data;
+      final success = data['success'] == true;
+      final backendMessage = (data['message'] ?? '').toString();
+
+      if (!success) {
+        _showMessage(backendMessage.isEmpty ? 'Login failed' : backendMessage);
+        return;
+      }
+
+      final payload = (data['data'] ?? {}) as Map<String, dynamic>;
+      final accessToken = (payload['accessToken'] ?? '').toString();
+      final refreshToken = (payload['refreshToken'] ?? '').toString();
+
+      if (accessToken.isEmpty || refreshToken.isEmpty) {
+        _showMessage('Login failed: missing token');
+        return;
+      }
+
+      await TokenManager.save(
+        access: accessToken,
+        refresh: refreshToken,
+        uid: (payload['_id'] ?? payload['user']?['_id'] ?? '').toString(),
+        userName: (payload['user']?['name'] ?? '').toString(),
+        userEmail: (payload['user']?['email'] ?? email).toString(),
+        userRole: (payload['role'] ?? payload['user']?['role'] ?? '').toString(),
+      );
+
+      await TokenManager.setRememberMe(_rememberMe);
+      if (_rememberMe) {
+        await TokenManager.saveRememberedCredentials(email: email, password: password);
+      } else {
+        await TokenManager.clearRememberedCredentials();
+      }
+
+      if (backendMessage.isNotEmpty) {
+        _showMessage(backendMessage);
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaymentAndSubscriptionScreen()));
+    } on DioException catch (e) {
+      final resData = e.response?.data;
+      String message = 'Login failed';
+      if (resData is Map && resData['message'] != null) {
+        message = resData['message'].toString();
+      } else if (e.message != null && e.message!.trim().isNotEmpty) {
+        message = e.message!;
+      }
+      _showMessage(message);
+    } catch (_) {
+      _showMessage('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showMessage('Please enter your email first');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final response = await _apiClient.post(ApiEndpoints.forgetPassword, data: {'email': email});
+      final data = response.data;
+      final message = (data['message'] ?? 'OTP sent to your email').toString();
+      _showMessage(message);
+
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => CodeVerificationScreen(email: email)));
+    } on DioException catch (e) {
+      final resData = e.response?.data;
+      String message = 'Failed to send OTP';
+      if (resData is Map && resData['message'] != null) {
+        message = resData['message'].toString();
+      } else if (e.message != null && e.message!.trim().isNotEmpty) {
+        message = e.message!;
+      }
+      _showMessage(message);
+    } catch (_) {
+      _showMessage('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    CustomSnackbar.show(message);
+  }
 }
 
 class _AuthTextField extends StatelessWidget {
   const _AuthTextField({
     required this.hint,
     required this.icon,
+    required this.controller,
     this.obscureText = false,
     this.keyboardType,
+    this.suffixIcon,
   });
 
   final String hint;
   final IconData icon;
+  final TextEditingController controller;
   final bool obscureText;
   final TextInputType? keyboardType;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 48,
       child: TextField(
+        controller: controller,
         keyboardType: keyboardType,
         obscureText: obscureText,
         style: const TextStyle(color: Color(0xFFF5F6F8), fontSize: 14),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-            color: Color(0xFFA8ADB3),
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
+          hintStyle: const TextStyle(color: Color(0xFFA8ADB3), fontSize: 14, fontWeight: FontWeight.w400),
           prefixIcon: Icon(icon, size: 18, color: const Color(0xFFA8ADB3)),
+          suffixIcon: suffixIcon,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
           filled: true,
           fillColor: const Color(0xFF090B0F),
@@ -335,16 +429,9 @@ class _SocialButton extends StatelessWidget {
         width: 64,
         height: 48,
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
         child: Center(
-          child: SizedBox(
-            width: 40,
-            height: 40,
-            child: Image.asset(asset, fit: BoxFit.contain),
-          ),
+          child: SizedBox(width: 40, height: 40, child: Image.asset(asset, fit: BoxFit.contain)),
         ),
       ),
     );

@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/assets.dart';
+import '../../core/network/api_service/token_meneger.dart';
+import '../home/views/home_menu_screen.dart';
+import '../onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key, required this.next});
-
-  final Widget next;
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -44,11 +45,17 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  void _goNext() {
+  Future<void> _goNext() async {
+    if (!mounted) return;
+    final loggedIn = await TokenManager.isLoggedIn();
     if (!mounted) return;
     Navigator.of(
       context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => widget.next));
+    ).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => loggedIn ? const HomeMenuScreen() : const OnboardingScreen(),
+      ),
+    );
   }
 
   @override

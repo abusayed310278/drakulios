@@ -1,15 +1,50 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/assets.dart';
+import '../../../../core/network/api_service/token_meneger.dart';
+import '../../../../core/network/api_service/user_api_service.dart';
 import '../../../profile/views/member_profile_screen.dart';
 
-class TrainingHeader extends StatelessWidget {
+class TrainingHeader extends StatefulWidget {
   const TrainingHeader({super.key, required this.activeIndex, required this.onTabChange, required this.dateTitle, required this.dateValue});
 
   final int activeIndex;
   final ValueChanged<int> onTabChange;
   final String dateTitle;
   final String dateValue;
+
+  @override
+  State<TrainingHeader> createState() => _TrainingHeaderState();
+}
+
+class _TrainingHeaderState extends State<TrainingHeader> {
+  final UserApiService _userApi = UserApiService();
+  String _displayName = 'Member';
+  String _avatarUrl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHeaderProfile();
+  }
+
+  Future<void> _loadHeaderProfile() async {
+    try {
+      final res = await _userApi.getProfile();
+      final data = (res['data'] ?? {}) as Map;
+      if (!mounted) return;
+      setState(() {
+        final name = (data['name'] ?? '').toString().trim();
+        _displayName = name.isEmpty ? 'Member' : name;
+        _avatarUrl = (data['avatar']?['url'] ?? '').toString();
+      });
+      return;
+    } catch (_) {}
+
+    final savedName = (await TokenManager.getUserName())?.trim() ?? '';
+    if (!mounted) return;
+    setState(() => _displayName = savedName.isEmpty ? 'Member' : savedName);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,16 +64,16 @@ class TrainingHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Good Morning 🔥',
                   style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 14, fontWeight: FontWeight.w500, height: 1.2),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
-                  'Pramuditya Uzumaki',
+                  _displayName,
                   style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 18, fontWeight: FontWeight.w700, height: 1.2),
                 ),
               ],
@@ -54,15 +89,25 @@ class TrainingHeader extends StatelessWidget {
               child: CircleAvatar(
                 radius: 12,
                 backgroundColor: const Color(0xFF2A2F39),
-                child: ClipOval(child: Image.asset(Images.profileImage, width: 24, height: 24, fit: BoxFit.cover)),
+                child: ClipOval(
+                  child: _avatarUrl.trim().isNotEmpty
+                      ? Image.network(
+                          _avatarUrl,
+                          width: 24,
+                          height: 24,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Image.asset(Images.profileImage, width: 24, height: 24, fit: BoxFit.cover),
+                        )
+                      : Image.asset(Images.profileImage, width: 24, height: 24, fit: BoxFit.cover),
+                ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 14),
-        _TabSwitcher(activeIndex: activeIndex, onChange: onTabChange),
+        _TabSwitcher(activeIndex: widget.activeIndex, onChange: widget.onTabChange),
         const SizedBox(height: 12),
-        _DateCard(title: dateTitle, date: dateValue),
+        _DateCard(title: widget.dateTitle, date: widget.dateValue),
       ],
     );
   }
@@ -166,11 +211,12 @@ class _DateCard extends StatelessWidget {
               ),
             ],
           ),
-          Container(
+          SizedBox(
             width: 32,
             height: 32,
-            // decoration: BoxDecoration(color: const Color(0xFFF2B31A), borderRadius: BorderRadius.circular(8)),
-            child: Center(child: Image.asset(Images.solarCalendarImage, width: 32, height: 32, color: const Color(0xFFF2B31A))),
+            child: Center(
+              child: Image.asset(Images.solarCalendarImage, width: 32, height: 32, color: const Color(0xFFF2B31A)),
+            ),
           ),
         ],
       ),

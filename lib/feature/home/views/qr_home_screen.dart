@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/assets.dart';
+import '../../../core/network/api_service/token_meneger.dart';
 
 class QrHomeScreen extends StatelessWidget {
   const QrHomeScreen({super.key});
+
+  Future<String> _getDisplayName() async {
+    final name = (await TokenManager.getUserName())?.trim() ?? '';
+    if (name.isNotEmpty) return name;
+
+    final email = (await TokenManager.getEmail())?.trim() ?? '';
+    if (email.contains('@')) return email.split('@').first;
+
+    return 'Member';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,17 +40,25 @@ class QrHomeScreen extends StatelessWidget {
                         constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                       ),
                       const SizedBox(width: 6),
-                      const Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Good Morning 🔥',
                             style: TextStyle(color: Color(0xFFC9CDD3), fontSize: 12, fontWeight: FontWeight.w500),
                           ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Pramuditya Uzumaki',
-                            style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 16, fontWeight: FontWeight.w600),
+                          const SizedBox(height: 2),
+                          FutureBuilder<String>(
+                            future: _getDisplayName(),
+                            builder: (context, snapshot) {
+                              final displayName = (snapshot.data ?? '').trim().isNotEmpty
+                                  ? snapshot.data!.trim()
+                                  : 'Member';
+                              return Text(
+                                displayName,
+                                style: const TextStyle(color: Color(0xFFFFFFFF), fontSize: 16, fontWeight: FontWeight.w600),
+                              );
+                            },
                           ),
                         ],
                       ),

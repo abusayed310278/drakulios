@@ -1,12 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
+import '../../../core/common/widgets/custom_snackbar.dart';
 import '../../../core/constants/assets.dart';
+import '../../../core/network/api_service/training_shop_api_service.dart';
 import 'product_detail_screen.dart';
 import 'shopping_cart_screen.dart';
 import 'widgets/shop_header.dart';
 
-class ShopScreen extends StatelessWidget {
+class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
+
+  @override
+  State<ShopScreen> createState() => _ShopScreenState();
+}
+
+class _ShopScreenState extends State<ShopScreen> {
+  final TrainingShopApiService _api = TrainingShopApiService();
+  bool _loading = true;
+  List<Map<String, dynamic>> _items = <Map<String, dynamic>>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    try {
+      final data = await _api.getSubscriptions();
+      if (!mounted) return;
+      setState(() => _items = data);
+    } on DioException catch (e) {
+      final d = e.response?.data;
+      final msg = d is Map && d['message'] != null ? d['message'].toString() : 'Failed to load shop items';
+      CustomSnackbar.show(msg);
+    } catch (_) {
+      CustomSnackbar.show('Failed to load shop items');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +97,24 @@ class ShopScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     _DealCard(),
                     const SizedBox(height: 12),
-                    const _ProductCard(title: 'GT5s Motorized Treadmill', price: r'$1200', image: Images.gym1Image),
-                    const SizedBox(height: 12),
-                    const _ProductCard(title: 'Magnetic Cross Trainer', price: r'$449', image: Images.gym2Image),
-                    const SizedBox(height: 12),
-                    const _ProductCard(title: 'Spinning Bike (Pro)', price: r'$259', image: Images.gym3Image),
+                    if (_loading)
+                      const Center(child: CircularProgressIndicator(color: Color(0xFFF3B41A)))
+                    else if (_items.isEmpty) ...[
+                      const _ProductCard(title: 'GT5s Motorized Treadmill', price: r'$1200', image: Images.gym1Image),
+                      const SizedBox(height: 12),
+                      const _ProductCard(title: 'Magnetic Cross Trainer', price: r'$449', image: Images.gym2Image),
+                      const SizedBox(height: 12),
+                      const _ProductCard(title: 'Spinning Bike (Pro)', price: r'$259', image: Images.gym3Image),
+                    ] else ...List.generate(_items.length, (index) {
+                      final item = _items[index];
+                      final title = (item['name'] ?? 'Subscription').toString();
+                      final monthly = item['priceMonthly']?.toString() ?? '0';
+                      final image = [Images.gym1Image, Images.gym2Image, Images.gym3Image][index % 3];
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: index == _items.length - 1 ? 0 : 12),
+                        child: _ProductCard(title: title, price: '\$$monthly', image: image),
+                      );
+                    }),
                   ],
                 ),
               ),

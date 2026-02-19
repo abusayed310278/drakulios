@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
+import '../../../core/common/widgets/custom_snackbar.dart';
+import '../../../core/constants/api_endpoints.dart';
 import '../../../core/constants/assets.dart';
+import '../../../core/network/api_service/api_client.dart';
+import '../../../core/network/api_service/token_meneger.dart';
+import '../../auth/login_screen.dart';
 import '../../shop/views/shop_screen.dart';
 import 'health_profile_screen.dart';
 import 'qr_home_screen.dart';
@@ -10,6 +16,41 @@ class HomeMenuScreen extends StatelessWidget {
 
   void _showTrainingDialog(BuildContext context) {
     showDialog<void>(context: context, barrierColor: Colors.black.withOpacity(0.6), builder: (context) => const _TrainingInfoDialog());
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final apiClient = ApiClient(ApiEndpoints.baseUrl);
+    String message = 'Logged out successfully';
+
+    try {
+      final response = await apiClient.post(ApiEndpoints.logout);
+      final data = response.data;
+      if (data is Map && data['message'] != null) {
+        message = data['message'].toString();
+      }
+    } on DioException catch (e) {
+      final resData = e.response?.data;
+      if (resData is Map && resData['message'] != null) {
+        message = resData['message'].toString();
+      } else {
+        message = 'Session cleared locally';
+      }
+    } catch (_) {
+      message = 'Session cleared locally';
+    }
+
+    await TokenManager.clearToken();
+    await TokenManager.clearRole();
+    await TokenManager.clearUid();
+    await TokenManager.clearUserName();
+    await TokenManager.clearServiceType();
+
+    if (!context.mounted) return;
+    CustomSnackbar.show(message);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -73,7 +114,7 @@ class HomeMenuScreen extends StatelessWidget {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () => _handleLogout(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF2B31A),
                         foregroundColor: Colors.black,

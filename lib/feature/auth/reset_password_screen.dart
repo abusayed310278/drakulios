@@ -1,9 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
+import '../../core/common/widgets/custom_snackbar.dart';
+import '../../core/constants/api_endpoints.dart';
 import '../../core/constants/assets.dart';
+import '../../core/network/api_service/api_client.dart';
+import 'login_screen.dart';
 
-class ResetPasswordScreen extends StatelessWidget {
-  const ResetPasswordScreen({super.key});
+class ResetPasswordScreen extends StatefulWidget {
+  const ResetPasswordScreen({super.key, required this.email, required this.otp});
+
+  final String email;
+  final String otp;
+
+  @override
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+}
+
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  late final TextEditingController _newPasswordController;
+  late final TextEditingController _confirmPasswordController;
+  late final ApiClient _apiClient;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _newPasswordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+    _apiClient = ApiClient(ApiEndpoints.baseUrl);
+  }
+
+  @override
+  void dispose() {
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,14 +110,14 @@ class ResetPasswordScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 22),
-                  const _PasswordField(hint: 'New password'),
+                  _PasswordField(hint: 'New password', controller: _newPasswordController),
                   const SizedBox(height: 12),
-                  const _PasswordField(hint: 'Confirm password'),
+                  _PasswordField(hint: 'Confirm password', controller: _confirmPasswordController),
                   const SizedBox(height: 24),
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: _isLoading ? null : _handleResetPassword,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF3B41A),
                         foregroundColor: Colors.white,
@@ -93,16 +126,25 @@ class ResetPasswordScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text(
-                        'Continue',
-                        style: TextStyle(
-                          color: Color(0xFFFFFFFF),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          height: 1.2,
-                          letterSpacing: 0,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Continue',
+                              style: TextStyle(
+                                color: Color(0xFFFFFFFF),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                height: 1.2,
+                                letterSpacing: 0,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -113,18 +155,70 @@ class ResetPasswordScreen extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _handleResetPassword() async {
+    final password = _newPasswordController.text;
+    final confirm = _confirmPasswordController.text;
+
+    if (password.isEmpty || confirm.isEmpty) {
+      CustomSnackbar.show('Please enter both password fields');
+      return;
+    }
+    if (password != confirm) {
+      CustomSnackbar.show('Password and confirm password do not match');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.resetPassword,
+        data: {
+          'email': widget.email,
+          'otp': widget.otp,
+          'password': password,
+        },
+      );
+      final data = response.data;
+      final message = (data['message'] ?? 'Password reset successfully').toString();
+      CustomSnackbar.show(message);
+
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    } on DioException catch (e) {
+      final resData = e.response?.data;
+      String message = 'Reset password failed';
+      if (resData is Map && resData['message'] != null) {
+        message = resData['message'].toString();
+      } else if (e.message != null && e.message!.trim().isNotEmpty) {
+        message = e.message!;
+      }
+      CustomSnackbar.show(message);
+    } catch (_) {
+      CustomSnackbar.show('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 }
 
 class _PasswordField extends StatelessWidget {
-  const _PasswordField({required this.hint});
+  const _PasswordField({required this.hint, required this.controller});
 
   final String hint;
+  final TextEditingController controller;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 48,
       child: TextField(
+        controller: controller,
         obscureText: true,
         style: const TextStyle(color: Color(0xFFF5F6F8), fontSize: 14),
         decoration: InputDecoration(

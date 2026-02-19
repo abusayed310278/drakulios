@@ -1,11 +1,200 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
-class EditProfileScreen extends StatelessWidget {
-  const EditProfileScreen({super.key});
+import '../../../core/common/widgets/custom_snackbar.dart';
+import '../../../core/network/api_service/token_meneger.dart';
+import '../../../core/network/api_service/user_api_service.dart';
+
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key, this.initialProfile});
+
+  final Map<String, dynamic>? initialProfile;
+
+  @override
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  final UserApiService _userApi = UserApiService();
+  final ImagePicker _imagePicker = ImagePicker();
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _memberIdController = TextEditingController();
+
+  final TextEditingController _currentWeightController = TextEditingController();
+  final TextEditingController _targetWeightController = TextEditingController();
+  final TextEditingController _recentWeightChangesController = TextEditingController();
+  final TextEditingController _bodyTypeController = TextEditingController();
+  final TextEditingController _currentHeightController = TextEditingController();
+  final TextEditingController _sleepPatternsController = TextEditingController();
+  final TextEditingController _appetiteHungerController = TextEditingController();
+  final TextEditingController _typicalMealsController = TextEditingController();
+  final TextEditingController _waterIntakeController = TextEditingController();
+  final TextEditingController _surgicalHistoryController = TextEditingController();
+  final TextEditingController _physicalPainsController = TextEditingController();
+  final TextEditingController _digestionGutController = TextEditingController();
+  final TextEditingController _supplementsController = TextEditingController();
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+  XFile? _selectedAvatar;
+  Map<String, dynamic> _profile = const {};
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialProfile;
+    if (initial != null && initial.isNotEmpty) {
+      _applyProfileData(initial);
+      _isLoading = false;
+    }
+    _prefillProfile();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _memberIdController.dispose();
+    _currentWeightController.dispose();
+    _targetWeightController.dispose();
+    _recentWeightChangesController.dispose();
+    _bodyTypeController.dispose();
+    _currentHeightController.dispose();
+    _sleepPatternsController.dispose();
+    _appetiteHungerController.dispose();
+    _typicalMealsController.dispose();
+    _waterIntakeController.dispose();
+    _surgicalHistoryController.dispose();
+    _physicalPainsController.dispose();
+    _digestionGutController.dispose();
+    _supplementsController.dispose();
+    super.dispose();
+  }
+
+  String _pickString(Map<String, dynamic> source, List<String> keys) {
+    for (final key in keys) {
+      final value = source[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return '';
+  }
+
+  void _applyProfileData(Map<String, dynamic> data) {
+    final bodyDetails = data['personalBodyDetails'] is Map
+        ? Map<String, dynamic>.from(data['personalBodyDetails'] as Map)
+        : data['bodyDetails'] is Map
+            ? Map<String, dynamic>.from(data['bodyDetails'] as Map)
+            : data['healthProfile'] is Map
+                ? Map<String, dynamic>.from(data['healthProfile'] as Map)
+                : <String, dynamic>{};
+
+    _profile = data;
+    _nameController.text = _pickString(data, ['name']);
+    _phoneController.text = _pickString(data, ['phone', 'contact']);
+    _emailController.text = _pickString(data, ['email']);
+    _memberIdController.text = _pickString(data, ['_id', 'id', 'memberId']);
+
+    _currentWeightController.text = _pickString(bodyDetails, ['currentWeight']);
+    _targetWeightController.text = _pickString(bodyDetails, ['targetWeight']);
+    _recentWeightChangesController.text = _pickString(bodyDetails, ['recentWeightChanges']);
+    _bodyTypeController.text = _pickString(bodyDetails, ['bodyType']);
+    _currentHeightController.text = _pickString(bodyDetails, ['currentHeight', 'height']);
+    _sleepPatternsController.text = _pickString(bodyDetails, ['sleepPatterns', 'sleep']);
+    _appetiteHungerController.text = _pickString(bodyDetails, ['appetiteHunger']);
+    _typicalMealsController.text = _pickString(bodyDetails, ['typicalDailyMeals', 'typicalMeals']);
+    _waterIntakeController.text = _pickString(bodyDetails, ['waterFluidIntake', 'waterIntake']);
+    _surgicalHistoryController.text = _pickString(bodyDetails, ['surgicalHistory']);
+    _physicalPainsController.text = _pickString(bodyDetails, ['currentPhysicalPains', 'physicalPains']);
+    _digestionGutController.text = _pickString(bodyDetails, ['digestionGutHealth', 'digestionGut']);
+    _supplementsController.text = _pickString(bodyDetails, ['supplementsCurrentlyUsed', 'supplements']);
+  }
+
+  Future<void> _prefillProfile() async {
+    try {
+      final res = await _userApi.getProfile();
+      final data = Map<String, dynamic>.from((res['data'] ?? {}) as Map);
+
+      if (!mounted) return;
+      _applyProfileData(data);
+
+      setState(() => _isLoading = false);
+    } on DioException catch (e) {
+      final payload = e.response?.data;
+      final msg = payload is Map && payload['message'] != null ? payload['message'].toString() : 'Failed to load profile';
+      CustomSnackbar.show(msg);
+      if (mounted) setState(() => _isLoading = false);
+    } catch (_) {
+      CustomSnackbar.show('Failed to load profile');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      CustomSnackbar.show('Username is required');
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      final res = await _userApi.updateProfile(
+        name: name,
+        avatarPath: _selectedAvatar?.path,
+      );
+
+      await TokenManager.saveUserName(name);
+      if (_emailController.text.trim().isNotEmpty) {
+        await TokenManager.saveEmail(_emailController.text.trim());
+      }
+
+      final message = (res['message'] ?? 'Profile updated successfully').toString();
+      CustomSnackbar.show(message);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on DioException catch (e) {
+      final payload = e.response?.data;
+      final msg = payload is Map && payload['message'] != null ? payload['message'].toString() : 'Profile update failed';
+      CustomSnackbar.show(msg);
+    } catch (_) {
+      CustomSnackbar.show('Profile update failed');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _pickAvatar() async {
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (picked == null || !mounted) return;
+      setState(() => _selectedAvatar = picked);
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.isEmpty) {
+        CustomSnackbar.show('Unable to select photo');
+      } else {
+        CustomSnackbar.show(msg);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final avatarUrl = (_profile['avatar']?['url'] ?? '').toString();
+
     return Scaffold(
       backgroundColor: const Color(0xFF050608),
       body: SafeArea(
@@ -19,6 +208,8 @@ class EditProfileScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (_isLoading)
+                    const LinearProgressIndicator(minHeight: 1.5, color: Color(0xFFF3B41A), backgroundColor: Colors.transparent),
                   Row(
                     children: [
                       Transform.translate(
@@ -32,95 +223,139 @@ class EditProfileScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Personal Body Details :',
-                        style: GoogleFonts.outfit(
-                          color: const Color(0xFFE5E7EB),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          height: 1.2,
-                        ),
+                        'Edit Profile',
+                        style: GoogleFonts.outfit(color: const Color(0xFFB1B1B1), fontSize: 18, fontWeight: FontWeight.w400, height: 1.2),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  const _SectionTitle(text: 'Weight :'),
-                  const _FieldLabel(text: 'Current Weight'),
-                  const _InputField(initialValue: '56 kg'),
-                  const SizedBox(height: 8),
-                  const _FieldLabel(text: 'Target Weight'),
-                  const _InputField(initialValue: '65 kg'),
-                  const SizedBox(height: 8),
-                  const _FieldLabel(text: 'Recent Weight Changes (if any)'),
-                  const _InputField(
-                    initialValue: "I've gained 10 kg in the last 6 months due to a desk job",
-                    minLines: 3,
+                  const SizedBox(height: 18),
+                  Center(
+                    child: _Avatar(
+                      imageUrl: avatarUrl,
+                      localImagePath: _selectedAvatar?.path,
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  const _SectionTitle(text: 'Body :'),
-                  const _FieldLabel(text: 'Body Type'),
-                  const _InputField(
-                    initialValue: 'I have a heavy frame but carry most of my fat around the midsection',
-                    minLines: 3,
-                  ),
-                  const SizedBox(height: 8),
-                  const _FieldLabel(text: 'Current Height'),
-                  const _InputField(initialValue: '5 ft'),
-                  const SizedBox(height: 10),
-                  const _SectionTitle(text: 'Sleep :'),
-                  const _FieldLabel(text: 'Sleep Patterns'),
-                  const _InputField(initialValue: '6-7 hours/day'),
-                  const SizedBox(height: 10),
-                  const _SectionTitle(text: 'Nutrition Assessment :'),
-                  const _FieldLabel(text: 'Appetite & Hunger'),
-                  const _InputField(
-                    initialValue: "I'm never hungry in the morning, but I get intense sugar cravings at night.",
-                    minLines: 3,
-                  ),
-                  const SizedBox(height: 8),
-                  const _FieldLabel(text: 'Typical Daily Meals'),
-                  const _InputField(initialValue: '3 meals per day'),
-                  const SizedBox(height: 8),
-                  const _FieldLabel(text: 'Water & Fluid Intake'),
-                  const _InputField(initialValue: 'I drink 1.5L of water and 4 cups of black coffee daily'),
-                  const SizedBox(height: 10),
-                  const _SectionTitle(text: 'Other Information:'),
-                  const _FieldLabel(text: 'Surgical History (if any)'),
-                  const _InputField(initialValue: 'Appendectomy 3 years ago; hernia repair in 2021'),
-                  const SizedBox(height: 8),
-                  const _FieldLabel(text: 'Current Physical Pains (if any)'),
-                  const _InputField(initialValue: 'Sharp pain in the right shoulder when doing overhead presses'),
-                  const SizedBox(height: 8),
-                  const _FieldLabel(text: 'Digestion & Gut Health'),
-                  const _InputField(initialValue: 'Frequent bloating after eating dairy or heavy carbs'),
-                  const SizedBox(height: 8),
-                  const _FieldLabel(text: 'Supplements Currently Used'),
-                  const _InputField(initialValue: 'I use Whey protein and Creatine from the gym shop'),
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    height: 40,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: ElevatedButton.styleFrom(
-                        elevation: 0,
-                        backgroundColor: const Color(0xFFF3B41A),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                      ),
+                  const SizedBox(height: 6),
+                  Center(
+                    child: InkWell(
+                      onTap: _pickAvatar,
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
+                          const Icon(Icons.edit, size: 12, color: Color(0xFFB1B1B1)),
+                          const SizedBox(width: 4),
                           Text(
-                            'Continue',
+                            'Change Photo',
                             style: GoogleFonts.outfit(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFFB1B1B1),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
                               height: 1.2,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward, color: Colors.white, size: 15),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _FieldLabel(text: 'Username'),
+                  _InputField(controller: _nameController),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Contact Number'),
+                  _InputField(controller: _phoneController),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Email'),
+                  _InputField(controller: _emailController),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Member ID'),
+                  _InputField(controller: _memberIdController),
+                  const SizedBox(height: 18),
+                  _SectionHeading(text: 'Personal Body Details :', color: const Color(0xFFF3B41A)),
+                  const SizedBox(height: 8),
+
+                  _SectionHeading(text: 'Weight :'),
+                  _FieldLabel(text: 'Current Weight'),
+                  _InputField(controller: _currentWeightController),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Target Weight'),
+                  _InputField(controller: _targetWeightController),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Recent Weight Changes (if any)'),
+                  _InputField(
+                    controller: _recentWeightChangesController,
+                    minLines: 3,
+                  ),
+                  const SizedBox(height: 14),
+
+                  _SectionHeading(text: 'Body :'),
+                  _FieldLabel(text: 'Body Type'),
+                  _InputField(
+                    controller: _bodyTypeController,
+                    minLines: 3,
+                  ),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Current Height'),
+                  _InputField(controller: _currentHeightController),
+                  const SizedBox(height: 14),
+
+                  _SectionHeading(text: 'Sleep :'),
+                  _FieldLabel(text: 'Sleep Patterns'),
+                  _InputField(controller: _sleepPatternsController),
+                  const SizedBox(height: 14),
+
+                  _SectionHeading(text: 'Nutrition Assessment :'),
+                  _FieldLabel(text: 'Appetite & Hunger'),
+                  _InputField(
+                    controller: _appetiteHungerController,
+                    minLines: 3,
+                  ),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Typical Daily Meals'),
+                  _InputField(controller: _typicalMealsController),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Water & Fluid Intake'),
+                  _InputField(
+                    controller: _waterIntakeController,
+                    minLines: 2,
+                  ),
+                  const SizedBox(height: 14),
+
+                  _SectionHeading(text: 'Other Information:'),
+                  _FieldLabel(text: 'Surgical History (if any)'),
+                  _InputField(controller: _surgicalHistoryController, minLines: 3),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Current Physical Pains (if any)'),
+                  _InputField(
+                    controller: _physicalPainsController,
+                    minLines: 2,
+                  ),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Digestion & Gut Health'),
+                  _InputField(
+                    controller: _digestionGutController,
+                    minLines: 2,
+                  ),
+                  const SizedBox(height: 10),
+                  _FieldLabel(text: 'Supplements Currently Used'),
+                  _InputField(controller: _supplementsController, minLines: 2),
+                  const SizedBox(height: 18),
+
+                  SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _isSaving ? null : _saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF3B41A),
+                        disabledBackgroundColor: const Color(0xFF8A6A1A),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: _isSaving
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
+                          : Text(
+                              'Update',
+                              style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500, height: 1.2),
+                            ),
                     ),
                   ),
                 ],
@@ -133,24 +368,61 @@ class EditProfileScreen extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.text});
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.imageUrl, this.localImagePath});
 
-  final String text;
+  final String imageUrl;
+  final String? localImagePath;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(
-        text,
-        style: GoogleFonts.outfit(
-          color: Colors.white,
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          height: 1.2,
-        ),
+    final hasUrl = imageUrl.trim().isNotEmpty;
+    return CircleAvatar(
+      radius: 42,
+      backgroundColor: const Color(0xFF2A2F39),
+      child: ClipOval(
+        child: localImagePath != null && localImagePath!.isNotEmpty
+            ? Image.file(
+                File(localImagePath!),
+                width: 84,
+                height: 84,
+                fit: BoxFit.cover,
+              )
+            : hasUrl
+                ? Image.network(
+                    imageUrl,
+                    width: 84,
+                    height: 84,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => _fallback(),
+                  )
+                : _fallback(),
       ),
+    );
+  }
+
+  Widget _fallback() {
+    return Container(
+      width: 84,
+      height: 84,
+      color: const Color(0xFF2A2F39),
+      alignment: Alignment.center,
+      child: const Icon(Icons.person, size: 34, color: Color(0xFF9AA3B2)),
+    );
+  }
+}
+
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({required this.text, this.color = Colors.white});
+
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: GoogleFonts.outfit(color: color, fontSize: 14, fontWeight: FontWeight.w600, height: 1.2),
     );
   }
 }
@@ -163,50 +435,39 @@ class _FieldLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
-        style: GoogleFonts.outfit(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          height: 1.2,
-        ),
+        style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500, height: 1.2),
       ),
     );
   }
 }
 
 class _InputField extends StatelessWidget {
-  const _InputField({required this.initialValue, this.minLines = 1});
+  const _InputField({this.controller, this.minLines = 1});
 
-  final String initialValue;
+  final TextEditingController? controller;
   final int minLines;
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      initialValue: initialValue,
+    return TextField(
+      controller: controller,
       minLines: minLines,
-      maxLines: minLines,
-      style: GoogleFonts.outfit(
-        color: const Color(0xFF3A3A3A),
-        fontSize: 11,
-        fontWeight: FontWeight.w400,
-        height: 1.2,
-      ),
+      maxLines: minLines == 1 ? 1 : minLines,
+      style: GoogleFonts.outfit(color: const Color(0xFF4B4B4B), fontSize: 12, fontWeight: FontWeight.w400, height: 1.2),
       decoration: InputDecoration(
-        isDense: true,
         filled: true,
-        fillColor: const Color(0xFFEDEDED),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        fillColor: const Color(0xFFE9E9EC),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(5),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFE9E9EC), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(5),
-          borderSide: const BorderSide(color: Color(0xFFF3B41A), width: 1),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFF3B41A), width: 1.2),
         ),
       ),
     );

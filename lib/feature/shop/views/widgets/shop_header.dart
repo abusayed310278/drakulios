@@ -1,14 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
 import '../../../../core/constants/assets.dart';
+import '../../../../core/network/api_service/user_api_service.dart';
+import '../../../../core/common/widgets/custom_snackbar.dart';
 import '../../../profile/views/member_profile_screen.dart';
 
-class ShopHeader extends StatelessWidget {
+class ShopHeader extends StatefulWidget {
   const ShopHeader({super.key, required this.title, this.onBack, this.showIcons = true});
 
   final String title;
   final VoidCallback? onBack;
   final bool showIcons;
+
+  @override
+  State<ShopHeader> createState() => _ShopHeaderState();
+}
+
+class _ShopHeaderState extends State<ShopHeader> {
+  final UserApiService _userApi = UserApiService();
+  String _avatarUrl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvatar();
+  }
+
+  Future<void> _loadAvatar() async {
+    try {
+      final res = await _userApi.getProfile();
+      final data = (res['data'] ?? {}) as Map;
+      final avatar = (data['avatar']?['url'] ?? '').toString();
+      if (!mounted) return;
+      setState(() => _avatarUrl = avatar);
+    } on DioException catch (e) {
+      final payload = e.response?.data;
+      final msg = payload is Map && payload['message'] != null ? payload['message'].toString() : '';
+      if (msg.isNotEmpty) {
+        CustomSnackbar.show(msg);
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +50,7 @@ class ShopHeader extends StatelessWidget {
         Transform.translate(
           offset: const Offset(-15, 0),
           child: IconButton(
-            onPressed: onBack ?? () => Navigator.of(context).pop(),
+            onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
             icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
             splashRadius: 18,
             padding: EdgeInsets.zero,
@@ -26,10 +59,10 @@ class ShopHeader extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          title,
+          widget.title,
           style: const TextStyle(color: Color(0xFFB1B1B1), fontSize: 18, fontWeight: FontWeight.w400, height: 1.2),
         ),
-        if (showIcons) ...[
+        if (widget.showIcons) ...[
           const Spacer(),
           Image.asset(Images.cartImage, width: 24, height: 24, color: const Color(0xFFF3B41A)),
           const SizedBox(width: 12),
@@ -43,7 +76,19 @@ class ShopHeader extends StatelessWidget {
             child: CircleAvatar(
               radius: 12,
               backgroundColor: const Color(0xFF2A2F39),
-              child: ClipOval(child: Image.asset(Images.profileImage, width: 24, height: 24, fit: BoxFit.cover)),
+              child: ClipOval(
+                child: _avatarUrl.trim().isNotEmpty
+                    ? Image.network(
+                        _avatarUrl,
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Image.asset(Images.profileImage, width: 24, height: 24, fit: BoxFit.cover);
+                        },
+                      )
+                    : Image.asset(Images.profileImage, width: 24, height: 24, fit: BoxFit.cover),
+              ),
             ),
           ),
         ],

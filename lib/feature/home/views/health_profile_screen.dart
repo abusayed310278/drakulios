@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/common/widgets/custom_snackbar.dart';
 import 'training_nutrition_screen.dart';
 
 class HealthProfileScreen extends StatelessWidget {
@@ -100,6 +101,7 @@ class HealthProfileScreen extends StatelessWidget {
                     height: 48,
                     child: ElevatedButton(
                       onPressed: () {
+                        CustomSnackbar.show('Personal Body Details created successfully');
                         Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrainingNutritionScreen()));
                       },
                       style: ElevatedButton.styleFrom(
@@ -172,7 +174,7 @@ class _InputField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       maxLines: maxLines,
-      style: const TextStyle(color: Color(0xFFF5F6F8), fontSize: 12),
+      style: const TextStyle(color: Color(0xFF1B1B1B), fontSize: 12),
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: const TextStyle(color: Color.fromARGB(255, 20, 22, 25), fontSize: 11),

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
+import '../../core/common/widgets/custom_snackbar.dart';
+import '../../core/constants/api_endpoints.dart';
 import '../../core/constants/assets.dart';
+import '../../core/network/api_service/api_client.dart';
 import 'create_account_screen.dart';
 import 'reset_password_screen.dart';
 
 class CodeVerificationScreen extends StatefulWidget {
-  const CodeVerificationScreen({super.key});
+  const CodeVerificationScreen({super.key, required this.email});
+
+  final String email;
 
   @override
   State<CodeVerificationScreen> createState() => _CodeVerificationScreenState();
@@ -17,6 +23,14 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen> {
     (_) => TextEditingController(),
   );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  bool _isLoading = false;
+  late final ApiClient _apiClient;
+
+  @override
+  void initState() {
+    super.initState();
+    _apiClient = ApiClient(ApiEndpoints.baseUrl);
+  }
 
   @override
   void dispose() {
@@ -160,13 +174,7 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ResetPasswordScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: _isLoading ? null : _verifyOtp,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF3B41A),
                         foregroundColor: Colors.white,
@@ -175,16 +183,25 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text(
-                        'Verify',
-                        style: TextStyle(
-                          color: Color(0xFFFFFFFF),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          height: 1.2,
-                          letterSpacing: 0,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Verify',
+                              style: TextStyle(
+                                color: Color(0xFFFFFFFF),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                height: 1.2,
+                                letterSpacing: 0,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -201,7 +218,7 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {},
+                          onTap: _isLoading ? null : _resendOtp,
                           child: const Text(
                             'Resend',
                             style: TextStyle(
@@ -255,5 +272,76 @@ class _CodeVerificationScreenState extends State<CodeVerificationScreen> {
         ),
       ),
     );
+  }
+
+  String _otpValue() => _controllers.map((e) => e.text.trim()).join();
+
+  Future<void> _verifyOtp() async {
+    final otp = _otpValue();
+    if (otp.length != 6) {
+      CustomSnackbar.show('Please enter 6-digit OTP');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.verifyOtp,
+        data: {'email': widget.email, 'otp': otp},
+      );
+      final data = response.data;
+      final message = (data['message'] ?? 'OTP verified successfully').toString();
+      CustomSnackbar.show(message);
+
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ResetPasswordScreen(email: widget.email, otp: otp),
+        ),
+      );
+    } on DioException catch (e) {
+      final resData = e.response?.data;
+      String message = 'OTP verification failed';
+      if (resData is Map && resData['message'] != null) {
+        message = resData['message'].toString();
+      } else if (e.message != null && e.message!.trim().isNotEmpty) {
+        message = e.message!;
+      }
+      CustomSnackbar.show(message);
+    } catch (_) {
+      CustomSnackbar.show('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _resendOtp() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.forgetPassword,
+        data: {'email': widget.email},
+      );
+      final data = response.data;
+      final message = (data['message'] ?? 'OTP resent to your email').toString();
+      CustomSnackbar.show(message);
+    } on DioException catch (e) {
+      final resData = e.response?.data;
+      String message = 'Failed to resend OTP';
+      if (resData is Map && resData['message'] != null) {
+        message = resData['message'].toString();
+      } else if (e.message != null && e.message!.trim().isNotEmpty) {
+        message = e.message!;
+      }
+      CustomSnackbar.show(message);
+    } catch (_) {
+      CustomSnackbar.show('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 }

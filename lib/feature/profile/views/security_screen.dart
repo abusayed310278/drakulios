@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/common/widgets/custom_snackbar.dart';
 import '../../../core/constants/assets.dart';
+import '../../../core/network/api_service/token_meneger.dart';
+import '../../../core/network/api_service/user_api_service.dart';
+import '../../auth/create_account_screen.dart';
 import 'change_password_screen.dart';
 
 class SecurityScreen extends StatelessWidget {
@@ -66,9 +71,12 @@ class SecurityScreen extends StatelessWidget {
                   _SecurityTile(
                     label: 'Delete Account',
                     labelColor: const Color(0xFFFF3B30),
-                    leading: Image.asset(Images.deleteImage, width: 20, height: 20, color: const Color(0xFFFF3B30)),
+                    leading: Padding(
+                      padding: const EdgeInsets.only(left: 2, top: 1),
+                      child: Image.asset(Images.deleteImage, width: 20, height: 20, color: const Color(0xFFFF3B30)),
+                    ),
                     chevronColor: const Color(0xFFFF3B30),
-                    background: Colors.transparent,
+                    background: const Color(0x140E234D),
                     borderColor: const Color(0xFFF3B41A),
                     onTap: () => _showDeleteDialog(context),
                   ),
@@ -138,7 +146,7 @@ class SecurityScreen extends StatelessWidget {
                       child: SizedBox(
                         height: 42,
                         child: ElevatedButton(
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () => _deleteAccount(context),
                           style: ElevatedButton.styleFrom(
                             elevation: 0,
                             backgroundColor: const Color(0xFFF3B41A),
@@ -163,6 +171,37 @@ class SecurityScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    Navigator.of(context).pop();
+    final api = UserApiService();
+    String message = 'Account deleted successfully';
+    try {
+      final res = await api.deleteAccount();
+      message = (res['message'] ?? message).toString();
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      message = data is Map && data['message'] != null ? data['message'].toString() : 'Delete account failed';
+      CustomSnackbar.show(message);
+      return;
+    } catch (_) {
+      CustomSnackbar.show('Delete account failed');
+      return;
+    }
+
+    await TokenManager.clearToken();
+    await TokenManager.clearRole();
+    await TokenManager.clearUid();
+    await TokenManager.clearUserName();
+    await TokenManager.clearServiceType();
+
+    if (!context.mounted) return;
+    CustomSnackbar.show(message);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const CreateAccountScreen()),
+      (route) => false,
     );
   }
 }
