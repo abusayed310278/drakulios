@@ -6,6 +6,7 @@ import '../../../core/constants/assets.dart';
 import '../../../core/network/api_service/training_shop_api_service.dart';
 import 'product_detail_screen.dart';
 import 'shopping_cart_screen.dart';
+import 'widgets/shop_badge_state.dart';
 import 'widgets/shop_header.dart';
 
 class ShopScreen extends StatefulWidget {
@@ -17,13 +18,21 @@ class ShopScreen extends StatefulWidget {
 
 class _ShopScreenState extends State<ShopScreen> {
   final TrainingShopApiService _api = TrainingShopApiService();
+  final TextEditingController _searchController = TextEditingController();
   bool _loading = true;
   List<Map<String, dynamic>> _items = <Map<String, dynamic>>[];
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadProducts();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadProducts() async {
@@ -44,6 +53,20 @@ class _ShopScreenState extends State<ShopScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final fallbackItems = <Map<String, String>>[
+      {'title': 'GT5s Motorized Treadmill', 'price': r'$1200', 'image': Images.gym1Image},
+      {'title': 'Magnetic Cross Trainer', 'price': r'$449', 'image': Images.gym2Image},
+      {'title': 'Spinning Bike (Pro)', 'price': r'$259', 'image': Images.gym3Image},
+    ];
+    final filteredApiItems = _items.where((item) {
+      final title = (item['name'] ?? 'Subscription').toString().toLowerCase();
+      return _searchQuery.isEmpty || title.contains(_searchQuery);
+    }).toList();
+    final filteredFallbackItems = fallbackItems.where((item) {
+      final title = (item['title'] ?? '').toLowerCase();
+      return _searchQuery.isEmpty || title.contains(_searchQuery);
+    }).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFF050608),
       body: SafeArea(
@@ -65,12 +88,19 @@ class _ShopScreenState extends State<ShopScreen> {
                       height: 38,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                      child: Row(
-                        children: const [
-                          Icon(Icons.search, size: 18, color: Color(0xFF90959C)),
-                          SizedBox(width: 8),
-                          Text('Search', style: TextStyle(color: Color(0xFF90959C), fontSize: 13)),
-                        ],
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) => setState(() => _searchQuery = value.trim().toLowerCase()),
+                        style: const TextStyle(color: Color(0xFF1E1E1E), fontSize: 13),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          isDense: false,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                          prefixIcon: Icon(Icons.search, size: 18, color: Color(0xFF90959C)),
+                          prefixIconConstraints: BoxConstraints(minWidth: 34, minHeight: 34),
+                          hintText: 'Search',
+                          hintStyle: TextStyle(color: Color(0xFF90959C), fontSize: 13),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -100,18 +130,45 @@ class _ShopScreenState extends State<ShopScreen> {
                     if (_loading)
                       const Center(child: CircularProgressIndicator(color: Color(0xFFF3B41A)))
                     else if (_items.isEmpty) ...[
-                      const _ProductCard(title: 'GT5s Motorized Treadmill', price: r'$1200', image: Images.gym1Image),
-                      const SizedBox(height: 12),
-                      const _ProductCard(title: 'Magnetic Cross Trainer', price: r'$449', image: Images.gym2Image),
-                      const SizedBox(height: 12),
-                      const _ProductCard(title: 'Spinning Bike (Pro)', price: r'$259', image: Images.gym3Image),
-                    ] else ...List.generate(_items.length, (index) {
-                      final item = _items[index];
+                      if (filteredFallbackItems.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 18),
+                          child: Center(
+                            child: Text(
+                              'No products found',
+                              style: TextStyle(color: Color(0xFF9AA1AE), fontSize: 13),
+                            ),
+                          ),
+                        )
+                      else
+                        ...List.generate(filteredFallbackItems.length, (index) {
+                          final item = filteredFallbackItems[index];
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: index == filteredFallbackItems.length - 1 ? 0 : 12),
+                            child: _ProductCard(
+                              title: item['title']!,
+                              price: item['price']!,
+                              image: item['image']!,
+                            ),
+                          );
+                        }),
+                    ] else if (filteredApiItems.isEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.only(top: 18),
+                        child: Center(
+                          child: Text(
+                            'No products found',
+                            style: TextStyle(color: Color(0xFF9AA1AE), fontSize: 13),
+                          ),
+                        ),
+                      ),
+                    ] else ...List.generate(filteredApiItems.length, (index) {
+                      final item = filteredApiItems[index];
                       final title = (item['name'] ?? 'Subscription').toString();
                       final monthly = item['priceMonthly']?.toString() ?? '0';
                       final image = [Images.gym1Image, Images.gym2Image, Images.gym3Image][index % 3];
                       return Padding(
-                        padding: EdgeInsets.only(bottom: index == _items.length - 1 ? 0 : 12),
+                        padding: EdgeInsets.only(bottom: index == filteredApiItems.length - 1 ? 0 : 12),
                         child: _ProductCard(title: title, price: '\$$monthly', image: image),
                       );
                     }),
@@ -248,6 +305,7 @@ class _ProductCard extends StatelessWidget {
                         ),
                         InkWell(
                           onTap: () {
+                            ShopBadgeState.incrementCart();
                             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShoppingCartScreen()));
                           },
                           borderRadius: BorderRadius.circular(6),

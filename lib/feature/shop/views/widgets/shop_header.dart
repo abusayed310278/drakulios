@@ -5,6 +5,8 @@ import '../../../../core/constants/assets.dart';
 import '../../../../core/network/api_service/user_api_service.dart';
 import '../../../../core/common/widgets/custom_snackbar.dart';
 import '../../../profile/views/member_profile_screen.dart';
+import '../shopping_cart_screen.dart';
+import 'shop_badge_state.dart';
 
 class ShopHeader extends StatefulWidget {
   const ShopHeader({super.key, required this.title, this.onBack, this.showIcons = true});
@@ -64,9 +66,31 @@ class _ShopHeaderState extends State<ShopHeader> {
         ),
         if (widget.showIcons) ...[
           const Spacer(),
-          Image.asset(Images.cartImage, width: 24, height: 24, color: const Color(0xFFF3B41A)),
+          ValueListenableBuilder<int>(
+            valueListenable: ShopBadgeState.cartCount,
+            builder: (context, cartCount, _) {
+              return _BadgeIcon(
+                count: cartCount,
+                icon: Images.cartImage,
+                color: const Color(0xFFF3B41A),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShoppingCartScreen()));
+                },
+              );
+            },
+          ),
           const SizedBox(width: 12),
-          Image.asset(Images.bellImage, width: 24, height: 24, color: const Color(0xFFC9CDD3)),
+          ValueListenableBuilder<int>(
+            valueListenable: ShopBadgeState.notificationCount,
+            builder: (context, notificationCount, _) {
+              return _BadgeIcon(
+                count: notificationCount,
+                icon: Images.bellImage,
+                color: notificationCount > 0 ? const Color(0xFFF3B41A) : const Color(0xFFC9CDD3),
+                onTap: () {},
+              );
+            },
+          ),
           const SizedBox(width: 10),
           InkWell(
             onTap: () {
@@ -93,6 +117,69 @@ class _ShopHeaderState extends State<ShopHeader> {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _BadgeIcon extends StatelessWidget {
+  const _BadgeIcon({
+    required this.count,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final int count;
+  final String icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Center(
+              child: Image.asset(
+                icon,
+                width: 24,
+                height: 24,
+                color: color,
+              ),
+            ),
+            if (count > 0)
+              Positioned(
+                top: -3,
+                right: -4,
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE53935),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Center(
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

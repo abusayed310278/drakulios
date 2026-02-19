@@ -228,6 +228,192 @@ class _CalendarCardState extends State<_CalendarCard> {
   DateTime _displayedMonth = DateTime(2026, 1);
   DateTime _selectedDate = DateTime(2026, 1, 1);
 
+  Future<int?> _pickYear() async {
+    final years = List<int>.generate(101, (i) => 2000 + i); // 2000..2100
+    final initialIndex = years.indexOf(_displayedMonth.year).clamp(0, years.length - 1);
+    final controller = FixedExtentScrollController(initialItem: initialIndex);
+    int tempYear = _displayedMonth.year;
+
+    return showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: const Color(0xFFF5F5F5),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SizedBox(
+              height: 280,
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFBDBDBD),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Select Year',
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF202124),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: ListWheelScrollView.useDelegate(
+                      controller: controller,
+                      itemExtent: 40,
+                      perspective: 0.002,
+                      diameterRatio: 1.3,
+                      onSelectedItemChanged: (index) {
+                        setModalState(() => tempYear = years[index]);
+                      },
+                      physics: const FixedExtentScrollPhysics(),
+                      childDelegate: ListWheelChildBuilderDelegate(
+                        childCount: years.length,
+                        builder: (context, index) {
+                          final year = years[index];
+                          final selected = year == tempYear;
+                          return Center(
+                            child: Text(
+                              '$year',
+                              style: GoogleFonts.outfit(
+                                color: selected ? const Color(0xFF000000) : const Color(0xFF7D7D7D),
+                                fontSize: selected ? 18 : 15,
+                                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 42,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(tempYear),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF3B41A),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: const Text('Done'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<int?> _pickMonth() async {
+    final months = List<int>.generate(12, (i) => i + 1);
+    final initialIndex = (_displayedMonth.month - 1).clamp(0, months.length - 1);
+    final controller = FixedExtentScrollController(initialItem: initialIndex);
+    int tempMonth = _displayedMonth.month;
+
+    return showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: const Color(0xFFF5F5F5),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SizedBox(
+              height: 280,
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFBDBDBD),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Select Month',
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF202124),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: ListWheelScrollView.useDelegate(
+                      controller: controller,
+                      itemExtent: 40,
+                      perspective: 0.002,
+                      diameterRatio: 1.3,
+                      onSelectedItemChanged: (index) {
+                        setModalState(() => tempMonth = months[index]);
+                      },
+                      physics: const FixedExtentScrollPhysics(),
+                      childDelegate: ListWheelChildBuilderDelegate(
+                        childCount: months.length,
+                        builder: (context, index) {
+                          final month = months[index];
+                          final selected = month == tempMonth;
+                          return Center(
+                            child: Text(
+                              _monthNames[month - 1],
+                              style: GoogleFonts.outfit(
+                                color: selected ? const Color(0xFF000000) : const Color(0xFF7D7D7D),
+                                fontSize: selected ? 18 : 15,
+                                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 42,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(tempMonth),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF3B41A),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: const Text('Done'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -247,17 +433,7 @@ class _CalendarCardState extends State<_CalendarCard> {
               _SelectChip(
                 text: _monthNames[_displayedMonth.month - 1],
                 onSelected: () async {
-                  final selectedMonth = await showMenu<int>(
-                    context: context,
-                    position: const RelativeRect.fromLTRB(40, 340, 0, 0),
-                    items: List.generate(
-                      _monthNames.length,
-                      (index) => PopupMenuItem<int>(
-                        value: index + 1,
-                        child: Text(_monthNames[index], style: GoogleFonts.outfit(fontSize: 14)),
-                      ),
-                    ),
-                  );
+                  final selectedMonth = await _pickMonth();
                   if (selectedMonth != null) {
                     _setMonthYear(selectedMonth, _displayedMonth.year);
                   }
@@ -267,19 +443,7 @@ class _CalendarCardState extends State<_CalendarCard> {
               _SelectChip(
                 text: '${_displayedMonth.year}',
                 onSelected: () async {
-                  final years = List<int>.generate(11, (i) => 2022 + i);
-                  final selectedYear = await showMenu<int>(
-                    context: context,
-                    position: const RelativeRect.fromLTRB(160, 340, 0, 0),
-                    items: years
-                        .map(
-                          (year) => PopupMenuItem<int>(
-                            value: year,
-                            child: Text('$year', style: GoogleFonts.outfit(fontSize: 14)),
-                          ),
-                        )
-                        .toList(),
-                  );
+                  final selectedYear = await _pickYear();
                   if (selectedYear != null) {
                     _setMonthYear(_displayedMonth.month, selectedYear);
                   }
