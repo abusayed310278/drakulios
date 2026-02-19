@@ -33,6 +33,7 @@ base class ApiEndpoints {
   static const String deleteAccount = _User.deleteAccount;
   static const String trainingToday = _Training.today;
   static const String trainingMine = _Training.mine;
+  static const String trainingCreate = _Training.create;
   static const String nutritionToday = _Nutrition.today;
   static const String nutritionMine = _Nutrition.mine;
   static const String subscriptions = _Subscription.list;
@@ -132,6 +133,7 @@ class _User {
 class _Training {
   @protected
   static const String _route = '${ApiEndpoints.baseUrl}/training';
+  static const String create = _route;
   static const String today = '$_route/today';
   static const String mine = '$_route/me';
 }

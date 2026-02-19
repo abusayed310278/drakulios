@@ -23,6 +23,11 @@ class TrainingShopApiService {
     return _toList(res.data);
   }
 
+  Future<Map<String, dynamic>> createTraining(Map<String, dynamic> payload) async {
+    final Response res = await _client.post(ApiEndpoints.trainingCreate, data: payload);
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
   List<Map<String, dynamic>> _toList(dynamic raw) {
     if (raw is Map && raw['data'] is List) {
       return (raw['data'] as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
