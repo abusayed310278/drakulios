@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/assets.dart';
 import 'attendance_details_screen.dart';
+import 'edit_profile_screen.dart';
 import 'member_profile_details_screen.dart';
 import 'purchase_history_screen.dart';
 import 'security_screen.dart';
@@ -62,7 +63,7 @@ class MemberProfileScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                children: const [
+                                children: [
                                   Flexible(
                                     child: Text(
                                       'Stella Jacobs',
@@ -70,8 +71,18 @@ class MemberProfileScreen extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  SizedBox(width: 120),
-                                  Icon(Icons.edit, size: 24, color: Color(0xFF2C6CFF)),
+                                  const SizedBox(width: 120),
+                                  IconButton(
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.edit, size: 24, color: Color(0xFF2C6CFF)),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                    splashRadius: 18,
+                                  ),
                                 ],
                               ),
 
