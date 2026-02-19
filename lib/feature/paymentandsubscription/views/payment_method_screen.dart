@@ -20,14 +20,15 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       backgroundColor: const Color(0xFF050608),
       body: SafeArea(
         top: false,
-        child: Center(
+        child: Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: MediaQuery.removePadding(
               context: context,
               removeTop: true,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+                padding: const EdgeInsets.fromLTRB(18, 40, 18, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
