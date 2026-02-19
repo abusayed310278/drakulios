@@ -122,59 +122,91 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
                   const _SectionTitle(text: 'Weight :'),
                   const _FieldLabel(text: 'Current Weight'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _currentWeight),
+                  _InputField(controller: _currentWeight, hintText: '56 kg'),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Target Weight'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _targetWeight),
+                  _InputField(controller: _targetWeight, hintText: '65 kg'),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Recent Weight Changes (if any)'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _recentWeightChanges, maxLines: 3),
+                  _InputField(
+                    controller: _recentWeightChanges,
+                    maxLines: 3,
+                    hintText: 'I’ve gained 10kg in the last 6 months due to a desk job',
+                  ),
                   const SizedBox(height: 14),
                   const _SectionTitle(text: 'Body :'),
                   const _FieldLabel(text: 'Body Type'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _bodyType, maxLines: 3),
+                  _InputField(
+                    controller: _bodyType,
+                    maxLines: 3,
+                    hintText: 'I have a heavy frame but carry most of my fat around the midsection',
+                  ),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Current Height'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _currentHeight),
+                  _InputField(controller: _currentHeight, hintText: '5 ft'),
                   const SizedBox(height: 14),
                   const _SectionTitle(text: 'Sleep :'),
                   const _FieldLabel(text: 'Sleep Patterns'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _sleepPatterns),
+                  _InputField(controller: _sleepPatterns, hintText: '6-7 hours/day'),
                   const SizedBox(height: 14),
                   const _SectionTitle(text: 'Nutrition Assessment :'),
                   const _FieldLabel(text: 'Appetite & Hunger'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _appetiteHunger, maxLines: 3),
+                  _InputField(
+                    controller: _appetiteHunger,
+                    maxLines: 3,
+                    hintText: 'I’m never hungry in the morning, but I get intense sugar cravings at night',
+                  ),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Typical Daily Meals'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _typicalDailyMeals),
+                  _InputField(controller: _typicalDailyMeals, hintText: '3 meals per day'),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Water & Fluid Intake'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _waterFluidIntake, maxLines: 2),
+                  _InputField(
+                    controller: _waterFluidIntake,
+                    maxLines: 2,
+                    hintText: 'I drink 1.5L of water and 4 cups of black coffee daily',
+                  ),
                   const SizedBox(height: 14),
                   const _SectionTitle(text: 'Other Information'),
                   const _FieldLabel(text: 'Surgical History (if any)'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _surgicalHistory, maxLines: 2),
+                  _InputField(
+                    controller: _surgicalHistory,
+                    maxLines: 2,
+                    hintText: 'Appendectomy 3 years ago; hernia repair in 2021',
+                  ),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Current Physical Pains (if any)'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _currentPhysicalPains, maxLines: 2),
+                  _InputField(
+                    controller: _currentPhysicalPains,
+                    maxLines: 2,
+                    hintText: 'Sharp pain in the right shoulder when doing overhead press',
+                  ),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Digestion & Gut Health'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _digestionGutHealth, maxLines: 2),
+                  _InputField(
+                    controller: _digestionGutHealth,
+                    maxLines: 2,
+                    hintText: 'Frequent bloating after eating dairy or heavy carbs',
+                  ),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Supplements Currently Used'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _supplementsCurrentlyUsed, maxLines: 2),
+                  _InputField(
+                    controller: _supplementsCurrentlyUsed,
+                    maxLines: 2,
+                    hintText: 'I use whey protein and creatine from the gym shop',
+                  ),
                   const SizedBox(height: 18),
                   SizedBox(
                     height: 48,
@@ -247,10 +279,11 @@ class _FieldLabel extends StatelessWidget {
 }
 
 class _InputField extends StatelessWidget {
-  const _InputField({required this.controller, this.maxLines = 1});
+  const _InputField({required this.controller, this.maxLines = 1, this.hintText});
 
   final TextEditingController controller;
   final int maxLines;
+  final String? hintText;
 
   @override
   Widget build(BuildContext context) {
@@ -259,6 +292,8 @@ class _InputField extends StatelessWidget {
       maxLines: maxLines,
       style: const TextStyle(color: Color(0xFF1B1B1B), fontSize: 12),
       decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: const TextStyle(color: Color.fromARGB(255, 20, 22, 25), fontSize: 11),
         filled: true,
         fillColor: const Color.fromARGB(255, 185, 192, 210),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
