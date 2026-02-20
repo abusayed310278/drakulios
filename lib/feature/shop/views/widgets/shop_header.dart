@@ -4,12 +4,18 @@ import 'package:dio/dio.dart';
 import '../../../../core/constants/assets.dart';
 import '../../../../core/network/api_service/user_api_service.dart';
 import '../../../../core/common/widgets/custom_snackbar.dart';
+import '../../../notifications/views/notification_screen.dart';
 import '../../../profile/views/member_profile_screen.dart';
 import '../shopping_cart_screen.dart';
 import 'shop_badge_state.dart';
 
 class ShopHeader extends StatefulWidget {
-  const ShopHeader({super.key, required this.title, this.onBack, this.showIcons = true});
+  const ShopHeader({
+    super.key,
+    required this.title,
+    this.onBack,
+    this.showIcons = true,
+  });
 
   final String title;
   final VoidCallback? onBack;
@@ -38,7 +44,9 @@ class _ShopHeaderState extends State<ShopHeader> {
       setState(() => _avatarUrl = avatar);
     } on DioException catch (e) {
       final payload = e.response?.data;
-      final msg = payload is Map && payload['message'] != null ? payload['message'].toString() : '';
+      final msg = payload is Map && payload['message'] != null
+          ? payload['message'].toString()
+          : '';
       if (msg.isNotEmpty) {
         CustomSnackbar.show(msg);
       }
@@ -53,7 +61,11 @@ class _ShopHeaderState extends State<ShopHeader> {
           offset: const Offset(-15, 0),
           child: IconButton(
             onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              size: 18,
+              color: Color(0xFFC9CDD3),
+            ),
             splashRadius: 18,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
@@ -62,7 +74,12 @@ class _ShopHeaderState extends State<ShopHeader> {
         const SizedBox(width: 6),
         Text(
           widget.title,
-          style: const TextStyle(color: Color(0xFFB1B1B1), fontSize: 18, fontWeight: FontWeight.w400, height: 1.2),
+          style: const TextStyle(
+            color: Color(0xFFB1B1B1),
+            fontSize: 18,
+            fontWeight: FontWeight.w400,
+            height: 1.2,
+          ),
         ),
         if (widget.showIcons) ...[
           const Spacer(),
@@ -74,7 +91,11 @@ class _ShopHeaderState extends State<ShopHeader> {
                 icon: Images.cartImage,
                 color: const Color(0xFFF3B41A),
                 onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShoppingCartScreen()));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ShoppingCartScreen(),
+                    ),
+                  );
                 },
               );
             },
@@ -86,15 +107,25 @@ class _ShopHeaderState extends State<ShopHeader> {
               return _BadgeIcon(
                 count: notificationCount,
                 icon: Images.bellImage,
-                color: notificationCount > 0 ? const Color(0xFFF3B41A) : const Color(0xFFC9CDD3),
-                onTap: () {},
+                color: notificationCount > 0
+                    ? const Color(0xFFF3B41A)
+                    : const Color(0xFFC9CDD3),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationScreen(),
+                    ),
+                  );
+                },
               );
             },
           ),
           const SizedBox(width: 10),
           InkWell(
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MemberProfileScreen()));
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const MemberProfileScreen()),
+              );
             },
             borderRadius: BorderRadius.circular(12),
             child: CircleAvatar(
@@ -108,10 +139,20 @@ class _ShopHeaderState extends State<ShopHeader> {
                         height: 24,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return Image.asset(Images.profileImage, width: 24, height: 24, fit: BoxFit.cover);
+                          return Image.asset(
+                            Images.profileImage,
+                            width: 24,
+                            height: 24,
+                            fit: BoxFit.cover,
+                          );
                         },
                       )
-                    : Image.asset(Images.profileImage, width: 24, height: 24, fit: BoxFit.cover),
+                    : Image.asset(
+                        Images.profileImage,
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.cover,
+                      ),
               ),
             ),
           ),
@@ -146,19 +187,17 @@ class _BadgeIcon extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Center(
-              child: Image.asset(
-                icon,
-                width: 24,
-                height: 24,
-                color: color,
-              ),
+              child: Image.asset(icon, width: 24, height: 24, color: color),
             ),
             if (count > 0)
               Positioned(
                 top: -3,
                 right: -4,
                 child: Container(
-                  constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                  constraints: const BoxConstraints(
+                    minWidth: 14,
+                    minHeight: 14,
+                  ),
                   padding: const EdgeInsets.symmetric(horizontal: 3),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE53935),

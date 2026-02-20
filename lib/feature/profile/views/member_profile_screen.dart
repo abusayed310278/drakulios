@@ -24,6 +24,21 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   bool _isLoading = true;
   Map<String, dynamic> _profile = const {};
 
+  String _toCamelCase(String value) {
+    final parts = value
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return 'Member';
+    return parts
+        .map(
+          (word) =>
+              '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}',
+        )
+        .join(' ');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -39,7 +54,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       });
     } on DioException catch (e) {
       final data = e.response?.data;
-      final msg = data is Map && data['message'] != null ? data['message'].toString() : 'Failed to load profile';
+      final msg = data is Map && data['message'] != null
+          ? data['message'].toString()
+          : 'Failed to load profile';
       CustomSnackbar.show(msg);
     } catch (_) {
       CustomSnackbar.show('Failed to load profile');
@@ -57,19 +74,29 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       return;
     }
 
-    final text = Uri.encodeComponent('Hi ${name?.trim().isNotEmpty == true ? name : 'Admin'}');
+    final text = Uri.encodeComponent(
+      'Hi ${name?.trim().isNotEmpty == true ? name : 'Admin'}',
+    );
     final appUri = Uri.parse('whatsapp://send?phone=$cleanedPhone&text=$text');
-    final webUri = Uri.parse('https://wa.me/${cleanedPhone.replaceAll('+', '')}?text=$text');
+    final webUri = Uri.parse(
+      'https://wa.me/${cleanedPhone.replaceAll('+', '')}?text=$text',
+    );
 
     try {
-      final openedApp = await launchUrl(appUri, mode: LaunchMode.externalApplication);
+      final openedApp = await launchUrl(
+        appUri,
+        mode: LaunchMode.externalApplication,
+      );
       if (openedApp) return;
     } catch (_) {
       // Ignore and try web fallback.
     }
 
     try {
-      final openedWeb = await launchUrl(webUri, mode: LaunchMode.externalApplication);
+      final openedWeb = await launchUrl(
+        webUri,
+        mode: LaunchMode.externalApplication,
+      );
       if (openedWeb) return;
     } catch (_) {}
 
@@ -119,9 +146,11 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final name = (_profile['name'] ?? 'Stella Jacobs').toString();
+    final name = _toCamelCase((_profile['name'] ?? 'Stella Jacobs').toString());
     final id = (_profile['_id'] ?? '1212').toString();
-    final phone = _formatPhone((_profile['phone'] ?? _profile['contact'] ?? '').toString());
+    final phone = _formatPhone(
+      (_profile['phone'] ?? _profile['contact'] ?? '').toString(),
+    );
     final email = (_profile['email'] ?? 'stella1212@gmail.com').toString();
     final since = _formatMemberSince((_profile['createdAt'] ?? '').toString());
 
@@ -141,23 +170,40 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (_isLoading) const LinearProgressIndicator(minHeight: 1.5, color: Color(0xFFF3B41A), backgroundColor: Colors.transparent),
+                    if (_isLoading)
+                      const LinearProgressIndicator(
+                        minHeight: 1.5,
+                        color: Color(0xFFF3B41A),
+                        backgroundColor: Colors.transparent,
+                      ),
                     Row(
                       children: [
                         Transform.translate(
                           offset: const Offset(-15, 0),
                           child: IconButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new,
+                              size: 18,
+                              color: Color(0xFFC9CDD3),
+                            ),
                             splashRadius: 18,
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                            constraints: const BoxConstraints(
+                              minWidth: 24,
+                              minHeight: 24,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 6),
                         const Text(
                           'Member Profile',
-                          style: TextStyle(color: Color(0xFFB1B1B1), fontSize: 18, fontWeight: FontWeight.w400, height: 1.2),
+                          style: TextStyle(
+                            color: Color(0xFFB1B1B1),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                            height: 1.2,
+                          ),
                         ),
                       ],
                     ),
@@ -165,7 +211,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _ProfileAvatar(imageUrl: (_profile['avatar']?['url'] ?? '').toString()),
+                        _ProfileAvatar(
+                          imageUrl: (_profile['avatar']?['url'] ?? '')
+                              .toString(),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -176,7 +225,11 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                   Flexible(
                                     child: Text(
                                       name,
-                                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
@@ -186,34 +239,72 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                       await Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder: (_) => EditProfileScreen(
-                                            initialProfile: Map<String, dynamic>.from(_profile),
+                                            initialProfile:
+                                                Map<String, dynamic>.from(
+                                                  _profile,
+                                                ),
                                           ),
                                         ),
                                       );
                                       if (!mounted) return;
                                       _loadProfile();
                                     },
-                                    icon: const Icon(Icons.edit, size: 24, color: Color(0xFF2C6CFF)),
+                                    icon: const Icon(
+                                      Icons.edit,
+                                      size: 24,
+                                      color: Color(0xFF2C6CFF),
+                                    ),
                                     padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 24,
+                                      minHeight: 24,
+                                    ),
                                     splashRadius: 18,
                                   ),
                                 ],
                               ),
 
                               const SizedBox(height: 6),
-                              Text('Member ID : $id', style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.3)),
-                              Text('Contact no. : $phone', style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.3)),
-                              Text('Email : $email', style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.3)),
+                              Text(
+                                'Member ID : $id',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  height: 1.3,
+                                ),
+                              ),
+                              Text(
+                                'Contact no. : $phone',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  height: 1.3,
+                                ),
+                              ),
+                              Text(
+                                'Email : $email',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  height: 1.3,
+                                ),
+                              ),
                               Text(
                                 'Member Since : $since',
-                                style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.3),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  height: 1.3,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               GestureDetector(
                                 onTap: () {
                                   Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const MemberProfileDetailsScreen()),
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const MemberProfileDetailsScreen(),
+                                    ),
                                   );
                                 },
                                 child: Text(
@@ -240,16 +331,28 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFF0C224E),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF2C6CFF), width: 1.2),
+                          border: Border.all(
+                            color: const Color(0xFF2C6CFF),
+                            width: 1.2,
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Image.asset(Images.whatsappImage, width: 24, height: 24, color: const Color(0xFF21C063)),
+                            Image.asset(
+                              Images.whatsappImage,
+                              width: 24,
+                              height: 24,
+                              color: const Color(0xFF21C063),
+                            ),
                             const SizedBox(width: 8),
                             const Text(
                               'Contact Admin',
-                              style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
@@ -258,7 +361,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -267,17 +373,30 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                               const Expanded(
                                 child: Text(
                                   'Plan Name: Online Coaching \nPrice : €149/ Month',
-                                  style: TextStyle(color: Color(0xFF263451), fontSize: 16, fontWeight: FontWeight.w500, height: 1.2),
+                                  style: TextStyle(
+                                    color: Color(0xFF263451),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.2,
+                                  ),
                                 ),
                               ),
                               Container(
                                 width: 64,
                                 height: 24,
                                 alignment: Alignment.center,
-                                decoration: BoxDecoration(color: const Color(0xFF47AD2A), borderRadius: BorderRadius.circular(100)),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF47AD2A),
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
                                 child: Text(
                                   'Active',
-                                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w400, height: 1.2),
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.2,
+                                  ),
                                 ),
                               ),
                             ],
@@ -292,7 +411,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                 height: 1.2,
                               ),
                               children: const [
-                                TextSpan(text: 'Renewal Date: March 1st, 2026.\nPayment Method : Credit Card '),
+                                TextSpan(
+                                  text:
+                                      'Renewal Date: March 1st, 2026.\nPayment Method : Credit Card ',
+                                ),
                                 TextSpan(
                                   text: '(paid)',
                                   style: TextStyle(color: Color(0xFF47AD2A)),
@@ -307,21 +429,33 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                     _MenuRow(
                       title: 'View Attendance',
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceDetailsScreen()));
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AttendanceDetailsScreen(),
+                          ),
+                        );
                       },
                     ),
                     const SizedBox(height: 10),
                     _MenuRow(
                       title: 'View Purchase History',
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PurchaseHistoryScreen()));
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PurchaseHistoryScreen(),
+                          ),
+                        );
                       },
                     ),
                     const SizedBox(height: 10),
                     _MenuRow(
                       title: 'Settings',
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SecurityScreen()));
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const SecurityScreen(),
+                          ),
+                        );
                       },
                     ),
                   ],
@@ -395,7 +529,11 @@ class _MenuRow extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const Spacer(),
               const Icon(Icons.chevron_right, color: Colors.white, size: 18),

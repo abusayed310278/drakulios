@@ -1,8 +1,5 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/common/widgets/custom_snackbar.dart';
-import '../../../core/network/api_service/training_shop_api_service.dart';
 import 'training_nutrition_screen.dart';
 
 class HealthProfileScreen extends StatefulWidget {
@@ -13,8 +10,6 @@ class HealthProfileScreen extends StatefulWidget {
 }
 
 class _HealthProfileScreenState extends State<HealthProfileScreen> {
-  final TrainingShopApiService _api = TrainingShopApiService();
-
   final TextEditingController _currentWeight = TextEditingController();
   final TextEditingController _targetWeight = TextEditingController();
   final TextEditingController _recentWeightChanges = TextEditingController();
@@ -27,9 +22,8 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
   final TextEditingController _surgicalHistory = TextEditingController();
   final TextEditingController _currentPhysicalPains = TextEditingController();
   final TextEditingController _digestionGutHealth = TextEditingController();
-  final TextEditingController _supplementsCurrentlyUsed = TextEditingController();
-
-  bool _isSubmitting = false;
+  final TextEditingController _supplementsCurrentlyUsed =
+      TextEditingController();
 
   @override
   void dispose() {
@@ -50,39 +44,10 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
   }
 
   Future<void> _submitTrainingDetails() async {
-    setState(() => _isSubmitting = true);
-    try {
-      final payload = {
-        'currentWeight': _currentWeight.text.trim(),
-        'targetWeight': _targetWeight.text.trim(),
-        'recentWeightChanges': _recentWeightChanges.text.trim(),
-        'bodyType': _bodyType.text.trim(),
-        'currentHeight': _currentHeight.text.trim(),
-        'sleepPatterns': _sleepPatterns.text.trim(),
-        'appetiteHunger': _appetiteHunger.text.trim(),
-        'typicalDailyMeals': _typicalDailyMeals.text.trim(),
-        'waterFluidIntake': _waterFluidIntake.text.trim(),
-        'surgicalHistory': _surgicalHistory.text.trim(),
-        'currentPhysicalPains': _currentPhysicalPains.text.trim(),
-        'digestionGutHealth': _digestionGutHealth.text.trim(),
-        'supplementsCurrentlyUsed': _supplementsCurrentlyUsed.text.trim(),
-      };
-
-      final res = await _api.createTraining(payload);
-      final message = (res['message'] ?? 'Personal Body Details created successfully').toString();
-      CustomSnackbar.show(message);
-
-      if (!mounted) return;
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TrainingNutritionScreen()));
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      final msg = data is Map && data['message'] != null ? data['message'].toString() : 'Failed to save training details';
-      CustomSnackbar.show(msg);
-    } catch (_) {
-      CustomSnackbar.show('Failed to save training details');
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+    if (!mounted) return;
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const TrainingNutritionScreen()));
   }
 
   @override
@@ -105,16 +70,27 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
                         offset: const Offset(-15, 0),
                         child: IconButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new,
+                            size: 18,
+                            color: Color(0xFFC9CDD3),
+                          ),
                           splashRadius: 18,
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                          constraints: const BoxConstraints(
+                            minWidth: 24,
+                            minHeight: 24,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
                       const Text(
                         'Personal Body Details',
-                        style: TextStyle(color: Color(0xFFE6E7EA), fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: Color(0xFFE6E7EA),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -133,7 +109,8 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
                   _InputField(
                     controller: _recentWeightChanges,
                     maxLines: 3,
-                    hintText: 'I’ve gained 10kg in the last 6 months due to a desk job',
+                    hintText:
+                        'I’ve gained 10kg in the last 6 months due to a desk job',
                   ),
                   const SizedBox(height: 14),
                   const _SectionTitle(text: 'Body :'),
@@ -142,7 +119,8 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
                   _InputField(
                     controller: _bodyType,
                     maxLines: 3,
-                    hintText: 'I have a heavy frame but carry most of my fat around the midsection',
+                    hintText:
+                        'I have a heavy frame but carry most of my fat around the midsection',
                   ),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Current Height'),
@@ -152,7 +130,10 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
                   const _SectionTitle(text: 'Sleep :'),
                   const _FieldLabel(text: 'Sleep Patterns'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _sleepPatterns, hintText: '6-7 hours/day'),
+                  _InputField(
+                    controller: _sleepPatterns,
+                    hintText: '6-7 hours/day',
+                  ),
                   const SizedBox(height: 14),
                   const _SectionTitle(text: 'Nutrition Assessment :'),
                   const _FieldLabel(text: 'Appetite & Hunger'),
@@ -160,19 +141,24 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
                   _InputField(
                     controller: _appetiteHunger,
                     maxLines: 3,
-                    hintText: 'I’m never hungry in the morning, but I get intense sugar cravings at night',
+                    hintText:
+                        'I’m never hungry in the morning, but I get intense sugar cravings at night',
                   ),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Typical Daily Meals'),
                   const SizedBox(height: 6),
-                  _InputField(controller: _typicalDailyMeals, hintText: '3 meals per day'),
+                  _InputField(
+                    controller: _typicalDailyMeals,
+                    hintText: '3 meals per day',
+                  ),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Water & Fluid Intake'),
                   const SizedBox(height: 6),
                   _InputField(
                     controller: _waterFluidIntake,
                     maxLines: 2,
-                    hintText: 'I drink 1.5L of water and 4 cups of black coffee daily',
+                    hintText:
+                        'I drink 1.5L of water and 4 cups of black coffee daily',
                   ),
                   const SizedBox(height: 14),
                   const _SectionTitle(text: 'Other Information'),
@@ -189,7 +175,8 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
                   _InputField(
                     controller: _currentPhysicalPains,
                     maxLines: 2,
-                    hintText: 'Sharp pain in the right shoulder when doing overhead press',
+                    hintText:
+                        'Sharp pain in the right shoulder when doing overhead press',
                   ),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Digestion & Gut Health'),
@@ -197,7 +184,8 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
                   _InputField(
                     controller: _digestionGutHealth,
                     maxLines: 2,
-                    hintText: 'Frequent bloating after eating dairy or heavy carbs',
+                    hintText:
+                        'Frequent bloating after eating dairy or heavy carbs',
                   ),
                   const SizedBox(height: 10),
                   const _FieldLabel(text: 'Supplements Currently Used'),
@@ -205,36 +193,42 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
                   _InputField(
                     controller: _supplementsCurrentlyUsed,
                     maxLines: 2,
-                    hintText: 'I use whey protein and creatine from the gym shop',
+                    hintText:
+                        'I use whey protein and creatine from the gym shop',
                   ),
                   const SizedBox(height: 18),
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submitTrainingDetails,
+                      onPressed: _submitTrainingDetails,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF2B31A),
                         foregroundColor: Colors.black,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Text(
-                                  'Continue',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, height: 1.2, color: Color(0xFFFFFFFF)),
-                                ),
-                                SizedBox(width: 8),
-                                Icon(Icons.arrow_forward, size: 18, color: Colors.white),
-                              ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Text(
+                            'Continue',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              height: 1.2,
+                              color: Color(0xFFFFFFFF),
                             ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -258,7 +252,11 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
-        style: const TextStyle(color: Color.fromARGB(255, 230, 233, 243), fontSize: 12, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          color: Color.fromARGB(255, 230, 233, 243),
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -273,13 +271,21 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(color: Color.fromARGB(255, 219, 229, 241), fontSize: 11, fontWeight: FontWeight.w500),
+      style: const TextStyle(
+        color: Color.fromARGB(255, 219, 229, 241),
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 }
 
 class _InputField extends StatelessWidget {
-  const _InputField({required this.controller, this.maxLines = 1, this.hintText});
+  const _InputField({
+    required this.controller,
+    this.maxLines = 1,
+    this.hintText,
+  });
 
   final TextEditingController controller;
   final int maxLines;
@@ -293,10 +299,16 @@ class _InputField extends StatelessWidget {
       style: const TextStyle(color: Color(0xFF1B1B1B), fontSize: 12),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(color: Color.fromARGB(255, 20, 22, 25), fontSize: 11),
+        hintStyle: const TextStyle(
+          color: Color.fromARGB(255, 20, 22, 25),
+          fontSize: 11,
+        ),
         filled: true,
         fillColor: const Color.fromARGB(255, 185, 192, 210),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: Color(0xFF2A2F39), width: 1),
