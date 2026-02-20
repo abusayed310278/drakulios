@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/assets.dart';
+import '../../home/views/terms_conditions_screen.dart';
 import 'payment_method_screen.dart';
 
 class PaymentAndSubscriptionScreen extends StatefulWidget {
@@ -13,186 +15,355 @@ class PaymentAndSubscriptionScreen extends StatefulWidget {
 
 class _PaymentAndSubscriptionScreenState
     extends State<PaymentAndSubscriptionScreen> {
-  int _selectedPlanIndex = 0;
+  int? _selectedPlan;
+
+  Future<void> _showTermsDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Spacer(),
+                  InkWell(
+                    onTap: () => Navigator.of(context).pop(),
+                    borderRadius: BorderRadius.circular(12),
+                    child: const Padding(
+                      padding: EdgeInsets.all(2),
+                      child: Icon(
+                        Icons.close,
+                        size: 22,
+                        color: Color(0xFF1F222A),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'By accepting this you agree with our',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFF1E2024),
+                  fontSize: 24 / 2,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const TermsConditionsScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'Terms And Conditions.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFFF2B31A),
+                    fontSize: 24 / 2,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(
+                            color: Color(0xFFF2B31A),
+                            width: 1,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Deny',
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFF2B31A),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const PaymentMethodScreen(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF2B31A),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Accept',
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFFFFFFF),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final plans = <_PlanModel>[
+      const _PlanModel(
+        title: 'Daily Pass',
+        markerColor: Color(0xFFF3B41A),
+        borderColor: Color(0xFFF3B41A),
+        background: LinearGradient(
+          colors: [Color(0xFF073447), Color(0xFF073447)],
+        ),
+        bullets: [
+          'Access for one day',
+          'Full access to the gym between 6:00 and 23:00',
+        ],
+        priceMain: '€10',
+      ),
+      const _PlanModel(
+        title: 'Monthly Plan',
+        markerColor: Color(0xFF4BCDC0),
+        borderColor: Color(0xFF6A8C87),
+        background: LinearGradient(
+          colors: [Color(0xFF142733), Color(0xFF124331)],
+        ),
+        bullets: [
+          'Full access to the gym',
+          'Renewable subscription with no commitment until cancellation',
+        ],
+        priceMain: '€40',
+        priceAccent: '/ Month',
+        accentColor: Color(0xFF4BCDC0),
+      ),
+      const _PlanModel(
+        title: '6-Month Plan',
+        markerColor: Color(0xFFB45CFF),
+        borderColor: Color(0xFF7A5D9A),
+        background: LinearGradient(
+          colors: [Color(0xFF2E1C44), Color(0xFF39214D)],
+        ),
+        bullets: [
+          'Gift: 1 Pro Factory T-shirt',
+          'Full access to the gym',
+          'Renewable subscription with a minimum commitment period of 6 months',
+        ],
+        priceMain: '€35',
+        priceAccent: '/ Month',
+        accentColor: Color(0xFFB45CFF),
+      ),
+      const _PlanModel(
+        title: '12-Month Plan',
+        markerColor: Color(0xFFF39DB8),
+        borderColor: Color(0xFF8D6675),
+        background: LinearGradient(
+          colors: [Color(0xFF4A2D39), Color(0xFF4A3139)],
+        ),
+        bullets: [
+          'Gift: 1 Pro Factory hoodie',
+          'Full access to the gym',
+          'Renewable subscription with a minimum commitment period of 12 months',
+        ],
+        priceMain: '€30',
+        priceAccent: '/ Month',
+        accentColor: Color(0xFFF39DB8),
+      ),
+      const _PlanModel(
+        title: '12-Month Plan Single\nPayment',
+        markerColor: Color(0xFFF0C13F),
+        borderColor: Color(0xFF8A7B4A),
+        background: LinearGradient(
+          colors: [Color(0xFF3A2E08), Color(0xFF433308)],
+        ),
+        bullets: [
+          'Gift: 1 Pro Factory hoodie',
+          'Full access to the gym',
+          'Renewable subscription for 12 months with no commitment.',
+        ],
+        priceMain: '€330/',
+        note: 'Subscription with discount\nfor upfront payment',
+      ),
+      const _PlanModel(
+        title: 'Off-Peak 12-Month Plan',
+        markerColor: Color(0xFFA7A7A7),
+        borderColor: Color(0xFF626B76),
+        background: LinearGradient(
+          colors: [Color(0xFF191E2B), Color(0xFF20222D)],
+        ),
+        bullets: [
+          'Gift: 1 Pro Factory T-shirt',
+          'Renewable subscription with a minimum commitment period of 12 months',
+          'Access to the gym at the following times:\nMonday to Friday: From 6:00 to 8:30 From 13:00 to 16:00 From 21:30 to 23:00\nWeekends: Full access to the gym',
+        ],
+        priceMain: '€25',
+        priceAccent: '/ Month',
+        accentColor: Color(0xFFA7A7A7),
+      ),
+      const _PlanModel(
+        title: 'Youth Off-Peak\n12-Month Plan',
+        markerColor: Color(0xFF45C83C),
+        borderColor: Color(0xFF5A8755),
+        background: LinearGradient(
+          colors: [Color(0xFF15270E), Color(0xFF1C3112)],
+        ),
+        bullets: [
+          'Gift: 1 Pro Factory T-shirt',
+          'For young people between 16 and 23 years of age',
+          'Renewable subscription with a minimum commitment period of 12 months.',
+          'Access to the gym at the following times:\nMonday to Friday: From 6:00 to 8:30 From 13:00 to 16:00 From 21:30 to 23:00\nWeekends: Full access to the gym',
+        ],
+        priceMain: '€20',
+        priceAccent: '/ Month',
+        accentColor: Color(0xFF45C83C),
+      ),
+    ];
+
     return Scaffold(
       backgroundColor: const Color(0xFF050608),
       body: SafeArea(
+        top: false,
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 10, 18, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(
-                            Icons.arrow_back_ios_new,
-                            size: 18,
-                            color: Color(0xFFC9CDD3),
-                          ),
-                          splashRadius: 18,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 24,
-                            minHeight: 24,
-                          ),
-                        ),
-                        Expanded(
-                          child: Center(
-                            child: SizedBox(
-                              width: 60,
-                              height: 43,
-                              child: Image.asset(
-                                Images.appLogo,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'Choose Your Plan',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xFFFFFFFF),
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'All Features, No Limit',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xFFB1B1B1),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  _PlanCard(
-                    title: 'Training Plan',
-                    price: '€89',
-                    accent: const Color(0xFFF2B31A),
-                    cardColor: const Color(0xFF3D3315),
-                    bulletColor: const Color.fromARGB(255, 219, 218, 216),
-                    subtitle: 'One-time',
-                    items: const [
-                      'Personalized workout plan',
-                      'No revisions',
-                      'No follow-ups',
-                    ],
-                    selected: _selectedPlanIndex == 0,
-                    onTap: () => setState(() => _selectedPlanIndex = 0),
-                  ),
-                  const SizedBox(height: 14),
-                  _PlanCard(
-                    title: 'Online Coaching',
-                    price: '€149 / Month',
-                    accent: const Color(0xFFD07BFF),
-                    cardColor: const Color(0xFF2E1F3D),
-                    bulletColor: const Color.fromARGB(255, 219, 218, 216),
-                    subtitle: 'Subscription',
-                    items: const [
-                      'Main Product',
-                      'Includes training',
-                      'Nutrition and continuous follow-up',
-                    ],
-                    priceWidget: RichText(
-                      text: TextSpan(
-                        children: [
-                          const TextSpan(text: '€149 '),
-                          TextSpan(
-                            text: '/ Month',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFFD07BFF).withOpacity(0.9),
-                            ),
-                          ),
-                        ],
-                        style: const TextStyle(
-                          color: Color(0xFFD07BFF),
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
+              padding: const EdgeInsets.fromLTRB(18, 60, 18, 20),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 2),
+                      Center(
+                        child: Image.asset(
+                          Images.appLogo,
+                          width: 60,
+                          height: 53,
+                          fit: BoxFit.contain,
                         ),
                       ),
-                    ),
-                    selected: _selectedPlanIndex == 1,
-                    onTap: () => setState(() => _selectedPlanIndex = 1),
-                  ),
-                  const SizedBox(height: 14),
-                  _PlanCard(
-                    title: '1-to-1 Training',
-                    price: 'Varies',
-                    accent: const Color(0xFF45B3FF),
-                    cardColor: const Color(0xFF0D1D3D),
-                    bulletColor: const Color.fromARGB(255, 219, 218, 216),
-                    subtitle: 'Session Packs',
-                    items: const [
-                      'In-person coaching sold in packs',
-                      '4, 8, or 12 sessions',
-                    ],
-                    selected: _selectedPlanIndex == 2,
-                    onTap: () => setState(() => _selectedPlanIndex = 2),
-                  ),
-                  const SizedBox(height: 18),
-                  SizedBox(
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const PaymentMethodScreen(),
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        width: 343,
+                        child: Text(
+                          'Choose Your Plan',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.nunito(
+                            color: const Color(0xFFEDEEF0),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            height: 1.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'All Features, No Limit',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.nunito(
+                          color: const Color(0xFFB0B6C0),
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const _RulesCard(),
+                      const SizedBox(height: 10),
+                      ...List.generate(plans.length, (index) {
+                        final p = plans[index];
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index == plans.length - 1 ? 0 : 12,
+                          ),
+                          child: _MembershipPlanCard(
+                            plan: p,
+                            selected: _selectedPlan == index,
+                            onTap: () => setState(() => _selectedPlan = index),
                           ),
                         );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF2B31A),
-                        foregroundColor: Colors.black,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                      }),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 34,
+                        child: ElevatedButton(
+                          onPressed: _showTermsDialog,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFF2B31A),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(9),
+                            ),
+                          ),
+                          child: Text(
+                            'Make Payment',
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFFFFFFFF),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              height: 1.2,
+                            ),
+                          ),
                         ),
                       ),
-                      child: const Text(
-                        'Make Payment',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                      const SizedBox(height: 10),
+                      Text(
+                        'You can cancel subscription anytime',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFFB1B1B1),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
                           height: 1.2,
-                          color: Color(0xFFFFFFFF),
+                          letterSpacing: 0,
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'You can cancel subscription anytime',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xFFB1B1B1),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      height: 1.2,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -202,28 +373,157 @@ class _PaymentAndSubscriptionScreenState
   }
 }
 
-class _PlanCard extends StatelessWidget {
-  const _PlanCard({
+class _RulesCard extends StatelessWidget {
+  const _RulesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 373),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(37, 99, 235, 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color.fromRGBO(255, 255, 255, 0.19),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image.asset(
+                Images.membershipImage,
+                width: 16,
+                height: 16,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Membership Rules',
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFFFFFFFF),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const _RuleLine(
+            iconPath: Images.switchingImage,
+            title: 'Switching:',
+            body: 'Change plans anytime;\ncommitment plans must upgrade',
+          ),
+          const SizedBox(height: 10),
+          const _RuleLine(
+            iconPath: Images.timelinessImage,
+            title: 'Timelines:',
+            body: 'New commitment starts\nafter the old one ends.',
+          ),
+          const SizedBox(height: 10),
+          const _RuleLine(
+            iconPath: Images.freezeImage,
+            title: 'Freeze:',
+            body: 'Pause once for up to 1 month\nper year',
+          ),
+          const SizedBox(height: 10),
+          const _RuleLine(
+            iconPath: Images.cancelImage,
+            title: 'Cancel:',
+            body: 'Cancel anytime for a 100€ fee.',
+          ),
+          const SizedBox(height: 10),
+          const _RuleLine(
+            iconPath: Images.lockImage,
+            title: 'Off-Peak:',
+            body: 'Access limited to authorized\nhours.',
+          ),
+          const SizedBox(height: 10),
+          const _RuleLine(
+            iconPath: Images.lockImage,
+            title: 'Refunds:',
+            body: 'All sales are final.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RuleLine extends StatelessWidget {
+  const _RuleLine({
+    required this.iconPath,
     required this.title,
-    required this.subtitle,
-    required this.items,
-    required this.price,
-    this.priceWidget,
-    required this.accent,
-    required this.cardColor,
-    required this.bulletColor,
+    required this.body,
+  });
+
+  final String iconPath;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final bodyStyle = GoogleFonts.outfit(
+      color: const Color(0xFFFFFFFF),
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      height: 1.35,
+      letterSpacing: 0,
+    );
+    final titleStyle = GoogleFonts.outfit(
+      color: const Color(0xFFFFFFFF),
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      height: 1.35,
+      letterSpacing: 0,
+    );
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Image.asset(
+            iconPath,
+            width: 16,
+            height: 16,
+            fit: BoxFit.contain,
+            color: const Color(0xFFF3B41A),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(text: title.replaceAll(':', ''), style: titleStyle),
+                TextSpan(text: ': ', style: bodyStyle),
+                TextSpan(text: body, style: bodyStyle),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MembershipPlanCard extends StatelessWidget {
+  const _MembershipPlanCard({
+    required this.plan,
     required this.selected,
     required this.onTap,
   });
 
-  final String title;
-  final String subtitle;
-  final List<String> items;
-  final String price;
-  final Widget? priceWidget;
-  final Color accent;
-  final Color cardColor;
-  final Color bulletColor;
+  final _PlanModel plan;
   final bool selected;
   final VoidCallback onTap;
 
@@ -233,92 +533,148 @@ class _PlanCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
           decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(14),
+            gradient: plan.background,
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selected ? accent : const Color(0xFF3F444C),
-              width: 1.2,
+              color: plan.borderColor,
+              width: selected ? 2.1 : 1.15,
             ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: plan.borderColor.withValues(alpha: 0.32),
+                      blurRadius: 10,
+                      spreadRadius: 0.5,
+                    ),
+                  ]
+                : null,
           ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    _SelectionDot(color: accent, selected: selected),
-                    const SizedBox(width: 8),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Color(0xFFF6F7F9),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: plan.markerColor, width: 2),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Color(0xFFF6F7F9),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: items
-                      .map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '•',
-                                style: TextStyle(
-                                  color: bulletColor,
-                                  fontSize: 16,
-                                  height: 1.2,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  item,
-                                  style: const TextStyle(
-                                    color: Color.fromARGB(255, 231, 236, 244),
-                                    fontSize: 13,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ),
-                            ],
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      plan.title,
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFFF2F4F8),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 5),
+              ...plan.bullets.map(
+                (b) => Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '•',
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFFFFFFFF),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 249),
+                          child: Text(
+                            b,
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFFFFFFFF),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              height: 1.5,
+                              letterSpacing: 0,
+                            ),
                           ),
                         ),
-                      )
-                      .toList(),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 10),
-                priceWidget ??
+              ),
+              const SizedBox(height: 5),
+              if (plan.note == null)
+                RichText(
+                  text: TextSpan(
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFFFFFFFF),
+                      fontSize: 32,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                    children: [
+                      TextSpan(text: plan.priceMain),
+                      if (plan.priceAccent != null)
+                        TextSpan(
+                          text: plan.priceAccent,
+                          style: TextStyle(
+                            color: plan.accentColor ?? const Color(0xFFFFFFFF),
+                          ),
+                        ),
+                    ],
+                  ),
+                )
+              else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
                     Text(
-                      price,
-                      style: const TextStyle(
-                        color: Color.fromARGB(255, 231, 236, 244),
+                      plan.priceMain,
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFFFFFFFF),
                         fontSize: 32,
                         fontWeight: FontWeight.w600,
                         height: 1.2,
                       ),
                     ),
-              ],
-            ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: SizedBox(
+                        width: 165,
+                        height: 34,
+                        child: Text(
+                          plan.note!,
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFF3B41A),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            height: 1.2,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
           ),
         ),
       ),
@@ -326,27 +682,26 @@ class _PlanCard extends StatelessWidget {
   }
 }
 
-class _SelectionDot extends StatelessWidget {
-  const _SelectionDot({required this.color, required this.selected});
+class _PlanModel {
+  const _PlanModel({
+    required this.title,
+    required this.markerColor,
+    required this.borderColor,
+    required this.background,
+    required this.bullets,
+    required this.priceMain,
+    this.priceAccent,
+    this.accentColor,
+    this.note,
+  });
 
-  final Color color;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 14,
-      height: 14,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: color, width: 2),
-        color: selected ? color : Colors.transparent,
-      ),
-      child: selected
-          ? const Center(
-              child: CircleAvatar(radius: 2.4, backgroundColor: Colors.black),
-            )
-          : null,
-    );
-  }
+  final String title;
+  final Color markerColor;
+  final Color borderColor;
+  final Gradient background;
+  final List<String> bullets;
+  final String priceMain;
+  final String? priceAccent;
+  final Color? accentColor;
+  final String? note;
 }

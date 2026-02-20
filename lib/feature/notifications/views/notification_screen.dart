@@ -28,10 +28,7 @@ class NotificationScreen extends StatelessWidget {
         body:
             'Please note that the gym remains closed between 3:00 PM and 5:00 PM today due to scheduled maintenance and staff safety checks. We appreciate your patience and understanding.',
       ),
-      _NotificationItem(
-        title: 'Admin',
-        message: 'Gym Remains closed between 3PM to 5Pm',
-      ),
+      _NotificationItem(title: 'Admin', message: 'Gym Remains closed between 3PM to 5Pm'),
     ];
     const weekItems = <_NotificationItem>[
       _NotificationItem(
@@ -43,10 +40,7 @@ class NotificationScreen extends StatelessWidget {
         body:
             'Please note that the gym remains closed between 3:00 PM and 5:00 PM today due to scheduled maintenance and staff safety checks. We appreciate your patience and understanding.',
       ),
-      _NotificationItem(
-        title: 'Admin',
-        message: 'Gym Remains closed between 3PM to 5Pm',
-      ),
+      _NotificationItem(title: 'Admin', message: 'Gym Remains closed between 3PM to 5Pm'),
     ];
 
     return Scaffold(
@@ -70,44 +64,29 @@ class NotificationScreen extends StatelessWidget {
                           child: InkWell(
                             onTap: () => Navigator.of(context).pop(),
                             borderRadius: BorderRadius.circular(12),
-                            child: const Center(
-                              child: Icon(
-                                Icons.arrow_back_ios_new,
-                                color: Color(0xFFC9CDD3),
-                                size: 14,
-                              ),
-                            ),
+                            child: const Center(child: Icon(Icons.arrow_back_ios_new, color: Color(0xFFC9CDD3), size: 18)),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         Text(
                           'Notifications',
-                          style: GoogleFonts.outfit(
-                            color: const Color(0xFFB1B1B1),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
-                            height: 1.2,
-                          ),
+                          style: GoogleFonts.outfit(color: const Color(0xFFB1B1B1), fontSize: 18, fontWeight: FontWeight.w400, height: 1.2),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 18),
                   Expanded(
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
                         _SectionHeading(title: 'Today'),
                         const SizedBox(height: 4),
-                        ...todayItems.map(
-                          (item) => _NotificationTile(item: item),
-                        ),
+                        ...todayItems.map((item) => _NotificationTile(item: item)),
                         const SizedBox(height: 4),
                         _SectionHeading(title: 'This week'),
                         const SizedBox(height: 4),
-                        ...weekItems.map(
-                          (item) => _NotificationTile(item: item),
-                        ),
+                        ...weekItems.map((item) => _NotificationTile(item: item)),
                       ],
                     ),
                   ),
@@ -130,12 +109,7 @@ class _SectionHeading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
-        color: const Color(0xFFE6E7EA),
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        height: 1.2,
-      ),
+      style: GoogleFonts.poppins(color: const Color(0xFFE6E7EA), fontSize: 14, fontWeight: FontWeight.w600, height: 1.2),
     );
   }
 }
@@ -155,14 +129,7 @@ class _NotificationTile extends StatelessWidget {
           CircleAvatar(
             radius: 20,
             backgroundColor: const Color(0xFFF2B31A),
-            child: ClipOval(
-              child: Image.asset(
-                Images.profileImage,
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-              ),
-            ),
+            child: ClipOval(child: Image.asset(Images.profileImage, width: 40, height: 40, fit: BoxFit.cover)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -202,12 +169,7 @@ class _NotificationTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     item.details!,
-                    style: GoogleFonts.outfit(
-                      color: Color(0xFFF2B31A),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
-                    ),
+                    style: GoogleFonts.outfit(color: Color(0xFFF2B31A), fontSize: 15, fontWeight: FontWeight.w700, height: 1.2),
                   ).inkWell(() {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -233,14 +195,7 @@ class _NotificationTile extends StatelessWidget {
 }
 
 class _NotificationItem {
-  const _NotificationItem({
-    required this.title,
-    required this.message,
-    this.details,
-    this.heading,
-    this.bullet,
-    this.body,
-  });
+  const _NotificationItem({required this.title, required this.message, this.details, this.heading, this.bullet, this.body});
 
   final String title;
   final String message;
@@ -255,10 +210,7 @@ extension on Widget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: this,
-      ),
+      child: Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: this),
     );
   }
 }

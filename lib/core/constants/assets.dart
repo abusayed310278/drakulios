@@ -36,4 +36,10 @@ class Images {
   static const String totalvisitImage = 'assets/images/fa6-solid_map-location.png';
   static const String averageImage = 'assets/images/lets-icons_time-atack-fill.png';
   static const String hourglassImage = 'assets/images/ri_hourglass-fill.png';
+  static const String membershipImage = 'assets/images/Group.png';
+  static const String switchingImage = 'assets/images/Layer_1.png';
+  static const String timelinessImage = 'assets/images/Vector.png';
+  static const String freezeImage = 'assets/images/zondicons_hand-stop.png';
+  static const String cancelImage = 'assets/images/material-symbols_cancel-rounded.png';
+  static const String lockImage = 'assets/images/material-symbols_lock _1.png';
 }

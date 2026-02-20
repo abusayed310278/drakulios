@@ -4,13 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/assets.dart';
 
 class NotificationDetailsScreen extends StatelessWidget {
-  const NotificationDetailsScreen({
-    super.key,
-    required this.senderName,
-    required this.heading,
-    required this.bullet,
-    required this.body,
-  });
+  const NotificationDetailsScreen({super.key, required this.senderName, required this.heading, required this.bullet, required this.body});
 
   final String senderName;
   final String heading;
@@ -40,37 +34,21 @@ class NotificationDetailsScreen extends StatelessWidget {
                           child: InkWell(
                             onTap: () => Navigator.of(context).pop(),
                             borderRadius: BorderRadius.circular(12),
-                            child: const Center(
-                              child: Icon(
-                                Icons.arrow_back_ios_new,
-                                color: Color(0xFFC9CDD3),
-                                size: 14,
-                              ),
-                            ),
+                            child: const Center(child: Icon(Icons.arrow_back_ios_new, color: Color(0xFFC9CDD3), size: 18)),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         Text(
                           'Notifications Details',
-                          style: GoogleFonts.outfit(
-                            color: const Color(0xFFB1B1B1),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
-                            height: 1.2,
-                          ),
+                          style: GoogleFonts.outfit(color: const Color(0xFFB1B1B1), fontSize: 18, fontWeight: FontWeight.w400, height: 1.2),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 18),
                   Text(
                     'Today',
-                    style: GoogleFonts.poppins(
-                      color: const Color(0xFFE6E7EA),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      height: 1.2,
-                    ),
+                    style: GoogleFonts.poppins(color: const Color(0xFFE6E7EA), fontSize: 14, fontWeight: FontWeight.w600, height: 1.2),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -78,14 +56,7 @@ class NotificationDetailsScreen extends StatelessWidget {
                       CircleAvatar(
                         radius: 20,
                         backgroundColor: const Color(0xFFF2B31A),
-                        child: ClipOval(
-                          child: Image.asset(
-                            Images.profileImage,
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                        child: ClipOval(child: Image.asset(Images.profileImage, width: 40, height: 40, fit: BoxFit.cover)),
                       ),
                       const SizedBox(width: 10),
                       Text(
