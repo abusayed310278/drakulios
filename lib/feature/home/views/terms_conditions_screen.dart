@@ -138,7 +138,9 @@ class TermsConditionsScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 46,
                     child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () {
+                        Navigator.of(context).pop(true);
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF2B31A),
                         foregroundColor: Colors.white,

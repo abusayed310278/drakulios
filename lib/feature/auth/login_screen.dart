@@ -428,10 +428,10 @@ class _SocialButton extends StatelessWidget {
       child: Container(
         width: 64,
         height: 48,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        // padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
         child: Center(
-          child: SizedBox(width: 40, height: 40, child: Image.asset(asset, fit: BoxFit.contain)),
+          child: SizedBox(width: 50, height: 50, child: Image.asset(asset, fit: BoxFit.contain)),
         ),
       ),
     );

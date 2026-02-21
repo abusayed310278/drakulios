@@ -122,10 +122,12 @@ class _ShopHeaderState extends State<ShopHeader> {
           ),
           const SizedBox(width: 10),
           InkWell(
-            onTap: () {
-              Navigator.of(context).push(
+            onTap: () async {
+              await Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const MemberProfileScreen()),
               );
+              if (!mounted) return;
+              _loadAvatar();
             },
             borderRadius: BorderRadius.circular(12),
             child: CircleAvatar(

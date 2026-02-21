@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'training_nutrition_screen.dart';
+import '../../paymentandsubscription/views/payment_flow_destination.dart';
+import '../../paymentandsubscription/views/payment_method_screen.dart';
 
 class HealthProfileScreen extends StatefulWidget {
   const HealthProfileScreen({super.key});
@@ -45,9 +46,13 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
 
   Future<void> _submitTrainingDetails() async {
     if (!mounted) return;
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const TrainingNutritionScreen()));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const PaymentMethodScreen(
+          flowDestination: PaymentFlowDestination.training,
+        ),
+      ),
+    );
   }
 
   @override

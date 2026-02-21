@@ -2,143 +2,253 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/assets.dart';
+import 'health_profile_screen.dart';
+import 'terms_conditions_screen.dart';
 
 class ChooseTrainingPlanScreen extends StatefulWidget {
   const ChooseTrainingPlanScreen({super.key});
 
   @override
-  State<ChooseTrainingPlanScreen> createState() =>
-      _ChooseTrainingPlanScreenState();
+  State<ChooseTrainingPlanScreen> createState() => _ChooseTrainingPlanScreenState();
 }
 
 class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
-  int? _selectedPlan;
+  int? _selectedPlan = 0;
+
+  int get _selectedPlanIndex => _selectedPlan ?? 0;
+
+  Future<void> _openTermsFlow() async {
+    final accepted = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const TermsConditionsScreen()));
+    if (!mounted) return;
+    if (accepted == true) {
+      await _showBodyGoalsDialog();
+    }
+  }
+
+  Future<void> _showBodyGoalsDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(16)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Spacer(),
+                  InkWell(
+                    onTap: () => Navigator.of(dialogContext).pop(),
+                    borderRadius: BorderRadius.circular(12),
+                    child: const Padding(
+                      padding: EdgeInsets.all(2),
+                      child: Icon(Icons.close, size: 20, color: Color(0xFF1F222A)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'To help us build the best possible plan for you, please tell us a little bit about your body and goals',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(color: const Color(0xFF1E2024), fontSize: 12, fontWeight: FontWeight.w500, height: 1.35),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(dialogContext).pop();
+                    await Future<void>.delayed(Duration.zero);
+                    if (!mounted) return;
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HealthProfileScreen()));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF2B31A),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Continue',
+                        style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 18, fontWeight: FontWeight.w500, height: 1.2),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward, size: 18, color: Color(0xFFFFFFFF)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showTermsDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(8)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Spacer(),
+                  InkWell(
+                    onTap: () => Navigator.of(dialogContext).pop(),
+                    borderRadius: BorderRadius.circular(12),
+                    child: const Padding(
+                      padding: EdgeInsets.all(2),
+                      child: Icon(Icons.close, size: 22, color: Color(0xFF1F222A)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'By accepting this you agree with our',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(color: const Color(0xFF1E2024), fontSize: 12, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 2),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(dialogContext).pop();
+                  _openTermsFlow();
+                },
+                child: Text(
+                  'Terms And Conditions.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(color: const Color(0xFFF2B31A), fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFF2B31A), width: 1),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: Text(
+                          'Deny',
+                          style: GoogleFonts.outfit(color: const Color(0xFFF2B31A), fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.of(dialogContext).pop();
+                          await Future<void>.delayed(Duration.zero);
+                          if (!mounted) return;
+                          _showBodyGoalsDialog();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF2B31A),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: Text(
+                          'Accept',
+                          style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final plans = <_PlanModel>[
-      const _PlanModel(
-        title: 'Daily Pass',
-        markerColor: Color(0xFFF3B41A),
-        borderColor: Color(0xFFF3B41A),
-        background: LinearGradient(
-          colors: [Color(0xFF073447), Color(0xFF073447)],
-        ),
-        bullets: [
-          'Access for one day',
-          'Full access to the gym between 6:00 and 23:00',
-        ],
-        priceMain: '€10',
-      ),
-      const _PlanModel(
-        title: 'Monthly Plan',
-        markerColor: Color(0xFF4BCDC0),
-        borderColor: Color(0xFF6A8C87),
-        background: LinearGradient(
-          colors: [Color(0xFF142733), Color(0xFF124331)],
-        ),
-        bullets: [
-          'Full access to the gym',
-          'Renewable subscription with no commitment until cancellation',
-        ],
-        priceMain: '€40',
-        priceAccent: '/ Month',
-        accentColor: Color(0xFF4BCDC0),
-      ),
-      const _PlanModel(
-        title: '6-Month Plan',
+    final plans = <_TrainingPlanModel>[
+      const _TrainingPlanModel(
+        title: 'Online Coaching',
         markerColor: Color(0xFFB45CFF),
-        borderColor: Color(0xFF7A5D9A),
-        background: LinearGradient(
-          colors: [Color(0xFF2E1C44), Color(0xFF39214D)],
-        ),
+        borderColor: Color(0xFFF2B31A),
+        backgroundColor: Color(0xFF28195F),
         bullets: [
-          'Gift: 1 Pro Factory T-shirt',
-          'Full access to the gym',
-          'Renewable subscription with a minimum commitment period of 6 months',
+          'Monthly payment.',
+          'This plan includes: Planning of a training plan personalized to their objectives, a personalized nutrition plan, weekly online reviews with their coach.',
+          'When choosing this plan the user will access the objectives questionnaire and from there to the payment gateway.',
+          'After a period of 24/48 they will be able to see in their profile the following:',
         ],
-        priceMain: '€35',
-        priceAccent: '/ Month',
-        accentColor: Color(0xFFB45CFF),
+        numberedItems: ['Daily personalized training plan.', 'Complete nutrition plan.', 'Weekly online reviews to be agreed in calendar.'],
       ),
-      const _PlanModel(
-        title: '12-Month Plan',
-        markerColor: Color(0xFFF39DB8),
-        borderColor: Color(0xFF8D6675),
-        background: LinearGradient(
-          colors: [Color(0xFF4A2D39), Color(0xFF4A3139)],
-        ),
+      const _TrainingPlanModel(
+        title: 'Training Plan',
+        markerColor: Color(0xFF08BBFF),
+        borderColor: Color(0xFF1D8CB4),
+        backgroundColor: Color(0xFF072B46),
         bullets: [
-          'Gift: 1 Pro Factory hoodie',
-          'Full access to the gym',
-          'Renewable subscription with a minimum commitment period of 12 months',
+          'One-time payment product.',
+          'This plan includes: Planning of a training plan personalized to their objectives elaborated for a determined time.',
+          'When choosing this product the user will access the objectives questionnaire and from there to the payment gateway.',
+          'After a period of 24/48 they will be able to see in their profile the following:',
         ],
-        priceMain: '€30',
-        priceAccent: '/ Month',
-        accentColor: Color(0xFFF39DB8),
+        numberedItems: ['Daily personalized training plan.'],
       ),
-      const _PlanModel(
-        title: '12-Month Plan Single Payment',
-        markerColor: Color(0xFFF0C13F),
-        borderColor: Color(0xFF8A7B4A),
-        background: LinearGradient(
-          colors: [Color(0xFF3A2E08), Color(0xFF433308)],
-        ),
+      const _TrainingPlanModel(
+        title: 'Personal Training',
+        markerColor: Color(0xFFF2B31A),
+        borderColor: Color(0xFF88660B),
+        backgroundColor: Color(0xFF3A2B05),
         bullets: [
-          'Gift: 1 Pro Factory hoodie',
-          'Full access to the gym',
-          'Renewable subscription for 12 months with no commitment.',
+          'One-time payment product.',
+          'This plan includes: 1 to 1 personal training sessions with a personal trainer.',
+          'When choosing this product the user will access the objectives questionnaire and from there must choose one of the following packages:',
         ],
-        priceMain: '€330',
-        note: 'Subscription with discount\nfor upfront payment',
-      ),
-      const _PlanModel(
-        title: 'Off-Peak 12-Month Plan',
-        markerColor: Color(0xFFA7A7A7),
-        borderColor: Color(0xFF626B76),
-        background: LinearGradient(
-          colors: [Color(0xFF191E2B), Color(0xFF20222D)],
-        ),
-        bullets: [
-          'Gift: 1 Pro Factory T-shirt',
-          'Renewable subscription with a minimum commitment period of 12 months',
-          'Access to the gym at the following times:\nMonday to Friday: From 6:00 to 8:30 From 13:00 to 16:00 From 21:30 to 23:00\nWeekends: Full access to the gym',
+        numberedItems: [
+          '4 training sessions.',
+          '8 training sessions.',
+          '12 training sessions.',
+          'After acquiring one of the mentioned packages the user will be able to see a calendar where they will have to choose the days they want to carry out the personal training, and a counter of how many sessions they have left as credit.',
         ],
-        priceMain: '€25',
-        priceAccent: '/ Month',
-        accentColor: Color(0xFFA7A7A7),
-      ),
-      const _PlanModel(
-        title: 'Youth Off-Peak\n12-Month Plan',
-        markerColor: Color(0xFF45C83C),
-        borderColor: Color(0xFF5A8755),
-        background: LinearGradient(
-          colors: [Color(0xFF15270E), Color(0xFF1C3112)],
-        ),
-        bullets: [
-          'Gift: 1 Pro Factory T-shirt',
-          'For young people between 16 and 23 years of age',
-          'Renewable subscription with a minimum commitment period of 12 months.',
-          'Access to the gym at the following times:\nMonday to Friday: From 6:00 to 8:30 From 13:00 to 16:00 From 21:30 to 23:00\nWeekends: Full access to the gym',
-        ],
-        priceMain: '€20',
-        priceAccent: '/ Month',
-        accentColor: Color(0xFF45C83C),
       ),
     ];
 
     return Scaffold(
       backgroundColor: const Color(0xFF050608),
       body: SafeArea(
-        top: false,
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 36, 18, 20),
+              padding: const EdgeInsets.fromLTRB(17, 5, 17, 20),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 320),
+                  constraints: const BoxConstraints(maxWidth: 343),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -146,98 +256,73 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
                         children: [
                           IconButton(
                             onPressed: () => Navigator.of(context).maybePop(),
-                            icon: const Icon(
-                              Icons.arrow_back_ios_new,
-                              size: 18,
-                              color: Color(0xFFC9CDD3),
-                            ),
                             splashRadius: 18,
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
-                              minWidth: 24,
-                              minHeight: 24,
-                            ),
+                            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                            icon: const Icon(Icons.arrow_back_ios_new, size: 16, color: Color(0xFFE4E6EB)),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
-                      Center(
-                        child: Image.asset(
-                          Images.appLogo,
-                          width: 44,
-                          height: 39,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 10),
+                      Center(child: Image.asset(Images.appLogo, width: 60, height: 53, fit: BoxFit.contain)),
+                      const SizedBox(height: 12),
                       Text(
-                        'Choose Your Plan',
+                        'Choose Your Training Plan',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.nunito(
-                          color: const Color(0xFFEDEEF0),
-                          fontSize: 16,
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFFF3F5F9),
+                          fontSize: 31 / 2,
                           fontWeight: FontWeight.w700,
-                          height: 1.0,
+                          height: 1.1,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'All Features, No Limit',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.nunito(
-                          color: const Color(0xFFB0B6C0),
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const _RulesCard(),
-                      const SizedBox(height: 10),
+                      // const SizedBox(height: 8),
+                      // Text(
+                      //   'All Features, No Limit',
+                      //   textAlign: TextAlign.center,
+                      //   style: GoogleFonts.outfit(
+                      //     color: const Color(0xFFB0B6C0),
+                      //     fontSize: 10,
+                      //     fontWeight: FontWeight.w500,
+                      //     height: 1.0,
+                      //   ),
+                      // ),
+                      const SizedBox(height: 14),
                       ...List.generate(plans.length, (index) {
-                        final p = plans[index];
+                        final plan = plans[index];
                         return Padding(
-                          padding: EdgeInsets.only(
-                            bottom: index == plans.length - 1 ? 0 : 12,
-                          ),
-                          child: _MembershipPlanCard(
-                            plan: p,
-                            selected: _selectedPlan == index,
+                          padding: EdgeInsets.only(bottom: index == plans.length - 1 ? 0 : 10),
+                          child: _TrainingPlanCard(
+                            plan: plan,
+                            selected: _selectedPlanIndex == index,
                             onTap: () => setState(() => _selectedPlan = index),
                           ),
                         );
                       }),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       SizedBox(
-                        height: 34,
+                        height: 44,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            _showTermsDialog();
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFF2B31A),
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(9),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
-                          child: Text(
-                            'Make Payment',
-                            style: GoogleFonts.nunito(
-                              color: const Color(0xFFFFFFFF),
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              height: 1.0,
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Continue',
+                                style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_forward, size: 16, color: Color(0xFFFFFFFF)),
+                            ],
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'You can cancel subscription anytime',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.nunito(
-                          color: const Color(0xFF9AA1AE),
-                          fontSize: 7.5,
-                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -252,131 +337,10 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
   }
 }
 
-class _RulesCard extends StatelessWidget {
-  const _RulesCard();
+class _TrainingPlanCard extends StatelessWidget {
+  const _TrainingPlanCard({required this.plan, required this.selected, required this.onTap});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
-      decoration: BoxDecoration(
-        color: const Color(0xFF23428A),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF8EA2DC), width: 1.1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.card_membership_rounded,
-                color: Color(0xFFF3B41A),
-                size: 14,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Membership Rules',
-                style: GoogleFonts.nunito(
-                  color: const Color(0xFFEFF2F8),
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          const _RuleLine(
-            icon: Icons.sync_alt_rounded,
-            title: 'Switching:',
-            body: 'Change plans anytime;\ncommitment plans must upgrade',
-          ),
-          const SizedBox(height: 5),
-          const _RuleLine(
-            icon: Icons.timelapse,
-            title: 'Timelines:',
-            body: 'New commitment starts\nafter the old one ends.',
-          ),
-          const SizedBox(height: 5),
-          const _RuleLine(
-            icon: Icons.pan_tool_alt,
-            title: 'Freeze:',
-            body: 'Pause once for up to 1 month\nper year',
-          ),
-          const SizedBox(height: 5),
-          const _RuleLine(
-            icon: Icons.cancel,
-            title: 'Cancel:',
-            body: 'Cancel anytime for a 100€ fee.',
-          ),
-          const SizedBox(height: 5),
-          const _RuleLine(
-            icon: Icons.lock,
-            title: 'Off-Peak:',
-            body: 'Access limited to authorized\nhours.',
-          ),
-          const SizedBox(height: 5),
-          const _RuleLine(
-            icon: Icons.lock_outline,
-            title: 'Refunds:',
-            body: 'All sales are final.',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RuleLine extends StatelessWidget {
-  const _RuleLine({
-    required this.icon,
-    required this.title,
-    required this.body,
-  });
-
-  final IconData icon;
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 11, color: const Color(0xFFF3B41A)),
-        const SizedBox(width: 6),
-        Expanded(
-          child: RichText(
-            text: TextSpan(
-              style: GoogleFonts.nunito(
-                color: const Color(0xFFEFF2F8),
-                fontSize: 8.5,
-                fontWeight: FontWeight.w500,
-                height: 1.3,
-              ),
-              children: [
-                TextSpan(
-                  text: '$title ',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                TextSpan(text: body),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MembershipPlanCard extends StatelessWidget {
-  const _MembershipPlanCard({
-    required this.plan,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final _PlanModel plan;
+  final _TrainingPlanModel plan;
   final bool selected;
   final VoidCallback onTap;
 
@@ -386,25 +350,14 @@ class _MembershipPlanCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
           decoration: BoxDecoration(
-            gradient: plan.background,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: plan.borderColor,
-              width: selected ? 2.1 : 1.15,
-            ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: plan.borderColor.withValues(alpha: 0.32),
-                      blurRadius: 10,
-                      spreadRadius: 0.5,
-                    ),
-                  ]
-                : null,
+            color: plan.backgroundColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: selected ? plan.borderColor : plan.borderColor.withValues(alpha: 0.75), width: selected ? 2.1 : 1.1),
+            boxShadow: selected ? [BoxShadow(color: plan.borderColor.withValues(alpha: 0.22), blurRadius: 12, spreadRadius: 0.6)] : null,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -412,107 +365,44 @@ class _MembershipPlanCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 9,
-                    height: 9,
+                    width: 16,
+                    height: 16,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: plan.markerColor, width: 2),
                     ),
+                    child: selected
+                        ? Center(
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(shape: BoxShape.circle, color: plan.markerColor),
+                            ),
+                          )
+                        : null,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       plan.title,
-                      style: GoogleFonts.nunito(
-                        color: const Color(0xFFF2F4F8),
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                        height: 1.1,
-                      ),
+                      style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 24, fontWeight: FontWeight.w600, height: 1.2),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 8),
               ...plan.bullets.map(
-                (b) => Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '•',
-                        style: GoogleFonts.nunito(
-                          color: const Color(0xFFFFFFFF),
-                          fontSize: 8,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Expanded(
-                        child: Text(
-                          b,
-                          style: GoogleFonts.nunito(
-                            color: const Color(0xFFF2F4F8),
-                            fontSize: 7.6,
-                            fontWeight: FontWeight.w600,
-                            height: 1.25,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 3),
+                  child: _LineText(leading: '•', text: item),
                 ),
               ),
-              const SizedBox(height: 5),
-              if (plan.note == null)
-                RichText(
-                  text: TextSpan(
-                    style: GoogleFonts.nunito(
-                      color: const Color(0xFFFFFFFF),
-                      fontSize: 8 * 2,
-                      fontWeight: FontWeight.w700,
-                      height: 1.0,
-                    ),
-                    children: [
-                      TextSpan(text: plan.priceMain),
-                      if (plan.priceAccent != null)
-                        TextSpan(
-                          text: plan.priceAccent,
-                          style: TextStyle(
-                            color: plan.accentColor ?? const Color(0xFFFFFFFF),
-                          ),
-                        ),
-                    ],
-                  ),
-                )
-              else
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      plan.priceMain,
-                      style: GoogleFonts.nunito(
-                        color: const Color(0xFFFFFFFF),
-                        fontSize: 8 * 2,
-                        fontWeight: FontWeight.w700,
-                        height: 1.0,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        plan.note!,
-                        style: GoogleFonts.nunito(
-                          color: const Color(0xFFF3B41A),
-                          fontSize: 8,
-                          fontWeight: FontWeight.w700,
-                          height: 1.1,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              ...List.generate(plan.numberedItems.length, (index) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 3),
+                  child: _LineText(leading: '${index + 1}.', text: plan.numberedItems[index]),
+                );
+              }),
             ],
           ),
         ),
@@ -521,26 +411,50 @@ class _MembershipPlanCard extends StatelessWidget {
   }
 }
 
-class _PlanModel {
-  const _PlanModel({
+class _LineText extends StatelessWidget {
+  const _LineText({required this.leading, required this.text});
+
+  final String leading;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 16,
+          child: Text(
+            leading,
+            style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 14, fontWeight: FontWeight.w500, height: 1.5),
+          ),
+        ),
+        const SizedBox(width: 2),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 14, fontWeight: FontWeight.w500, height: 1.5),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TrainingPlanModel {
+  const _TrainingPlanModel({
     required this.title,
     required this.markerColor,
     required this.borderColor,
-    required this.background,
+    required this.backgroundColor,
     required this.bullets,
-    required this.priceMain,
-    this.priceAccent,
-    this.accentColor,
-    this.note,
+    required this.numberedItems,
   });
 
   final String title;
   final Color markerColor;
   final Color borderColor;
-  final Gradient background;
+  final Color backgroundColor;
   final List<String> bullets;
-  final String priceMain;
-  final String? priceAccent;
-  final Color? accentColor;
-  final String? note;
+  final List<String> numberedItems;
 }

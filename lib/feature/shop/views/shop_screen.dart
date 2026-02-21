@@ -37,12 +37,14 @@ class _ShopScreenState extends State<ShopScreen> {
 
   Future<void> _loadProducts() async {
     try {
-      final data = await _api.getSubscriptions();
+      final data = await _api.getProducts();
       if (!mounted) return;
       setState(() => _items = data);
     } on DioException catch (e) {
       final d = e.response?.data;
-      final msg = d is Map && d['message'] != null ? d['message'].toString() : 'Failed to load shop items';
+      final msg = d is Map && d['message'] != null
+          ? d['message'].toString()
+          : 'Failed to load shop items';
       CustomSnackbar.show(msg);
     } catch (_) {
       CustomSnackbar.show('Failed to load shop items');
@@ -54,12 +56,24 @@ class _ShopScreenState extends State<ShopScreen> {
   @override
   Widget build(BuildContext context) {
     final fallbackItems = <Map<String, String>>[
-      {'title': 'GT5s Motorized Treadmill', 'price': r'$1200', 'image': Images.gym1Image},
-      {'title': 'Magnetic Cross Trainer', 'price': r'$449', 'image': Images.gym2Image},
-      {'title': 'Spinning Bike (Pro)', 'price': r'$259', 'image': Images.gym3Image},
+      {
+        'title': 'GT5s Motorized Treadmill',
+        'price': r'$1200',
+        'image': Images.gym1Image,
+      },
+      {
+        'title': 'Magnetic Cross Trainer',
+        'price': r'$449',
+        'image': Images.gym2Image,
+      },
+      {
+        'title': 'Spinning Bike (Pro)',
+        'price': r'$259',
+        'image': Images.gym3Image,
+      },
     ];
     final filteredApiItems = _items.where((item) {
-      final title = (item['name'] ?? 'Subscription').toString().toLowerCase();
+      final title = (item['name'] ?? 'Product').toString().toLowerCase();
       return _searchQuery.isEmpty || title.contains(_searchQuery);
     }).toList();
     final filteredFallbackItems = fallbackItems.where((item) {
@@ -87,26 +101,48 @@ class _ShopScreenState extends State<ShopScreen> {
                     Container(
                       height: 38,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       child: TextField(
                         controller: _searchController,
-                        onChanged: (value) => setState(() => _searchQuery = value.trim().toLowerCase()),
-                        style: const TextStyle(color: Color(0xFF1E1E1E), fontSize: 13),
+                        onChanged: (value) => setState(
+                          () => _searchQuery = value.trim().toLowerCase(),
+                        ),
+                        style: const TextStyle(
+                          color: Color(0xFF1E1E1E),
+                          fontSize: 13,
+                        ),
                         decoration: const InputDecoration(
                           border: InputBorder.none,
                           isDense: false,
                           contentPadding: EdgeInsets.symmetric(vertical: 10),
-                          prefixIcon: Icon(Icons.search, size: 18, color: Color(0xFF90959C)),
-                          prefixIconConstraints: BoxConstraints(minWidth: 34, minHeight: 34),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            size: 18,
+                            color: Color(0xFF90959C),
+                          ),
+                          prefixIconConstraints: BoxConstraints(
+                            minWidth: 34,
+                            minHeight: 34,
+                          ),
                           hintText: 'Search',
-                          hintStyle: TextStyle(color: Color(0xFF90959C), fontSize: 13),
+                          hintStyle: TextStyle(
+                            color: Color(0xFF90959C),
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     const Text(
                       'Products',
-                      style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 14, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: Color(0xFFFFFFFF),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     SizedBox(
@@ -128,7 +164,11 @@ class _ShopScreenState extends State<ShopScreen> {
                     _DealCard(),
                     const SizedBox(height: 12),
                     if (_loading)
-                      const Center(child: CircularProgressIndicator(color: Color(0xFFF3B41A)))
+                      const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFF3B41A),
+                        ),
+                      )
                     else if (_items.isEmpty) ...[
                       if (filteredFallbackItems.isEmpty)
                         const Padding(
@@ -136,7 +176,10 @@ class _ShopScreenState extends State<ShopScreen> {
                           child: Center(
                             child: Text(
                               'No products found',
-                              style: TextStyle(color: Color(0xFF9AA1AE), fontSize: 13),
+                              style: TextStyle(
+                                color: Color(0xFF9AA1AE),
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         )
@@ -144,7 +187,11 @@ class _ShopScreenState extends State<ShopScreen> {
                         ...List.generate(filteredFallbackItems.length, (index) {
                           final item = filteredFallbackItems[index];
                           return Padding(
-                            padding: EdgeInsets.only(bottom: index == filteredFallbackItems.length - 1 ? 0 : 12),
+                            padding: EdgeInsets.only(
+                              bottom: index == filteredFallbackItems.length - 1
+                                  ? 0
+                                  : 12,
+                            ),
                             child: _ProductCard(
                               title: item['title']!,
                               price: item['price']!,
@@ -158,20 +205,38 @@ class _ShopScreenState extends State<ShopScreen> {
                         child: Center(
                           child: Text(
                             'No products found',
-                            style: TextStyle(color: Color(0xFF9AA1AE), fontSize: 13),
+                            style: TextStyle(
+                              color: Color(0xFF9AA1AE),
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ),
-                    ] else ...List.generate(filteredApiItems.length, (index) {
-                      final item = filteredApiItems[index];
-                      final title = (item['name'] ?? 'Subscription').toString();
-                      final monthly = item['priceMonthly']?.toString() ?? '0';
-                      final image = [Images.gym1Image, Images.gym2Image, Images.gym3Image][index % 3];
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: index == filteredApiItems.length - 1 ? 0 : 12),
-                        child: _ProductCard(title: title, price: '\$$monthly', image: image),
-                      );
-                    }),
+                    ] else
+                      ...List.generate(filteredApiItems.length, (index) {
+                        final item = filteredApiItems[index];
+                        final title = (item['name'] ?? 'Product').toString();
+                        final price =
+                            (item['price'] ?? item['priceMonthly'] ?? 0)
+                                .toString();
+                        final image = [
+                          Images.gym1Image,
+                          Images.gym2Image,
+                          Images.gym3Image,
+                        ][index % 3];
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index == filteredApiItems.length - 1
+                                ? 0
+                                : 12,
+                          ),
+                          child: _ProductCard(
+                            title: title,
+                            price: '\$$price',
+                            image: image,
+                          ),
+                        );
+                      }),
                   ],
                 ),
               ),
@@ -196,15 +261,26 @@ class _CategoryChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: selected ? const Color(0xFF2C6CFF) : const Color(0xFF1E2024),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: selected ? const Color(0xFF2C6CFF) : const Color(0xFF3A3F47), width: 1.1),
+        border: Border.all(
+          color: selected ? const Color(0xFF2C6CFF) : const Color(0xFF3A3F47),
+          width: 1.1,
+        ),
       ),
       child: Row(
         children: [
-          Icon(Icons.fitness_center, size: 14, color: selected ? Colors.white : const Color(0xFFF2B31A)),
+          Icon(
+            Icons.fitness_center,
+            size: 14,
+            color: selected ? Colors.white : const Color(0xFFF2B31A),
+          ),
           const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(color: selected ? Colors.white : const Color(0xFFF2B31A), fontSize: 12, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: selected ? Colors.white : const Color(0xFFF2B31A),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -217,7 +293,10 @@ class _DealCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      decoration: BoxDecoration(color: const Color(0xFF0C224E), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0C224E),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -226,22 +305,37 @@ class _DealCard extends StatelessWidget {
               children: const [
                 Text(
                   'Deal of the month',
-                  style: TextStyle(color: Color(0xFFB7C0D0), fontSize: 11, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: Color(0xFFB7C0D0),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 SizedBox(height: 4),
                 Text(
                   '10% off Pre-Workout',
-                  style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(color: const Color(0xFF2C6CFF), borderRadius: BorderRadius.circular(100)),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2C6CFF),
+              borderRadius: BorderRadius.circular(100),
+            ),
             child: const Text(
               'See Now',
-              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -251,7 +345,11 @@ class _DealCard extends StatelessWidget {
 }
 
 class _ProductCard extends StatelessWidget {
-  const _ProductCard({required this.title, required this.price, required this.image});
+  const _ProductCard({
+    required this.title,
+    required this.price,
+    required this.image,
+  });
 
   final String title;
   final String price;
@@ -263,7 +361,9 @@ class _ProductCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProductDetailScreen()));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProductDetailScreen()),
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Ink(
@@ -276,7 +376,9 @@ class _ProductCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
                 child: Image.asset(image, height: 150, fit: BoxFit.cover),
               ),
               Padding(
@@ -286,7 +388,12 @@ class _ProductCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600, height: 1.2),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -298,7 +405,12 @@ class _ProductCard extends StatelessWidget {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 price,
-                                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500, height: 1.0),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.0,
+                                ),
                               ),
                             ),
                           ),
@@ -306,14 +418,25 @@ class _ProductCard extends StatelessWidget {
                         InkWell(
                           onTap: () {
                             ShopBadgeState.incrementCart();
-                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShoppingCartScreen()));
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ShoppingCartScreen(),
+                              ),
+                            );
                           },
                           borderRadius: BorderRadius.circular(6),
                           child: Ink(
                             width: 24,
                             height: 24,
-                            decoration: BoxDecoration(color: const Color(0xFFF2B31A), borderRadius: BorderRadius.circular(6)),
-                            child: const Icon(Icons.add, size: 14, color: Colors.black),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF2B31A),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.add,
+                              size: 14,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                       ],

@@ -43,10 +43,7 @@ class HomeMenuScreen extends StatelessWidget {
 
     if (!context.mounted) return;
     CustomSnackbar.show(message);
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
+    Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false);
   }
 
   @override
@@ -63,14 +60,7 @@ class HomeMenuScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Center(
-                    child: SizedBox(
-                      width: 160,
-                      height: 60,
-                      child: Image.asset(
-                        Images.proFactoryImage,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+                    child: SizedBox(width: 160, height: 60, child: Image.asset(Images.proFactoryImage, fit: BoxFit.contain)),
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -80,21 +70,13 @@ class HomeMenuScreen extends StatelessWidget {
                           title: 'QR',
                           asset: Images.qrcodeImage,
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const QrHomeScreen(),
-                              ),
-                            );
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QrHomeScreen()));
                           },
                         ),
                       ),
                       const SizedBox(width: 16),
                       const Expanded(
-                        child: _MenuTile(
-                          title: 'Messages',
-                          asset: Images.whatsappImage,
-                          iconSize: 82,
-                        ),
+                        child: _MenuTile(title: 'Messages', asset: Images.whatsappImage, iconSize: 82),
                       ),
                     ],
                   ),
@@ -106,12 +88,7 @@ class HomeMenuScreen extends StatelessWidget {
                           title: 'Trainings',
                           asset: Images.traningImage,
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const ChooseTrainingPlanScreen(),
-                              ),
-                            );
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChooseTrainingPlanScreen()));
                           },
                         ),
                       ),
@@ -121,11 +98,7 @@ class HomeMenuScreen extends StatelessWidget {
                           title: 'Shop',
                           asset: Images.cartImage,
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const ShopScreen(),
-                              ),
-                            );
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShopScreen()));
                           },
                         ),
                       ),
@@ -141,18 +114,11 @@ class HomeMenuScreen extends StatelessWidget {
                         backgroundColor: const Color(0xFFF2B31A),
                         foregroundColor: Colors.black,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       child: const Text(
                         'Log out',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          height: 1.2,
-                          color: Color(0xFFFFFFFF),
-                        ),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, height: 1.2, color: Color(0xFFFFFFFF)),
                       ),
                     ),
                   ),
@@ -167,12 +133,7 @@ class HomeMenuScreen extends StatelessWidget {
 }
 
 class _MenuTile extends StatelessWidget {
-  const _MenuTile({
-    required this.title,
-    this.asset,
-    this.onTap,
-    this.iconSize = 65,
-  });
+  const _MenuTile({required this.title, this.asset, this.onTap, this.iconSize = 65});
 
   final String title;
   final String? asset;
@@ -197,22 +158,11 @@ class _MenuTile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (asset != null)
-                Image.asset(
-                  asset!,
-                  width: iconSize,
-                  height: iconSize,
-                  color: const Color(0xFFF2B31A),
-                ),
+              if (asset != null) Image.asset(asset!, width: iconSize, height: iconSize, color: const Color(0xFFF2B31A)),
               const SizedBox(height: 10),
               Text(
                 title,
-                style: const TextStyle(
-                  color: Color(0xFFFFFFFF),
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  height: 1.2,
-                ),
+                style: const TextStyle(color: Color(0xFFFFFFFF), fontSize: 24, fontWeight: FontWeight.w600, height: 1.2),
               ),
             ],
           ),

@@ -26,7 +26,8 @@ base class ApiEndpoints {
   static const String bookingRequests = _Services.bookingRequests;
   static const String applyCoupon = _Coupons.applyCoupon;
   static const String myCoupons = _Coupons.myCoupons;
-  static const String updateProfessionalStatus = _Professional.updateProfessionalStatus;
+  static const String updateProfessionalStatus =
+      _Professional.updateProfessionalStatus;
   static const String getProfile = _User.getProfile;
   static const String updateProfile = _User.updateProfile;
   static const String profileChangePassword = _User.changePassword;
@@ -37,6 +38,8 @@ base class ApiEndpoints {
   static const String nutritionToday = _Nutrition.today;
   static const String nutritionMine = _Nutrition.mine;
   static const String subscriptions = _Subscription.list;
+  static const String products = _Product.all;
+  static const String createProduct = _Product.create;
 
   // ---------------------- USER -----------------------------
   static const String user = '$baseUrl/user';
@@ -45,15 +48,22 @@ base class ApiEndpoints {
   // ---------------------- category -----------------------------
   static const String categories = '$baseUrl/categories';
   static String serviceById(String id) => _Services.serviceById(id);
-  static String bookingRequestById(String id) => _Services.bookingRequestById(id);
+  static String bookingRequestById(String id) =>
+      _Services.bookingRequestById(id);
   static String cancelService(String id) => _Services.cancelService(id);
-  static String cancelBookingRequest(String id) => _Services.cancelBookingRequest(id);
+  static String cancelBookingRequest(String id) =>
+      _Services.cancelBookingRequest(id);
   static String repeatService(String id) => _Services.repeatService(id);
-  static String repeatBookingRequest(String id) => _Services.repeatBookingRequest(id);
+  static String repeatBookingRequest(String id) =>
+      _Services.repeatBookingRequest(id);
+  static String productById(String id) => _Product.byId(id);
+  static String updateProduct(String id) => _Product.update(id);
+  static String deleteProduct(String id) => _Product.delete(id);
 
   //---------------------subcategory-------------------------
   // ✅ subcategory by categoryId
-  static String subcategoriesByCategoryId(String categoryId) => '$baseUrl/subcategories/category/$categoryId';
+  static String subcategoriesByCategoryId(String categoryId) =>
+      '$baseUrl/subcategories/category/$categoryId';
 }
 
 class _RemoteServer {
@@ -65,10 +75,10 @@ class _RemoteServer {
 // ignore: unused_element
 class _LocalHostWifi {
   // ignore: unused_field
-  static const String socketUrl = 'http://10.10.5.98:8001';
+  static const String socketUrl = 'http://10.10.5.98:5000';
 
   // ignore: unused_field
-  static const String baseUrl = 'http://10.10.5.98:8001/api/v1';
+  static const String baseUrl = 'http://10.10.5.98:5000/api/v1';
 }
 
 abstract class _Auth {
@@ -103,15 +113,19 @@ class _Services {
   static String serviceById(String id) => '$services/$id';
   static String bookingRequestById(String id) => '$bookingRequests/$id';
   static String cancelService(String id) => '$services/$id/cancel';
-  static String cancelBookingRequest(String id) => '$bookingRequests/$id/cancel';
+  static String cancelBookingRequest(String id) =>
+      '$bookingRequests/$id/cancel';
   static String repeatService(String id) => '$services/$id/repeat';
-  static String repeatBookingRequest(String id) => '$bookingRequests/$id/repeat';
+  static String repeatBookingRequest(String id) =>
+      '$bookingRequests/$id/repeat';
 }
 
 class _Professional {
   @protected
-  static const String _professionalRoute = '${ApiEndpoints.baseUrl}/professional';
-  static const String updateProfessionalStatus = '$_professionalRoute/update-status';
+  static const String _professionalRoute =
+      '${ApiEndpoints.baseUrl}/professional';
+  static const String updateProfessionalStatus =
+      '$_professionalRoute/update-status';
 }
 
 class _Coupons {
@@ -149,4 +163,15 @@ class _Subscription {
   @protected
   static const String _route = '${ApiEndpoints.baseUrl}/subscription';
   static const String list = _route;
+}
+
+class _Product {
+  @protected
+  static const String _route = '${ApiEndpoints.baseUrl}/product';
+  static const String create = '$_route/create-product';
+  static const String all = '$_route/all';
+
+  static String byId(String id) => '$_route/$id';
+  static String update(String id) => '$_route/$id';
+  static String delete(String id) => '$_route/$id';
 }

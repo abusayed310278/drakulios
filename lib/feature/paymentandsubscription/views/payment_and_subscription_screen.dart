@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/assets.dart';
 import '../../home/views/terms_conditions_screen.dart';
+import 'payment_flow_destination.dart';
 import 'payment_method_screen.dart';
 
 class PaymentAndSubscriptionScreen extends StatefulWidget {
@@ -17,11 +18,31 @@ class _PaymentAndSubscriptionScreenState
     extends State<PaymentAndSubscriptionScreen> {
   int? _selectedPlan;
 
+  void _goToPaymentMethod() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const PaymentMethodScreen(
+          flowDestination: PaymentFlowDestination.homeMenu,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openTermsFlow() async {
+    final accepted = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const TermsConditionsScreen()),
+    );
+    if (!mounted) return;
+    if (accepted == true) {
+      _goToPaymentMethod();
+    }
+  }
+
   Future<void> _showTermsDialog() async {
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.55),
-      builder: (context) => Dialog(
+      builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 34),
         child: Container(
@@ -37,7 +58,7 @@ class _PaymentAndSubscriptionScreenState
                 children: [
                   const Spacer(),
                   InkWell(
-                    onTap: () => Navigator.of(context).pop(),
+                    onTap: () => Navigator.of(dialogContext).pop(),
                     borderRadius: BorderRadius.circular(12),
                     child: const Padding(
                       padding: EdgeInsets.all(2),
@@ -63,11 +84,8 @@ class _PaymentAndSubscriptionScreenState
               const SizedBox(height: 2),
               GestureDetector(
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const TermsConditionsScreen(),
-                    ),
-                  );
+                  Navigator.of(dialogContext).pop();
+                  _openTermsFlow();
                 },
                 child: Text(
                   'Terms And Conditions.',
@@ -86,7 +104,7 @@ class _PaymentAndSubscriptionScreenState
                     child: SizedBox(
                       height: 36,
                       child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () => Navigator.of(dialogContext).pop(),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(
                             color: Color(0xFFF2B31A),
@@ -113,12 +131,8 @@ class _PaymentAndSubscriptionScreenState
                       height: 36,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const PaymentMethodScreen(),
-                            ),
-                          );
+                          Navigator.of(dialogContext).pop();
+                          _goToPaymentMethod();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFF2B31A),
@@ -272,7 +286,7 @@ class _PaymentAndSubscriptionScreenState
               padding: const EdgeInsets.fromLTRB(18, 60, 18, 20),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 320),
+                  constraints: const BoxConstraints(maxWidth: 343),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -291,22 +305,26 @@ class _PaymentAndSubscriptionScreenState
                         child: Text(
                           'Choose Your Plan',
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.nunito(
-                            color: const Color(0xFFEDEEF0),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            height: 1.0,
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFFFFFFF),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            height: 1.2,
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'All Features, No Limit',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.nunito(
-                          color: const Color(0xFFB0B6C0),
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w500,
+                      SizedBox(
+                        width: 343,
+                        child: Text(
+                          'All Features, No Limit',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFB1B1B1),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            height: 1.2,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -321,21 +339,25 @@ class _PaymentAndSubscriptionScreenState
                           child: _MembershipPlanCard(
                             plan: p,
                             selected: _selectedPlan == index,
-                            onTap: () => setState(() => _selectedPlan = index),
+                            onTap: () async {
+                              setState(() => _selectedPlan = index);
+                              await _showTermsDialog();
+                            },
                           ),
                         );
                       }),
                       const SizedBox(height: 12),
                       SizedBox(
-                        height: 34,
+                        height: 48,
                         child: ElevatedButton(
                           onPressed: _showTermsDialog,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF2B31A),
+                            backgroundColor: const Color(0xFFF3B41A),
                             foregroundColor: Colors.white,
                             elevation: 0,
+                            padding: const EdgeInsets.all(10),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(9),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           child: Text(
@@ -350,15 +372,18 @@ class _PaymentAndSubscriptionScreenState
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        'You can cancel subscription anytime',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(
-                          color: const Color(0xFFB1B1B1),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          height: 1.2,
-                          letterSpacing: 0,
+                      SizedBox(
+                        width: 346,
+                        child: Text(
+                          'You can cancel subscription anytime',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFB1B1B1),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            height: 1.2,
+                            letterSpacing: 0,
+                          ),
                         ),
                       ),
                     ],
