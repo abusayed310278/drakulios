@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/constants/assets.dart';
+import '../../../../core/network/api_service/notification_api_service.dart';
 import '../../../../core/network/api_service/user_api_service.dart';
 import '../../../../core/common/widgets/custom_snackbar.dart';
 import '../../../notifications/views/notification_screen.dart';
@@ -27,12 +28,14 @@ class ShopHeader extends StatefulWidget {
 
 class _ShopHeaderState extends State<ShopHeader> {
   final UserApiService _userApi = UserApiService();
+  final NotificationApiService _notificationApi = NotificationApiService();
   String _avatarUrl = '';
 
   @override
   void initState() {
     super.initState();
     _loadAvatar();
+    _loadNotificationCount();
   }
 
   Future<void> _loadAvatar() async {
@@ -50,6 +53,14 @@ class _ShopHeaderState extends State<ShopHeader> {
       if (msg.isNotEmpty) {
         CustomSnackbar.show(msg);
       }
+    } catch (_) {}
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final items = await _notificationApi.getMyNotifications();
+      final count = items.where((e) => e['isRead'] != true).length;
+      ShopBadgeState.setNotificationCount(count);
     } catch (_) {}
   }
 
@@ -111,11 +122,13 @@ class _ShopHeaderState extends State<ShopHeader> {
                     ? const Color(0xFFF3B41A)
                     : const Color(0xFFC9CDD3),
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const NotificationScreen(),
-                    ),
-                  );
+                  Navigator.of(context)
+                      .push(
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationScreen(),
+                        ),
+                      )
+                      .then((_) => _loadNotificationCount());
                 },
               );
             },

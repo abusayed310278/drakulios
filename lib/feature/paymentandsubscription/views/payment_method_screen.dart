@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:dio/dio.dart';
 
 import '../../../core/constants/assets.dart';
+import '../../../core/common/widgets/custom_snackbar.dart';
+import '../../../core/network/api_service/token_meneger.dart';
+import '../../../core/network/api_service/training_shop_api_service.dart';
 import 'payment_flow_destination.dart';
 import 'payment_success_screen.dart';
 
@@ -9,16 +14,221 @@ class PaymentMethodScreen extends StatefulWidget {
   const PaymentMethodScreen({
     super.key,
     this.flowDestination = PaymentFlowDestination.homeMenu,
+    this.amount = 49,
+    this.subscriptionId,
+    this.billingPeriod,
   });
 
   final PaymentFlowDestination flowDestination;
+  final double amount;
+  final String? subscriptionId;
+  final String? billingPeriod;
 
   @override
   State<PaymentMethodScreen> createState() => _PaymentMethodScreenState();
 }
 
 class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
+  final TrainingShopApiService _api = TrainingShopApiService();
   int _selectedMethod = 0;
+  bool _isPaying = false;
+
+  String _friendlyError(Object error, {required String fallback}) {
+    final asString = error.toString().trim();
+    if (asString.isNotEmpty && !asString.startsWith('Instance of')) {
+      return asString;
+    }
+    try {
+      final dynamicError = error as dynamic;
+      final message = dynamicError.message?.toString().trim();
+      if (message != null && message.isNotEmpty) return message;
+    } catch (_) {}
+    return fallback;
+  }
+
+  Future<bool> _ensureStripeConfigured() async {
+    // Accessing Stripe.publishableKey can throw if not initialized yet.
+    try {
+      final existingKey = Stripe.publishableKey;
+      if (existingKey.trim().isNotEmpty) return true;
+    } catch (_) {
+      // Continue and load key from backend config.
+    }
+    try {
+      final config = await _api.getPaymentConfig();
+      final data = config['data'];
+      final key = data is Map ? data['publishableKey']?.toString() : null;
+      if (key == null || key.trim().isEmpty) {
+        CustomSnackbar.show('Stripe publishable key is missing');
+        return false;
+      }
+      if (!key.startsWith('pk_')) {
+        CustomSnackbar.show('Invalid Stripe publishable key on server');
+        return false;
+      }
+      Stripe.publishableKey = key;
+      await Stripe.instance.applySettings();
+      return true;
+    } on MissingPluginException {
+      CustomSnackbar.show(
+        'Stripe SDK not loaded. Rebuild app: flutter clean, pub get, pod install, run.',
+      );
+      return false;
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String? backendMessage;
+      if (data is Map) {
+        backendMessage =
+            data['error']?.toString() ??
+            data['message']?.toString() ??
+            data['details']?.toString();
+      } else if (data != null) {
+        backendMessage = data.toString();
+      }
+      CustomSnackbar.show(
+        backendMessage == null || backendMessage.trim().isEmpty
+            ? 'Failed to load payment config'
+            : backendMessage,
+      );
+      return false;
+    } on StripeConfigException catch (e) {
+      final msg = e.message.trim();
+      CustomSnackbar.show(
+        msg.isEmpty ? 'Stripe configuration error' : msg,
+      );
+      return false;
+    } catch (e) {
+      CustomSnackbar.show(
+        _friendlyError(e, fallback: 'Failed to initialize Stripe'),
+      );
+      return false;
+    }
+  }
+
+  Future<void> _handlePay() async {
+    if (_isPaying) return;
+    setState(() => _isPaying = true);
+    try {
+      final stripeReady = await _ensureStripeConfigured();
+      if (!stripeReady) return;
+
+      final hasSubscriptionInfo =
+          widget.subscriptionId != null &&
+          widget.subscriptionId!.trim().isNotEmpty &&
+          widget.billingPeriod != null &&
+          widget.billingPeriod!.trim().isNotEmpty;
+
+      final uid =
+          await TokenManager.getUid() ?? await TokenManager.getUidFromToken();
+
+      final paymentRes = await _api.createPayment(
+        userId: uid,
+        price: widget.amount,
+        subscriptionId: hasSubscriptionInfo ? widget.subscriptionId : null,
+        billingPeriod: hasSubscriptionInfo ? widget.billingPeriod : null,
+        paymentMethod: _selectedMethod == 0 ? 'card' : 'stripe',
+        useTestStripe: false,
+      );
+
+      if (paymentRes['success'] != true &&
+          paymentRes['paymentIntentId'] == null) {
+        CustomSnackbar.show('Payment initialization failed');
+        return;
+      }
+
+      final clientSecret = paymentRes['clientSecret']?.toString();
+      final paymentIntentId = paymentRes['paymentIntentId']?.toString();
+      if (clientSecret == null || clientSecret.isEmpty) {
+        CustomSnackbar.show('Payment client secret not found');
+        return;
+      }
+      if (paymentIntentId == null || paymentIntentId.isEmpty) {
+        CustomSnackbar.show('Payment id not found');
+        return;
+      }
+
+      try {
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            merchantDisplayName: 'Drakulios',
+            paymentIntentClientSecret: clientSecret,
+          ),
+        );
+        await Stripe.instance.presentPaymentSheet();
+
+        final confirmRes = await _api.confirmPayment(
+          paymentIntentId: paymentIntentId,
+        );
+        if (confirmRes['success'] != true) {
+          CustomSnackbar.show('Payment could not be confirmed');
+          return;
+        }
+      } on MissingPluginException {
+        CustomSnackbar.show(
+          'Stripe SDK not loaded. Rebuild app: flutter clean, pub get, pod install, run.',
+        );
+        return;
+      } on PlatformException catch (e) {
+        final msg = (e.message?.trim().isNotEmpty ?? false)
+            ? e.message!.trim()
+            : e.toString();
+        CustomSnackbar.show(msg);
+        return;
+      } on StripeConfigException catch (e) {
+        final msg = e.message.trim();
+        CustomSnackbar.show(
+          msg.isEmpty ? 'Stripe configuration error' : msg,
+        );
+        return;
+      } on StripeException catch (e) {
+        final localized = (e.error.localizedMessage ?? '').toLowerCase();
+        final isCanceled =
+            e.error.code == FailureCode.Canceled ||
+            localized.contains('cancel');
+        final stripeMsg = e.error.localizedMessage?.trim();
+        if (isCanceled) {
+          CustomSnackbar.show('Payment Canceled');
+        } else {
+          CustomSnackbar.show(
+            stripeMsg != null && stripeMsg.isNotEmpty
+                ? stripeMsg
+                : 'Payment failed',
+          );
+        }
+        return;
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) =>
+              PaymentSuccessScreen(flowDestination: widget.flowDestination),
+        ),
+      );
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String? backendMessage;
+      if (data is Map) {
+        backendMessage =
+            data['error']?.toString() ??
+            data['message']?.toString() ??
+            data['details']?.toString();
+      } else if (data != null) {
+        backendMessage = data.toString();
+      }
+      CustomSnackbar.show(
+        backendMessage == null || backendMessage.trim().isEmpty
+            ? 'Payment failed'
+            : backendMessage,
+      );
+    } catch (e) {
+      CustomSnackbar.show(
+        _friendlyError(e, fallback: 'Payment failed. Please try again'),
+      );
+    } finally {
+      if (mounted) setState(() => _isPaying = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,48 +294,10 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                       selected: _selectedMethod == 1,
                       onTap: () => setState(() => _selectedMethod = 1),
                     ),
-                    const SizedBox(height: 22),
-                    const Text(
-                      'Card Details',
-                      style: TextStyle(
-                        color: Color(0xFFF5F6F8),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    const _FieldLabel(text: 'Card Number'),
-                    const SizedBox(height: 8),
-                    _DarkTextField(
-                      hintText: '0000 0000 0000 0000',
-                      suffixIcon: const Icon(
-                        Icons.credit_card,
-                        color: Color(0xFFE2E5EA),
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: const [
-                        Expanded(child: _FieldLabel(text: 'Expiry Date')),
-                        SizedBox(width: 12),
-                        Expanded(child: _FieldLabel(text: 'CW')),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: _DarkTextField(hintText: 'MM/YY'),
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(child: _DarkTextField(hintText: '123')),
-                      ],
-                    ),
                     const SizedBox(height: 18),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text(
                           'Total Amount',
                           style: TextStyle(
@@ -135,8 +307,8 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                           ),
                         ),
                         Text(
-                          r'$49.00',
-                          style: TextStyle(
+                          '\$${widget.amount.toStringAsFixed(2)}',
+                          style: const TextStyle(
                             color: Color(0xFFFFFFFF),
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -148,15 +320,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => PaymentSuccessScreen(
-                                flowDestination: widget.flowDestination,
-                              ),
-                            ),
-                          );
-                        },
+                        onPressed: _isPaying ? null : _handlePay,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFF2B31A),
                           foregroundColor: Colors.black,
@@ -165,15 +329,24 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text(
-                          r'Pay $49.00',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            height: 1.2,
-                            color: Color(0xFFFFFFFF),
-                          ),
-                        ),
+                        child: _isPaying
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                'Pay \$${widget.amount.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.2,
+                                  color: Color(0xFFFFFFFF),
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -315,58 +488,6 @@ class _StripeBadge extends StatelessWidget {
             color: Colors.black,
             fontSize: 10,
             fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: GoogleFonts.poppins(
-        color: Color.fromARGB(255, 229, 235, 244),
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        height: 1.0,
-      ),
-    );
-  }
-}
-
-class _DarkTextField extends StatelessWidget {
-  const _DarkTextField({required this.hintText, this.suffixIcon});
-
-  final String hintText;
-  final Widget? suffixIcon;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: TextField(
-        style: const TextStyle(color: Color(0xFFF5F6F8), fontSize: 13),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: const TextStyle(color: Color(0xFF7E838C), fontSize: 13),
-          filled: true,
-          fillColor: const Color(0xFF0A0C11),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-          suffixIcon: suffixIcon,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF263141), width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF3A4860), width: 1.2),
           ),
         ),
       ),

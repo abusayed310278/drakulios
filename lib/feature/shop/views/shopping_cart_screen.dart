@@ -1,6 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/common/widgets/custom_snackbar.dart';
 import '../../../core/constants/assets.dart';
+import '../../../core/network/api_service/training_shop_api_service.dart';
 import '../../paymentandsubscription/views/payment_flow_destination.dart';
 import '../../paymentandsubscription/views/payment_method_screen.dart';
 
@@ -12,20 +15,101 @@ class ShoppingCartScreen extends StatefulWidget {
 }
 
 class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
-  final List<int> _quantities = List<int>.filled(4, 2);
+  final TrainingShopApiService _api = TrainingShopApiService();
+  bool _loading = true;
+  List<_CartItemUi> _items = <_CartItemUi>[];
+  double _subtotal = 0;
+  double _tax = 0;
+  double _total = 0;
 
-  void _incrementQuantity(int index) {
-    setState(() {
-      _quantities[index] += 1;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadCart();
   }
 
-  void _decrementQuantity(int index) {
-    setState(() {
-      if (_quantities[index] > 1) {
-        _quantities[index] -= 1;
+  Future<void> _loadCart() async {
+    try {
+      final res = await _api.getCart();
+      final data = res['data'];
+      if (data is Map) {
+        final itemsRaw = data['items'];
+        final items = <_CartItemUi>[];
+        if (itemsRaw is List) {
+          for (final rawItem in itemsRaw) {
+            if (rawItem is! Map) continue;
+            final item = Map<String, dynamic>.from(rawItem);
+            final productRaw = item['product'];
+            final product = productRaw is Map
+                ? Map<String, dynamic>.from(productRaw)
+                : <String, dynamic>{};
+            items.add(
+              _CartItemUi(
+                productId: (product['_id'] ?? item['product'] ?? '').toString(),
+                name: (product['name'] ?? 'Product').toString(),
+                price: _toDouble(product['price']),
+                quantity: (item['quantity'] as num?)?.toInt() ?? 1,
+              ),
+            );
+          }
+        }
+        if (!mounted) return;
+        setState(() {
+          _items = items;
+          _subtotal = _toDouble(data['subTotal']);
+          _tax = _toDouble(data['tax']);
+          _total = _toDouble(data['total']);
+        });
       }
-    });
+    } on DioException catch (e) {
+      final d = e.response?.data;
+      final msg = d is Map && d['message'] != null
+          ? d['message'].toString()
+          : 'Failed to load cart';
+      CustomSnackbar.show(msg);
+    } catch (_) {
+      CustomSnackbar.show('Failed to load cart');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _changeQuantity({
+    required String productId,
+    required String action,
+  }) async {
+    try {
+      await _api.updateCartItemQuantity(productId: productId, action: action);
+      _loadCart();
+    } on DioException catch (e) {
+      final d = e.response?.data;
+      final msg = d is Map && d['message'] != null
+          ? d['message'].toString()
+          : 'Failed to update cart';
+      CustomSnackbar.show(msg);
+    } catch (_) {
+      CustomSnackbar.show('Failed to update cart');
+    }
+  }
+
+  Future<void> _removeItem(String productId) async {
+    try {
+      await _api.removeCartItem(productId: productId);
+      _loadCart();
+    } on DioException catch (e) {
+      final d = e.response?.data;
+      final msg = d is Map && d['message'] != null
+          ? d['message'].toString()
+          : 'Failed to remove item';
+      CustomSnackbar.show(msg);
+    } catch (_) {
+      CustomSnackbar.show('Failed to remove item');
+    }
+  }
+
+  double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 
   @override
@@ -56,7 +140,6 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                           ),
                           splashRadius: 18,
                           padding: EdgeInsets.zero,
-
                           constraints: const BoxConstraints(
                             minWidth: 24,
                             minHeight: 24,
@@ -76,50 +159,100 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                     ],
                   ),
                   const SizedBox(height: 1),
-                  GridView.builder(
-                    padding: const EdgeInsets.only(top: 6),
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          mainAxisExtent: 220,
+                  if (_loading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 24),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFF3B41A),
                         ),
-                    itemCount: _quantities.length,
-                    itemBuilder: (context, index) {
-                      return _CartItemCard(
-                        image: Images.gym1Image,
-                        quantity: _quantities[index],
-                        onDecrease: () => _decrementQuantity(index),
-                        onIncrease: () => _incrementQuantity(index),
-                      );
-                    },
-                  ),
+                      ),
+                    )
+                  else if (_items.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 24),
+                      child: Center(
+                        child: Text(
+                          'Cart is empty',
+                          style: TextStyle(
+                            color: Color(0xFF9AA1AE),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    GridView.builder(
+                      padding: const EdgeInsets.only(top: 6),
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            mainAxisExtent: 220,
+                          ),
+                      itemCount: _items.length,
+                      itemBuilder: (context, index) {
+                        final item = _items[index];
+                        return _CartItemCard(
+                          image: Images.gym1Image,
+                          title: item.name,
+                          price: '\$${item.price.toStringAsFixed(2)}',
+                          quantity: item.quantity,
+                          onDecrease: () => _changeQuantity(
+                            productId: item.productId,
+                            action: 'decrement',
+                          ),
+                          onIncrease: () => _changeQuantity(
+                            productId: item.productId,
+                            action: 'increment',
+                          ),
+                          onRemove: () => _removeItem(item.productId),
+                        );
+                      },
+                    ),
                   const SizedBox(height: 16),
-                  const _SummaryRow(label: 'Subtotal', value: r'$449'),
+                  _SummaryRow(
+                    label: 'Subtotal',
+                    value: '\$${_subtotal.toStringAsFixed(2)}',
+                  ),
                   const SizedBox(height: 4),
-                  const _SummaryRow(label: 'Estimated Tax', value: r'$449'),
+                  _SummaryRow(
+                    label: 'Estimated Tax',
+                    value: '\$${_tax.toStringAsFixed(2)}',
+                  ),
                   const SizedBox(height: 6),
-                  const _SummaryRow(label: 'Total', value: r'$449', bold: true),
+                  _SummaryRow(
+                    label: 'Total',
+                    value: '\$${_total.toStringAsFixed(2)}',
+                    bold: true,
+                  ),
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const PaymentMethodScreen(
-                              flowDestination: PaymentFlowDestination.shop,
-                            ),
-                          ),
-                        );
-                      },
+                      onPressed: _items.isEmpty
+                          ? null
+                          : () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => PaymentMethodScreen(
+                                    flowDestination:
+                                        PaymentFlowDestination.shop,
+                                    amount: _total,
+                                  ),
+                                ),
+                              );
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF2B31A),
                         foregroundColor: Colors.black,
                         elevation: 0,
+                        disabledBackgroundColor: const Color(
+                          0xFFF2B31A,
+                        ).withValues(alpha: 0.45),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -148,15 +281,21 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
 class _CartItemCard extends StatelessWidget {
   const _CartItemCard({
     required this.image,
+    required this.title,
+    required this.price,
     required this.quantity,
     required this.onDecrease,
     required this.onIncrease,
+    required this.onRemove,
   });
 
   final String image;
+  final String title;
+  final String price;
   final int quantity;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -178,18 +317,20 @@ class _CartItemCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'GT5s Motorized Treadmill',
-                  style: TextStyle(
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  r'$1200',
-                  style: TextStyle(
+                Text(
+                  price,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -198,23 +339,27 @@ class _CartItemCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: const Color(0x33F3B41A),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: const Color(0xFFF3B41A),
-                          width: 1,
+                    InkWell(
+                      onTap: onRemove,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: const Color(0x33F3B41A),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFFF3B41A),
+                            width: 1,
+                          ),
                         ),
-                      ),
-                      child: Center(
-                        child: Image.asset(
-                          Images.deleteImage,
-                          width: 14,
-                          height: 14,
-                          color: Colors.white,
+                        child: Center(
+                          child: Image.asset(
+                            Images.deleteImage,
+                            width: 14,
+                            height: 14,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -335,4 +480,18 @@ class _SummaryRow extends StatelessWidget {
       ],
     );
   }
+}
+
+class _CartItemUi {
+  const _CartItemUi({
+    required this.productId,
+    required this.name,
+    required this.price,
+    required this.quantity,
+  });
+
+  final String productId;
+  final String name;
+  final double price;
+  final int quantity;
 }

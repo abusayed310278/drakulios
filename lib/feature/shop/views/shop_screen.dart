@@ -53,6 +53,25 @@ class _ShopScreenState extends State<ShopScreen> {
     }
   }
 
+  Future<void> _addToCart(String productId) async {
+    try {
+      await _api.addToCart(productId: productId, quantity: 1);
+      ShopBadgeState.incrementCart();
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const ShoppingCartScreen()));
+    } on DioException catch (e) {
+      final d = e.response?.data;
+      final msg = d is Map && d['message'] != null
+          ? d['message'].toString()
+          : 'Failed to add product to cart';
+      CustomSnackbar.show(msg);
+    } catch (_) {
+      CustomSnackbar.show('Failed to add product to cart');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final fallbackItems = <Map<String, String>>[
@@ -84,122 +103,92 @@ class _ShopScreenState extends State<ShopScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF050608),
       body: SafeArea(
-        top: false,
-        child: Center(
+        top: true,
+        child: Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(18, 50, 18, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const ShopHeader(title: 'Shop'),
-                    const SizedBox(height: 14),
-                    Container(
-                      height: 38,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(18, 6, 18, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const ShopHeader(title: 'Shop'),
+                  const SizedBox(height: 14),
+                  Container(
+                    height: 38,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) => setState(
+                        () => _searchQuery = value.trim().toLowerCase(),
                       ),
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (value) => setState(
-                          () => _searchQuery = value.trim().toLowerCase(),
+                      style: const TextStyle(
+                        color: Color(0xFF1E1E1E),
+                        fontSize: 13,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: false,
+                        contentPadding: EdgeInsets.symmetric(vertical: 10),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          size: 18,
+                          color: Color(0xFF90959C),
                         ),
-                        style: const TextStyle(
-                          color: Color(0xFF1E1E1E),
+                        prefixIconConstraints: BoxConstraints(
+                          minWidth: 34,
+                          minHeight: 34,
+                        ),
+                        hintText: 'Search',
+                        hintStyle: TextStyle(
+                          color: Color(0xFF90959C),
                           fontSize: 13,
                         ),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isDense: false,
-                          contentPadding: EdgeInsets.symmetric(vertical: 10),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            size: 18,
-                            color: Color(0xFF90959C),
-                          ),
-                          prefixIconConstraints: BoxConstraints(
-                            minWidth: 34,
-                            minHeight: 34,
-                          ),
-                          hintText: 'Search',
-                          hintStyle: TextStyle(
-                            color: Color(0xFF90959C),
-                            fontSize: 13,
-                          ),
-                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Products',
-                      style: TextStyle(
-                        color: Color(0xFFFFFFFF),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Products',
+                    style: TextStyle(
+                      color: Color(0xFFFFFFFF),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 34,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: const [
-                          _CategoryChip(label: 'Equipments', selected: true),
-                          SizedBox(width: 8),
-                          _CategoryChip(label: 'Apparel'),
-                          SizedBox(width: 8),
-                          _CategoryChip(label: 'Drinks'),
-                          SizedBox(width: 8),
-                          _CategoryChip(label: 'Supps'),
-                        ],
-                      ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 34,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: const [
+                        _CategoryChip(label: 'Equipments', selected: true),
+                        SizedBox(width: 8),
+                        _CategoryChip(label: 'Apparel'),
+                        SizedBox(width: 8),
+                        _CategoryChip(label: 'Drinks'),
+                        SizedBox(width: 8),
+                        _CategoryChip(label: 'Supps'),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    _DealCard(),
-                    const SizedBox(height: 12),
-                    if (_loading)
-                      const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFF3B41A),
-                        ),
-                      )
-                    else if (_items.isEmpty) ...[
-                      if (filteredFallbackItems.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 18),
-                          child: Center(
-                            child: Text(
-                              'No products found',
-                              style: TextStyle(
-                                color: Color(0xFF9AA1AE),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        )
-                      else
-                        ...List.generate(filteredFallbackItems.length, (index) {
-                          final item = filteredFallbackItems[index];
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              bottom: index == filteredFallbackItems.length - 1
-                                  ? 0
-                                  : 12,
-                            ),
-                            child: _ProductCard(
-                              title: item['title']!,
-                              price: item['price']!,
-                              image: item['image']!,
-                            ),
-                          );
-                        }),
-                    ] else if (filteredApiItems.isEmpty) ...[
+                  ),
+                  const SizedBox(height: 12),
+                  _DealCard(),
+                  const SizedBox(height: 12),
+                  if (_loading)
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFF3B41A),
+                      ),
+                    )
+                  else if (_items.isEmpty) ...[
+                    if (filteredFallbackItems.isEmpty)
                       const Padding(
                         padding: EdgeInsets.only(top: 18),
                         child: Center(
@@ -211,34 +200,64 @@ class _ShopScreenState extends State<ShopScreen> {
                             ),
                           ),
                         ),
-                      ),
-                    ] else
-                      ...List.generate(filteredApiItems.length, (index) {
-                        final item = filteredApiItems[index];
-                        final title = (item['name'] ?? 'Product').toString();
-                        final price =
-                            (item['price'] ?? item['priceMonthly'] ?? 0)
-                                .toString();
-                        final image = [
-                          Images.gym1Image,
-                          Images.gym2Image,
-                          Images.gym3Image,
-                        ][index % 3];
+                      )
+                    else
+                      ...List.generate(filteredFallbackItems.length, (index) {
+                        final item = filteredFallbackItems[index];
                         return Padding(
                           padding: EdgeInsets.only(
-                            bottom: index == filteredApiItems.length - 1
+                            bottom: index == filteredFallbackItems.length - 1
                                 ? 0
                                 : 12,
                           ),
                           child: _ProductCard(
-                            title: title,
-                            price: '\$$price',
-                            image: image,
+                            title: item['title']!,
+                            price: item['price']!,
+                            image: item['image']!,
                           ),
                         );
                       }),
-                  ],
-                ),
+                  ] else if (filteredApiItems.isEmpty) ...[
+                    const Padding(
+                      padding: EdgeInsets.only(top: 18),
+                      child: Center(
+                        child: Text(
+                          'No products found',
+                          style: TextStyle(
+                            color: Color(0xFF9AA1AE),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ] else
+                    ...List.generate(filteredApiItems.length, (index) {
+                      final item = filteredApiItems[index];
+                      final title = (item['name'] ?? 'Product').toString();
+                      final price = (item['price'] ?? item['priceMonthly'] ?? 0)
+                          .toString();
+                      final image = [
+                        Images.gym1Image,
+                        Images.gym2Image,
+                        Images.gym3Image,
+                      ][index % 3];
+                      final productId = (item['_id'] ?? item['id'] ?? '')
+                          .toString();
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index == filteredApiItems.length - 1 ? 0 : 12,
+                        ),
+                        child: _ProductCard(
+                          title: title,
+                          price: '\$$price',
+                          image: image,
+                          onAdd: productId.isNotEmpty
+                              ? () => _addToCart(productId)
+                              : null,
+                        ),
+                      );
+                    }),
+                ],
               ),
             ),
           ),
@@ -349,11 +368,13 @@ class _ProductCard extends StatelessWidget {
     required this.title,
     required this.price,
     required this.image,
+    this.onAdd,
   });
 
   final String title;
   final String price;
   final String image;
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -416,14 +437,7 @@ class _ProductCard extends StatelessWidget {
                           ),
                         ),
                         InkWell(
-                          onTap: () {
-                            ShopBadgeState.incrementCart();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const ShoppingCartScreen(),
-                              ),
-                            );
-                          },
+                          onTap: onAdd,
                           borderRadius: BorderRadius.circular(6),
                           child: Ink(
                             width: 24,

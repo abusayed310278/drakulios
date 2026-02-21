@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/common/widgets/custom_snackbar.dart';
+import '../../../core/network/api_service/token_meneger.dart';
+import '../../../core/network/api_service/training_shop_api_service.dart';
 import '../../paymentandsubscription/views/payment_flow_destination.dart';
 import '../../paymentandsubscription/views/payment_method_screen.dart';
 
@@ -11,6 +14,7 @@ class HealthProfileScreen extends StatefulWidget {
 }
 
 class _HealthProfileScreenState extends State<HealthProfileScreen> {
+  final TrainingShopApiService _api = TrainingShopApiService();
   final TextEditingController _currentWeight = TextEditingController();
   final TextEditingController _targetWeight = TextEditingController();
   final TextEditingController _recentWeightChanges = TextEditingController();
@@ -25,6 +29,7 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
   final TextEditingController _digestionGutHealth = TextEditingController();
   final TextEditingController _supplementsCurrentlyUsed =
       TextEditingController();
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -45,6 +50,46 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
   }
 
   Future<void> _submitTrainingDetails() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+    try {
+      final uid =
+          await TokenManager.getUid() ?? await TokenManager.getUidFromToken();
+      if (uid == null || uid.trim().isEmpty) {
+        CustomSnackbar.show('Unable to identify user for training submission');
+        return;
+      }
+
+      await _api.createTraining({
+        'userId': uid,
+        'name': 'Personalized Training Plan',
+        'reps': _typicalDailyMeals.text.trim(),
+        'rest': _sleepPatterns.text.trim(),
+        'weight': _currentWeight.text.trim(),
+        'date': DateTime.now().toIso8601String(),
+        'healthProfile': {
+          'currentWeight': _currentWeight.text.trim(),
+          'targetWeight': _targetWeight.text.trim(),
+          'recentWeightChanges': _recentWeightChanges.text.trim(),
+          'bodyType': _bodyType.text.trim(),
+          'currentHeight': _currentHeight.text.trim(),
+          'sleepPatterns': _sleepPatterns.text.trim(),
+          'appetiteHunger': _appetiteHunger.text.trim(),
+          'typicalDailyMeals': _typicalDailyMeals.text.trim(),
+          'waterFluidIntake': _waterFluidIntake.text.trim(),
+          'surgicalHistory': _surgicalHistory.text.trim(),
+          'currentPhysicalPains': _currentPhysicalPains.text.trim(),
+          'digestionGutHealth': _digestionGutHealth.text.trim(),
+          'supplementsCurrentlyUsed': _supplementsCurrentlyUsed.text.trim(),
+        },
+      });
+    } catch (_) {
+      CustomSnackbar.show('Failed to submit training details');
+      return;
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -205,35 +250,47 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _submitTrainingDetails,
+                      onPressed: _submitting ? null : _submitTrainingDetails,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF2B31A),
                         foregroundColor: Colors.black,
+                        disabledBackgroundColor: const Color(
+                          0xFFF2B31A,
+                        ).withValues(alpha: 0.45),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Text(
-                            'Continue',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                              color: Color(0xFFFFFFFF),
+                      child: _submitting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Text(
+                                  'Continue',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.2,
+                                    color: Color(0xFFFFFFFF),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(
+                                  Icons.arrow_forward,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              ],
                             ),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(
-                            Icons.arrow_forward,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ],

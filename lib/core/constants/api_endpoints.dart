@@ -35,11 +35,23 @@ base class ApiEndpoints {
   static const String trainingToday = _Training.today;
   static const String trainingMine = _Training.mine;
   static const String trainingCreate = _Training.create;
+  static const String attendanceMine = _Attendance.mine;
   static const String nutritionToday = _Nutrition.today;
   static const String nutritionMine = _Nutrition.mine;
   static const String subscriptions = _Subscription.list;
   static const String products = _Product.all;
   static const String createProduct = _Product.create;
+  static const String notifications = _Notification.me;
+  static const String cart = _Cart.get;
+  static const String cartAdd = _Cart.add;
+  static const String cartUpdateQuantity = _Cart.updateQuantity;
+  static const String cartRemoveItem = _Cart.removeItem;
+  static const String cartClear = _Cart.clear;
+  static const String paymentCreate = _Payment.create;
+  static const String paymentConfirm = _Payment.confirm;
+  static const String paymentConfig = _Payment.config;
+  static const String paymentHistory = _Payment.history;
+  static const String paymentMembershipSummary = _Payment.membershipSummary;
 
   // ---------------------- USER -----------------------------
   static const String user = '$baseUrl/user';
@@ -59,6 +71,7 @@ base class ApiEndpoints {
   static String productById(String id) => _Product.byId(id);
   static String updateProduct(String id) => _Product.update(id);
   static String deleteProduct(String id) => _Product.delete(id);
+  static String markNotificationRead(String id) => _Notification.markRead(id);
 
   //---------------------subcategory-------------------------
   // ✅ subcategory by categoryId
@@ -174,4 +187,37 @@ class _Product {
   static String byId(String id) => '$_route/$id';
   static String update(String id) => '$_route/$id';
   static String delete(String id) => '$_route/$id';
+}
+
+class _Notification {
+  @protected
+  static const String _route = '${ApiEndpoints.baseUrl}/notification';
+  static const String me = '$_route/me';
+  static String markRead(String id) => '$_route/$id/read';
+}
+
+class _Cart {
+  @protected
+  static const String _route = '${ApiEndpoints.baseUrl}/cart';
+  static const String add = '$_route/add';
+  static const String get = _route;
+  static const String updateQuantity = '$_route/update-quantity';
+  static const String removeItem = '$_route/remove-item';
+  static const String clear = '$_route/clear';
+}
+
+class _Payment {
+  @protected
+  static const String _route = '${ApiEndpoints.baseUrl}/payment';
+  static const String create = '$_route/create-payment';
+  static const String config = '$_route/config';
+  static const String confirm = '$_route/confirm-payment';
+  static const String history = '$_route/history';
+  static const String membershipSummary = '$_route/membership-summary';
+}
+
+class _Attendance {
+  @protected
+  static const String _route = '${ApiEndpoints.baseUrl}/attendance';
+  static const String mine = '$_route/me';
 }

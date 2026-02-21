@@ -27,17 +27,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _memberIdController = TextEditingController();
 
-  final TextEditingController _currentWeightController = TextEditingController();
+  final TextEditingController _currentWeightController =
+      TextEditingController();
   final TextEditingController _targetWeightController = TextEditingController();
-  final TextEditingController _recentWeightChangesController = TextEditingController();
+  final TextEditingController _recentWeightChangesController =
+      TextEditingController();
   final TextEditingController _bodyTypeController = TextEditingController();
-  final TextEditingController _currentHeightController = TextEditingController();
-  final TextEditingController _sleepPatternsController = TextEditingController();
-  final TextEditingController _appetiteHungerController = TextEditingController();
+  final TextEditingController _currentHeightController =
+      TextEditingController();
+  final TextEditingController _sleepPatternsController =
+      TextEditingController();
+  final TextEditingController _appetiteHungerController =
+      TextEditingController();
   final TextEditingController _typicalMealsController = TextEditingController();
   final TextEditingController _waterIntakeController = TextEditingController();
-  final TextEditingController _surgicalHistoryController = TextEditingController();
-  final TextEditingController _physicalPainsController = TextEditingController();
+  final TextEditingController _surgicalHistoryController =
+      TextEditingController();
+  final TextEditingController _physicalPainsController =
+      TextEditingController();
   final TextEditingController _digestionGutController = TextEditingController();
   final TextEditingController _supplementsController = TextEditingController();
 
@@ -93,10 +100,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final bodyDetails = data['personalBodyDetails'] is Map
         ? Map<String, dynamic>.from(data['personalBodyDetails'] as Map)
         : data['bodyDetails'] is Map
-            ? Map<String, dynamic>.from(data['bodyDetails'] as Map)
-            : data['healthProfile'] is Map
-                ? Map<String, dynamic>.from(data['healthProfile'] as Map)
-                : <String, dynamic>{};
+        ? Map<String, dynamic>.from(data['bodyDetails'] as Map)
+        : data['healthProfile'] is Map
+        ? Map<String, dynamic>.from(data['healthProfile'] as Map)
+        : <String, dynamic>{};
 
     _profile = data;
     _nameController.text = _pickString(data, ['name']);
@@ -106,17 +113,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     _currentWeightController.text = _pickString(bodyDetails, ['currentWeight']);
     _targetWeightController.text = _pickString(bodyDetails, ['targetWeight']);
-    _recentWeightChangesController.text = _pickString(bodyDetails, ['recentWeightChanges']);
+    _recentWeightChangesController.text = _pickString(bodyDetails, [
+      'recentWeightChanges',
+    ]);
     _bodyTypeController.text = _pickString(bodyDetails, ['bodyType']);
-    _currentHeightController.text = _pickString(bodyDetails, ['currentHeight', 'height']);
-    _sleepPatternsController.text = _pickString(bodyDetails, ['sleepPatterns', 'sleep']);
-    _appetiteHungerController.text = _pickString(bodyDetails, ['appetiteHunger']);
-    _typicalMealsController.text = _pickString(bodyDetails, ['typicalDailyMeals', 'typicalMeals']);
-    _waterIntakeController.text = _pickString(bodyDetails, ['waterFluidIntake', 'waterIntake']);
-    _surgicalHistoryController.text = _pickString(bodyDetails, ['surgicalHistory']);
-    _physicalPainsController.text = _pickString(bodyDetails, ['currentPhysicalPains', 'physicalPains']);
-    _digestionGutController.text = _pickString(bodyDetails, ['digestionGutHealth', 'digestionGut']);
-    _supplementsController.text = _pickString(bodyDetails, ['supplementsCurrentlyUsed', 'supplements']);
+    _currentHeightController.text = _pickString(bodyDetails, [
+      'currentHeight',
+      'height',
+    ]);
+    _sleepPatternsController.text = _pickString(bodyDetails, [
+      'sleepPatterns',
+      'sleep',
+    ]);
+    _appetiteHungerController.text = _pickString(bodyDetails, [
+      'appetiteHunger',
+    ]);
+    _typicalMealsController.text = _pickString(bodyDetails, [
+      'typicalDailyMeals',
+      'typicalMeals',
+    ]);
+    _waterIntakeController.text = _pickString(bodyDetails, [
+      'waterFluidIntake',
+      'waterIntake',
+    ]);
+    _surgicalHistoryController.text = _pickString(bodyDetails, [
+      'surgicalHistory',
+    ]);
+    _physicalPainsController.text = _pickString(bodyDetails, [
+      'currentPhysicalPains',
+      'physicalPains',
+    ]);
+    _digestionGutController.text = _pickString(bodyDetails, [
+      'digestionGutHealth',
+      'digestionGut',
+    ]);
+    _supplementsController.text = _pickString(bodyDetails, [
+      'supplementsCurrentlyUsed',
+      'supplements',
+    ]);
   }
 
   Future<void> _prefillProfile() async {
@@ -130,7 +164,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() => _isLoading = false);
     } on DioException catch (e) {
       final payload = e.response?.data;
-      final msg = payload is Map && payload['message'] != null ? payload['message'].toString() : 'Failed to load profile';
+      final msg = payload is Map && payload['message'] != null
+          ? payload['message'].toString()
+          : 'Failed to load profile';
       CustomSnackbar.show(msg);
       if (mounted) setState(() => _isLoading = false);
     } catch (_) {
@@ -150,7 +186,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final res = await _userApi.updateProfile(
         name: name,
+        phone: _phoneController.text.trim(),
+        email: _emailController.text.trim(),
         avatarPath: _selectedAvatar?.path,
+        personalBodyDetails: {
+          'currentWeight': _currentWeightController.text.trim(),
+          'targetWeight': _targetWeightController.text.trim(),
+          'recentWeightChanges': _recentWeightChangesController.text.trim(),
+          'bodyType': _bodyTypeController.text.trim(),
+          'currentHeight': _currentHeightController.text.trim(),
+          'sleepPatterns': _sleepPatternsController.text.trim(),
+          'appetiteHunger': _appetiteHungerController.text.trim(),
+          'typicalDailyMeals': _typicalMealsController.text.trim(),
+          'waterFluidIntake': _waterIntakeController.text.trim(),
+          'surgicalHistory': _surgicalHistoryController.text.trim(),
+          'currentPhysicalPains': _physicalPainsController.text.trim(),
+          'digestionGutHealth': _digestionGutController.text.trim(),
+          'supplementsCurrentlyUsed': _supplementsController.text.trim(),
+        },
       );
 
       await TokenManager.saveUserName(name);
@@ -158,13 +211,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         await TokenManager.saveEmail(_emailController.text.trim());
       }
 
-      final message = (res['message'] ?? 'Profile updated successfully').toString();
+      final message = (res['message'] ?? 'Profile updated successfully')
+          .toString();
       CustomSnackbar.show(message);
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } on DioException catch (e) {
       final payload = e.response?.data;
-      final msg = payload is Map && payload['message'] != null ? payload['message'].toString() : 'Profile update failed';
+      final msg = payload is Map && payload['message'] != null
+          ? payload['message'].toString()
+          : 'Profile update failed';
       CustomSnackbar.show(msg);
     } catch (_) {
       CustomSnackbar.show('Profile update failed');
@@ -209,22 +265,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (_isLoading)
-                    const LinearProgressIndicator(minHeight: 1.5, color: Color(0xFFF3B41A), backgroundColor: Colors.transparent),
+                    const LinearProgressIndicator(
+                      minHeight: 1.5,
+                      color: Color(0xFFF3B41A),
+                      backgroundColor: Colors.transparent,
+                    ),
                   Row(
                     children: [
                       Transform.translate(
                         offset: const Offset(-12, 0),
                         child: IconButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new,
+                            size: 18,
+                            color: Color(0xFFC9CDD3),
+                          ),
                           splashRadius: 18,
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                          constraints: const BoxConstraints(
+                            minWidth: 24,
+                            minHeight: 24,
+                          ),
                         ),
                       ),
                       Text(
                         'Edit Profile',
-                        style: GoogleFonts.outfit(color: const Color(0xFFB1B1B1), fontSize: 18, fontWeight: FontWeight.w400, height: 1.2),
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFFB1B1B1),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                          height: 1.2,
+                        ),
                       ),
                     ],
                   ),
@@ -242,7 +314,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.edit, size: 12, color: Color(0xFFB1B1B1)),
+                          const Icon(
+                            Icons.edit,
+                            size: 12,
+                            color: Color(0xFFB1B1B1),
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Change Photo',
@@ -270,7 +346,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   _FieldLabel(text: 'Member ID'),
                   _InputField(controller: _memberIdController),
                   const SizedBox(height: 18),
-                  _SectionHeading(text: 'Personal Body Details :', color: const Color(0xFFF3B41A)),
+                  _SectionHeading(
+                    text: 'Personal Body Details :',
+                    color: const Color(0xFFF3B41A),
+                  ),
                   const SizedBox(height: 8),
 
                   _SectionHeading(text: 'Weight :'),
@@ -289,10 +368,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   _SectionHeading(text: 'Body :'),
                   _FieldLabel(text: 'Body Type'),
-                  _InputField(
-                    controller: _bodyTypeController,
-                    minLines: 3,
-                  ),
+                  _InputField(controller: _bodyTypeController, minLines: 3),
                   const SizedBox(height: 10),
                   _FieldLabel(text: 'Current Height'),
                   _InputField(controller: _currentHeightController),
@@ -314,15 +390,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   _InputField(controller: _typicalMealsController),
                   const SizedBox(height: 10),
                   _FieldLabel(text: 'Water & Fluid Intake'),
-                  _InputField(
-                    controller: _waterIntakeController,
-                    minLines: 2,
-                  ),
+                  _InputField(controller: _waterIntakeController, minLines: 2),
                   const SizedBox(height: 14),
 
                   _SectionHeading(text: 'Other Information:'),
                   _FieldLabel(text: 'Surgical History (if any)'),
-                  _InputField(controller: _surgicalHistoryController, minLines: 3),
+                  _InputField(
+                    controller: _surgicalHistoryController,
+                    minLines: 3,
+                  ),
                   const SizedBox(height: 10),
                   _FieldLabel(text: 'Current Physical Pains (if any)'),
                   _InputField(
@@ -331,10 +407,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   const SizedBox(height: 10),
                   _FieldLabel(text: 'Digestion & Gut Health'),
-                  _InputField(
-                    controller: _digestionGutController,
-                    minLines: 2,
-                  ),
+                  _InputField(controller: _digestionGutController, minLines: 2),
                   const SizedBox(height: 10),
                   _FieldLabel(text: 'Supplements Currently Used'),
                   _InputField(controller: _supplementsController, minLines: 2),
@@ -348,13 +421,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         backgroundColor: const Color(0xFFF3B41A),
                         disabledBackgroundColor: const Color(0xFF8A6A1A),
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isSaving
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.white,
+                              ),
+                            )
                           : Text(
                               'Update',
-                              style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500, height: 1.2),
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                                height: 1.2,
+                              ),
                             ),
                     ),
                   ),
@@ -389,14 +476,14 @@ class _Avatar extends StatelessWidget {
                 fit: BoxFit.cover,
               )
             : hasUrl
-                ? Image.network(
-                    imageUrl,
-                    width: 84,
-                    height: 84,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => _fallback(),
-                  )
-                : _fallback(),
+            ? Image.network(
+                imageUrl,
+                width: 84,
+                height: 84,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => _fallback(),
+              )
+            : _fallback(),
       ),
     );
   }
@@ -422,7 +509,12 @@ class _SectionHeading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: GoogleFonts.outfit(color: color, fontSize: 14, fontWeight: FontWeight.w600, height: 1.2),
+      style: GoogleFonts.outfit(
+        color: color,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+      ),
     );
   }
 }
@@ -438,7 +530,12 @@ class _FieldLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
-        style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500, height: 1.2),
+        style: GoogleFonts.outfit(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          height: 1.2,
+        ),
       ),
     );
   }
@@ -456,11 +553,19 @@ class _InputField extends StatelessWidget {
       controller: controller,
       minLines: minLines,
       maxLines: minLines == 1 ? 1 : minLines,
-      style: GoogleFonts.outfit(color: const Color(0xFF4B4B4B), fontSize: 12, fontWeight: FontWeight.w400, height: 1.2),
+      style: GoogleFonts.outfit(
+        color: const Color(0xFF4B4B4B),
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        height: 1.2,
+      ),
       decoration: InputDecoration(
         filled: true,
         fillColor: const Color(0xFFE9E9EC),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFE9E9EC), width: 1),
