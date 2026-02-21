@@ -42,4 +42,7 @@ class Images {
   static const String freezeImage = 'assets/images/zondicons_hand-stop.png';
   static const String cancelImage = 'assets/images/material-symbols_cancel-rounded.png';
   static const String lockImage = 'assets/images/material-symbols_lock _1.png';
+  static const String apparelImage = 'assets/images/hugeicons_jogger-pants.png';
+  static const String drinkImage = 'assets/images/material-symbols_water-bottle-outline-rounded.png';
+  static const String dumbleImage = 'assets/images/dumble_gym.png';
 }
