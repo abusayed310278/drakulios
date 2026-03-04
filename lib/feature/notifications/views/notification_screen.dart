@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/common/widgets/custom_snackbar.dart';
-import '../../../core/constants/assets.dart';
 import '../../../core/network/api_service/notification_api_service.dart';
 import '../../../core/network/socket/notification_socket_service.dart';
 import '../../shop/views/widgets/shop_badge_state.dart';
@@ -94,6 +93,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       MaterialPageRoute(
         builder: (_) => NotificationDetailsScreen(
           senderName: item.title,
+          senderAvatarUrl: item.senderAvatarUrl,
           heading: item.heading ?? 'ATTENTION MEMBERS:',
           bullet: item.bullet ?? 'Update',
           body: item.body ?? '',
@@ -249,18 +249,7 @@ class _NotificationTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: const Color(0xFFF2B31A),
-            child: ClipOval(
-              child: Image.asset(
-                Images.profileImage,
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+          _NotificationAvatar(avatarUrl: item.senderAvatarUrl),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -325,6 +314,7 @@ class _NotificationItem {
     this.heading,
     this.bullet,
     this.body,
+    this.senderAvatarUrl,
   });
 
   factory _NotificationItem.fromMap(Map<String, dynamic> map) {
@@ -339,9 +329,43 @@ class _NotificationItem {
       heading: map['heading']?.toString(),
       bullet: map['bullet']?.toString(),
       body: map['body']?.toString(),
+      senderAvatarUrl: _readImageUrl(map),
       isRead: map['isRead'] == true,
       createdAt: created,
     );
+  }
+
+  static String _readImageUrl(Map<String, dynamic> map) {
+    final possibleDirectKeys = <String>[
+      'senderAvatarUrl',
+      'senderImage',
+      'imageUrl',
+      'avatarUrl',
+      'adminImage',
+    ];
+
+    for (final key in possibleDirectKeys) {
+      final value = map[key]?.toString().trim() ?? '';
+      if (value.isNotEmpty) return value;
+    }
+
+    final sender = map['sender'];
+    if (sender is Map) {
+      final senderMap = Map<String, dynamic>.from(sender);
+      final nested = (senderMap['avatar'] is Map)
+          ? Map<String, dynamic>.from(senderMap['avatar'] as Map)
+          : null;
+
+      final nestedUrl = (nested?['url'] ?? '').toString().trim();
+      if (nestedUrl.isNotEmpty) return nestedUrl;
+
+      for (final key in possibleDirectKeys) {
+        final value = senderMap[key]?.toString().trim() ?? '';
+        if (value.isNotEmpty) return value;
+      }
+    }
+
+    return '';
   }
 
   final String? id;
@@ -353,6 +377,51 @@ class _NotificationItem {
   final String? heading;
   final String? bullet;
   final String? body;
+  final String? senderAvatarUrl;
+}
+
+class _NotificationAvatar extends StatelessWidget {
+  const _NotificationAvatar({this.avatarUrl});
+
+  final String? avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmedUrl = avatarUrl?.trim() ?? '';
+
+    if (trimmedUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 20,
+        backgroundColor: const Color(0xFFF2B31A),
+        child: ClipOval(
+          child: Image.network(
+            trimmedUrl,
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const _NotificationAvatarPlaceholder();
+            },
+          ),
+        ),
+      );
+    }
+
+    return const _NotificationAvatarPlaceholder();
+  }
+}
+
+class _NotificationAvatarPlaceholder extends StatelessWidget {
+  const _NotificationAvatarPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const CircleAvatar(
+      radius: 20,
+      backgroundColor: Color(0xFFF2B31A),
+      child: Icon(Icons.person, size: 20, color: Color(0xFF050608)),
+    );
+  }
 }
 
 extension on Widget {

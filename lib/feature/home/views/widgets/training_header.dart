@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/assets.dart';
+import '../../../../core/network/api_service/notification_api_service.dart';
 import '../../../../core/network/api_service/token_meneger.dart';
 import '../../../../core/network/api_service/user_api_service.dart';
+import '../../../../core/network/socket/notification_socket_service.dart';
 import '../../../notifications/views/notification_screen.dart';
 import '../../../profile/views/member_profile_screen.dart';
+import '../../../shop/views/widgets/shop_badge_state.dart';
 
 class TrainingHeader extends StatefulWidget {
   const TrainingHeader({
@@ -26,8 +31,11 @@ class TrainingHeader extends StatefulWidget {
 
 class _TrainingHeaderState extends State<TrainingHeader> {
   final UserApiService _userApi = UserApiService();
+  final NotificationApiService _notificationApi = NotificationApiService();
+  final NotificationSocketService _socket = NotificationSocketService.instance;
   String _displayName = 'Member';
   String _avatarUrl = '';
+  StreamSubscription<NotificationSocketEvent>? _socketSub;
 
   String _toCamelCase(String value) {
     final parts = value
@@ -48,6 +56,8 @@ class _TrainingHeaderState extends State<TrainingHeader> {
   void initState() {
     super.initState();
     _loadHeaderProfile();
+    _loadNotificationCount();
+    _initSocket();
   }
 
   Future<void> _loadHeaderProfile() async {
@@ -66,6 +76,44 @@ class _TrainingHeaderState extends State<TrainingHeader> {
     final savedName = (await TokenManager.getUserName())?.trim() ?? '';
     if (!mounted) return;
     setState(() => _displayName = _toCamelCase(savedName));
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final items = await _notificationApi.getMyNotifications();
+      final count = items.where((e) => e['isRead'] != true).length;
+      ShopBadgeState.setNotificationCount(count);
+    } catch (_) {}
+  }
+
+  Future<void> _initSocket() async {
+    await _socket.connect();
+    if (!mounted) return;
+    _socketSub = _socket.events.listen((event) {
+      if (!mounted) return;
+      switch (event.type) {
+        case NotificationSocketEventType.created:
+          ShopBadgeState.incrementNotification();
+          _loadNotificationCount();
+          break;
+        case NotificationSocketEventType.updated:
+          _loadNotificationCount();
+          break;
+        case NotificationSocketEventType.deleted:
+          ShopBadgeState.decrementNotification();
+          _loadNotificationCount();
+          break;
+        case NotificationSocketEventType.connected:
+        case NotificationSocketEventType.disconnected:
+          break;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _socketSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -115,22 +163,75 @@ class _TrainingHeaderState extends State<TrainingHeader> {
               ],
             ),
             const Spacer(),
-            InkWell(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const NotificationScreen()),
+            ValueListenableBuilder<int>(
+              valueListenable: ShopBadgeState.notificationCount,
+              builder: (context, notificationCount, _) {
+                return InkWell(
+                  onTap: () {
+                    Navigator.of(context)
+                        .push(
+                          MaterialPageRoute(
+                            builder: (_) => const NotificationScreen(),
+                          ),
+                        )
+                        .then((_) => _loadNotificationCount());
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Center(
+                            child: Image.asset(
+                              Images.bellImage,
+                              width: 20,
+                              height: 20,
+                              color: notificationCount > 0
+                                  ? const Color(0xFFF3B41A)
+                                  : const Color(0xFFC9CDD3),
+                            ),
+                          ),
+                          if (notificationCount > 0)
+                            Positioned(
+                              top: -3,
+                              right: -4,
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  minWidth: 14,
+                                  minHeight: 14,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE53935),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    notificationCount > 99
+                                        ? '99+'
+                                        : '$notificationCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 );
               },
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.all(2),
-                child: Image.asset(
-                  Images.bellImage,
-                  width: 20,
-                  height: 20,
-                  color: const Color(0xFFC9CDD3),
-                ),
-              ),
             ),
             const SizedBox(width: 10),
             InkWell(

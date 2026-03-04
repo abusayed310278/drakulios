@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/constants/assets.dart';
-
 class NotificationDetailsScreen extends StatelessWidget {
-  const NotificationDetailsScreen({super.key, required this.senderName, required this.heading, required this.bullet, required this.body});
+  const NotificationDetailsScreen({
+    super.key,
+    required this.senderName,
+    required this.heading,
+    required this.bullet,
+    required this.body,
+    this.senderAvatarUrl,
+  });
 
   final String senderName;
   final String heading;
   final String bullet;
   final String body;
+  final String? senderAvatarUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -34,13 +40,24 @@ class NotificationDetailsScreen extends StatelessWidget {
                           child: InkWell(
                             onTap: () => Navigator.of(context).pop(),
                             borderRadius: BorderRadius.circular(12),
-                            child: const Center(child: Icon(Icons.arrow_back_ios_new, color: Color(0xFFC9CDD3), size: 18)),
+                            child: const Center(
+                              child: Icon(
+                                Icons.arrow_back_ios_new,
+                                color: Color(0xFFC9CDD3),
+                                size: 18,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Text(
                           'Notifications Details',
-                          style: GoogleFonts.outfit(color: const Color(0xFFB1B1B1), fontSize: 18, fontWeight: FontWeight.w400, height: 1.2),
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFB1B1B1),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                            height: 1.2,
+                          ),
                         ),
                       ],
                     ),
@@ -48,16 +65,17 @@ class NotificationDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 18),
                   Text(
                     'Today',
-                    style: GoogleFonts.poppins(color: const Color(0xFFE6E7EA), fontSize: 14, fontWeight: FontWeight.w600, height: 1.2),
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFFE6E7EA),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: const Color(0xFFF2B31A),
-                        child: ClipOval(child: Image.asset(Images.profileImage, width: 40, height: 40, fit: BoxFit.cover)),
-                      ),
+                      _NotificationAvatar(avatarUrl: senderAvatarUrl),
                       const SizedBox(width: 10),
                       Text(
                         senderName,
@@ -116,6 +134,50 @@ class NotificationDetailsScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _NotificationAvatar extends StatelessWidget {
+  const _NotificationAvatar({this.avatarUrl});
+
+  final String? avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmedUrl = avatarUrl?.trim() ?? '';
+
+    if (trimmedUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 20,
+        backgroundColor: const Color(0xFFF2B31A),
+        child: ClipOval(
+          child: Image.network(
+            trimmedUrl,
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const _NotificationAvatarPlaceholder();
+            },
+          ),
+        ),
+      );
+    }
+
+    return const _NotificationAvatarPlaceholder();
+  }
+}
+
+class _NotificationAvatarPlaceholder extends StatelessWidget {
+  const _NotificationAvatarPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const CircleAvatar(
+      radius: 20,
+      backgroundColor: Color(0xFFF2B31A),
+      child: Icon(Icons.person, size: 20, color: Color(0xFF050608)),
     );
   }
 }

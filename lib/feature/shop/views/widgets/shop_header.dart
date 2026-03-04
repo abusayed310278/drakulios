@@ -51,8 +51,14 @@ class _ShopHeaderState extends State<ShopHeader> {
       if (!mounted) return;
       switch (event.type) {
         case NotificationSocketEventType.created:
+          ShopBadgeState.incrementNotification();
+          _loadNotificationCount();
+          break;
         case NotificationSocketEventType.updated:
+          _loadNotificationCount();
+          break;
         case NotificationSocketEventType.deleted:
+          ShopBadgeState.decrementNotification();
           _loadNotificationCount();
           break;
         case NotificationSocketEventType.connected:
