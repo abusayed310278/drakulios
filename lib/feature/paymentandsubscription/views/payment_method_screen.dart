@@ -7,6 +7,7 @@ import '../../../core/constants/assets.dart';
 import '../../../core/common/widgets/custom_snackbar.dart';
 import '../../../core/network/api_service/token_meneger.dart';
 import '../../../core/network/api_service/training_shop_api_service.dart';
+import '../../shop/views/widgets/shop_badge_state.dart';
 import 'payment_flow_destination.dart';
 import 'payment_success_screen.dart';
 
@@ -93,9 +94,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       return false;
     } on StripeConfigException catch (e) {
       final msg = e.message.trim();
-      CustomSnackbar.show(
-        msg.isEmpty ? 'Stripe configuration error' : msg,
-      );
+      CustomSnackbar.show(msg.isEmpty ? 'Stripe configuration error' : msg);
       return false;
     } catch (e) {
       CustomSnackbar.show(
@@ -176,9 +175,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         return;
       } on StripeConfigException catch (e) {
         final msg = e.message.trim();
-        CustomSnackbar.show(
-          msg.isEmpty ? 'Stripe configuration error' : msg,
-        );
+        CustomSnackbar.show(msg.isEmpty ? 'Stripe configuration error' : msg);
         return;
       } on StripeException catch (e) {
         final localized = (e.error.localizedMessage ?? '').toLowerCase();
@@ -199,6 +196,9 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       }
 
       if (!mounted) return;
+      if (widget.flowDestination == PaymentFlowDestination.shop) {
+        ShopBadgeState.setCartCount(0);
+      }
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) =>

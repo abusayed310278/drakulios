@@ -30,6 +30,20 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
     _loadData();
   }
 
+  void _onTabChange(int index) {
+    if (_tabIndex == index) return;
+    setState(() => _tabIndex = index);
+
+    if (index == 1) {
+      setState(() => _loadingNutrition = true);
+      _loadNutrition();
+      return;
+    }
+
+    setState(() => _loadingTraining = true);
+    _loadTraining();
+  }
+
   Future<void> _loadData() async {
     await Future.wait([_loadTraining(), _loadNutrition()]);
   }
@@ -70,21 +84,26 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
   Future<void> _loadNutrition() async {
     try {
       final payload = await _api.getTodayNutritionsBundle();
-      final dataRaw = payload['data'];
-      final data = dataRaw is List
-          ? dataRaw
-                .whereType<Map>()
-                .map((e) => Map<String, dynamic>.from(e))
-                .toList()
-          : <Map<String, dynamic>>[];
+      final data = _toMapList(payload['data']);
       final meta = payload['meta'];
       DateTime? serverDate;
       if (meta is Map && meta['serverDate'] != null) {
         serverDate = DateTime.tryParse(meta['serverDate'].toString());
       }
+
+      var resolved = data;
+      if (resolved.isEmpty) {
+        final mine = await _api.getMyNutritions();
+        final today = DateTime.now();
+        final filtered = mine
+            .where((e) => _isSameDay(_tryParseItemDate(e), today))
+            .toList();
+        resolved = filtered.isNotEmpty ? filtered : mine;
+      }
+
       if (!mounted) return;
       setState(() {
-        _nutritions = data;
+        _nutritions = resolved;
         _nutritionServerDate = serverDate;
       });
     } on DioException catch (e) {
@@ -134,7 +153,7 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
                   children: [
                     TrainingHeader(
                       activeIndex: _tabIndex,
-                      onTabChange: (index) => setState(() => _tabIndex = index),
+                      onTabChange: _onTabChange,
                       dateTitle: _tabIndex == 0
                           ? 'Today\'s Challenge!'
                           : 'Today\'s Meal!',
@@ -190,9 +209,29 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
 
   DateTime? _tryParseItemDate(Map<String, dynamic>? item) {
     if (item == null) return null;
-    final raw = item['date'] ?? item['createdAt'] ?? item['updatedAt'];
+    final raw =
+        item['date'] ??
+        item['nutritionDate'] ??
+        item['forDate'] ??
+        item['createdAt'] ??
+        item['updatedAt'];
     if (raw == null) return null;
     return DateTime.tryParse(raw.toString());
+  }
+
+  List<Map<String, dynamic>> _toMapList(dynamic dataRaw) {
+    if (dataRaw is List) {
+      return dataRaw
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+    return <Map<String, dynamic>>[];
+  }
+
+  bool _isSameDay(DateTime? a, DateTime b) {
+    if (a == null) return false;
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   String _formatHeaderDate(DateTime? date) {

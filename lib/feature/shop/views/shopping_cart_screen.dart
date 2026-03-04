@@ -6,6 +6,7 @@ import '../../../core/constants/assets.dart';
 import '../../../core/network/api_service/training_shop_api_service.dart';
 import '../../paymentandsubscription/views/payment_flow_destination.dart';
 import '../../paymentandsubscription/views/payment_method_screen.dart';
+import 'widgets/shop_badge_state.dart';
 
 class ShoppingCartScreen extends StatefulWidget {
   const ShoppingCartScreen({super.key});
@@ -54,12 +55,14 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
           }
         }
         if (!mounted) return;
+        final badgeCount = items.length;
         setState(() {
           _items = items;
           _subtotal = _toDouble(data['subTotal']);
           _tax = _toDouble(data['tax']);
           _total = _toDouble(data['total']);
         });
+        ShopBadgeState.setCartCount(badgeCount);
       }
     } on DioException catch (e) {
       final d = e.response?.data;

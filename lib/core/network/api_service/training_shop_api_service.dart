@@ -16,7 +16,7 @@ class TrainingShopApiService {
 
   Future<Map<String, dynamic>> getTodayTrainingsBundle() async {
     final Response res = await _client.get(ApiEndpoints.trainingToday);
-    return Map<String, dynamic>.from(res.data as Map);
+    return _toBundle(res.data);
   }
 
   Future<List<Map<String, dynamic>>> getTodayNutritions() async {
@@ -26,7 +26,12 @@ class TrainingShopApiService {
 
   Future<Map<String, dynamic>> getTodayNutritionsBundle() async {
     final Response res = await _client.get(ApiEndpoints.nutritionToday);
-    return Map<String, dynamic>.from(res.data as Map);
+    return _toBundle(res.data);
+  }
+
+  Future<List<Map<String, dynamic>>> getMyNutritions() async {
+    final Response res = await _client.get(ApiEndpoints.nutritionMine);
+    return _toList(res.data);
   }
 
   Future<List<Map<String, dynamic>>> getSubscriptions() async {
@@ -215,5 +220,22 @@ class TrainingShopApiService {
           .toList();
     }
     return <Map<String, dynamic>>[];
+  }
+
+  Map<String, dynamic> _toBundle(dynamic raw) {
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    if (raw is List) {
+      return <String, dynamic>{
+        'data': raw
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList(),
+        'meta': <String, dynamic>{},
+      };
+    }
+    return <String, dynamic>{
+      'data': <Map<String, dynamic>>[],
+      'meta': <String, dynamic>{},
+    };
   }
 }

@@ -53,8 +53,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
     try {
       final raw = await _api.getMyNotifications();
       final items = raw.map(_NotificationItem.fromMap).toList();
-      final unreadCount = items.where((e) => !e.isRead).length;
-      ShopBadgeState.setNotificationCount(unreadCount);
+      final unreadIds = items
+          .where((e) => !e.isRead && e.id != null)
+          .map((e) => e.id!)
+          .toList();
+      if (unreadIds.isNotEmpty) {
+        ShopBadgeState.setNotificationCount(0);
+        unawaited(_markAllAsRead(unreadIds));
+      } else {
+        ShopBadgeState.setNotificationCount(0);
+      }
       if (!mounted) return;
       setState(() => _items = items);
     } on DioException catch (e) {
@@ -68,6 +76,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _markAllAsRead(List<String> ids) async {
+    await Future.wait(
+      ids.map((id) async {
+        try {
+          await _api.markAsRead(id);
+        } catch (_) {}
+      }),
+    );
   }
 
   bool _isToday(DateTime time) {
