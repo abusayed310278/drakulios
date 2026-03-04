@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/common/widgets/custom_snackbar.dart';
 import '../../../core/constants/assets.dart';
 import '../../../core/network/api_service/notification_api_service.dart';
+import '../../../core/network/socket/notification_socket_service.dart';
 import '../../shop/views/widgets/shop_badge_state.dart';
 import 'notification_details_screen.dart';
 
@@ -17,13 +20,34 @@ class NotificationScreen extends StatefulWidget {
 
 class _NotificationScreenState extends State<NotificationScreen> {
   final NotificationApiService _api = NotificationApiService();
+  final NotificationSocketService _socket = NotificationSocketService.instance;
   bool _loading = true;
   List<_NotificationItem> _items = <_NotificationItem>[];
+  StreamSubscription<NotificationSocketEvent>? _socketSub;
 
   @override
   void initState() {
     super.initState();
+    _initSocket();
     _loadNotifications();
+  }
+
+  Future<void> _initSocket() async {
+    await _socket.connect();
+    if (!mounted) return;
+    _socketSub = _socket.events.listen((event) {
+      if (!mounted) return;
+      switch (event.type) {
+        case NotificationSocketEventType.created:
+        case NotificationSocketEventType.updated:
+        case NotificationSocketEventType.deleted:
+          _loadNotifications();
+          break;
+        case NotificationSocketEventType.connected:
+        case NotificationSocketEventType.disconnected:
+          break;
+      }
+    });
   }
 
   Future<void> _loadNotifications() async {
@@ -77,6 +101,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
       ),
     );
     _loadNotifications();
+  }
+
+  @override
+  void dispose() {
+    _socketSub?.cancel();
+    super.dispose();
   }
 
   @override

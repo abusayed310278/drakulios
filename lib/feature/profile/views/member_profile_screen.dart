@@ -10,6 +10,7 @@ import '../../../core/network/api_service/training_shop_api_service.dart';
 import '../../../core/network/api_service/user_api_service.dart';
 import 'attendance_details_screen.dart';
 import 'edit_profile_screen.dart';
+import 'freeze_account_screen.dart';
 import 'member_profile_details_screen.dart';
 import 'purchase_history_screen.dart';
 import 'security_screen.dart';
@@ -233,7 +234,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                   context: context,
                   removeTop: true,
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(18, 50, 0, 24),
+                    padding: const EdgeInsets.fromLTRB(18, 50, 18, 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -292,15 +293,16 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                       Flexible(
                                         child: Text(
                                           name,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 18,
+                                            fontSize: 34 / 2,
                                             fontWeight: FontWeight.w700,
+                                            height: 1.2,
                                           ),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      const SizedBox(width: 120),
+                                      const Spacer(),
                                       IconButton(
                                         onPressed: () async {
                                           await Navigator.of(context).push(
@@ -318,7 +320,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                         },
                                         icon: const Icon(
                                           Icons.edit,
-                                          size: 24,
+                                          size: 20,
                                           color: Color(0xFF2C6CFF),
                                         ),
                                         padding: EdgeInsets.zero,
@@ -333,7 +335,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
 
                                   const SizedBox(height: 6),
                                   Text(
-                                    'Member ID : $id',
+                                    'Member ID : ${id.isEmpty ? '1212' : id}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
@@ -341,7 +343,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                     ),
                                   ),
                                   Text(
-                                    'Contact no. : $phone',
+                                    'Contact no. : ${phone.isEmpty ? '0000000000' : phone}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
@@ -349,7 +351,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                     ),
                                   ),
                                   Text(
-                                    'Email : $email',
+                                    'Email : ${email.isEmpty ? 'stella1212j@gmail.com' : email}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
@@ -390,122 +392,80 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        InkWell(
-                          onTap: () => _openWhatsApp(
-                            (_profile['adminPhone'] ?? _defaultAdminWhatsApp)
-                                .toString(),
-                            name: 'Admin',
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0C224E),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFF2C6CFF),
-                                width: 1.2,
+                        _MembershipCard(
+                          planName: hasMembership ? planName : 'Monthly Plan',
+                          priceLabel: hasMembership
+                              ? '€${price.toStringAsFixed(price == price.roundToDouble() ? 0 : 2)}/ $billingLabel'
+                              : 'N/A',
+                          renewalDate: renewalDate,
+                          paymentMethod: paymentMethod,
+                          isActive: hasMembership,
+                          paid: paid,
+                        ),
+                        const SizedBox(height: 10),
+                        _MembershipCard(
+                          planName: 'Training Plan',
+                          priceLabel: hasMembership
+                              ? 'One-time payment'
+                              : 'N/A',
+                          renewalDate: renewalDate,
+                          paymentMethod: paymentMethod,
+                          isActive: hasMembership,
+                          paid: paid,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _ActionButton(
+                                title: 'Freeze Membership',
+                                borderColor: const Color(0xFFF2B31A),
+                                backgroundColor: const Color(0xFF2A2513),
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => FreezeAccountScreen(
+                                        memberName: name,
+                                        memberId: id.isEmpty ? '1212' : id,
+                                        phone: phone.isEmpty
+                                            ? '0000000000'
+                                            : phone,
+                                        email: email.isEmpty
+                                            ? 'stella1212j@gmail.com'
+                                            : email,
+                                        memberSince: since,
+                                        avatarUrl:
+                                            (_profile['avatar']?['url'] ?? '')
+                                                .toString(),
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset(
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _ActionButton(
+                                title: 'Message Admin',
+                                borderColor: const Color(0xFF2C6CFF),
+                                backgroundColor: const Color(0xFF0C224E),
+                                leading: Image.asset(
                                   Images.whatsappImage,
-                                  width: 24,
-                                  height: 24,
+                                  width: 18,
+                                  height: 18,
                                   color: const Color(0xFF21C063),
                                 ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  'Contact Admin',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                onTap: () => _openWhatsApp(
+                                  (_profile['adminPhone'] ??
+                                          _defaultAdminWhatsApp)
+                                      .toString(),
+                                  name: 'Admin',
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      hasMembership
-                                          ? 'Plan Name: $planName\nPrice : €${price.toStringAsFixed(price == price.roundToDouble() ? 0 : 2)}/ $billingLabel'
-                                          : 'Plan Name: No Active Plan\nPrice : N/A',
-                                      style: const TextStyle(
-                                        color: Color(0xFF263451),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.2,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 64,
-                                    height: 24,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: hasMembership
-                                          ? const Color(0xFF47AD2A)
-                                          : const Color(0xFF9AA1AE),
-                                      borderRadius: BorderRadius.circular(100),
-                                    ),
-                                    child: Text(
-                                      hasMembership ? 'Active' : 'Inactive',
-                                      style: GoogleFonts.outfit(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w400,
-                                        height: 1.2,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              RichText(
-                                text: TextSpan(
-                                  style: GoogleFonts.outfit(
-                                    color: const Color(0xFF1E1E1E),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.2,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text:
-                                          'Renewal Date: $renewalDate.\nPayment Method : $paymentMethod ',
-                                    ),
-                                    if (hasMembership)
-                                      TextSpan(
-                                        text: paid ? '(paid)' : '(pending)',
-                                        style: TextStyle(
-                                          color: paid
-                                              ? const Color(0xFF47AD2A)
-                                              : const Color(0xFFE53935),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 12),
                         _MenuRow(
                           title: 'View Attendance',
                           onTap: () {
@@ -602,7 +562,7 @@ class _MenuRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         child: Ink(
           height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 18),
           decoration: BoxDecoration(
             color: const Color(0xFF2A2513),
             borderRadius: BorderRadius.circular(10),
@@ -614,12 +574,163 @@ class _MenuRow extends StatelessWidget {
                 title,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 18 / 1.6,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const Spacer(),
-              const Icon(Icons.chevron_right, color: Colors.white, size: 18),
+              const Icon(Icons.chevron_right, color: Colors.white, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MembershipCard extends StatelessWidget {
+  const _MembershipCard({
+    required this.planName,
+    required this.priceLabel,
+    required this.renewalDate,
+    required this.paymentMethod,
+    required this.isActive,
+    required this.paid,
+  });
+
+  final String planName;
+  final String priceLabel;
+  final String renewalDate;
+  final String paymentMethod;
+  final bool isActive;
+  final bool paid;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  'Plan Name: $planName\nPrice : $priceLabel',
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF22314F),
+                    fontSize: 16 / 1.3,
+                    fontWeight: FontWeight.w500,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+              Container(
+                width: 50,
+                height: 22,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? const Color(0xFF47AD2A)
+                      : const Color(0xFF9AA1AE),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  isActive ? 'Active' : 'Inactive',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w400,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Renewal Date: $renewalDate.',
+            style: GoogleFonts.outfit(
+              color: const Color(0xFF1E1E1E),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              height: 1.2,
+            ),
+          ),
+          RichText(
+            text: TextSpan(
+              style: GoogleFonts.outfit(
+                color: const Color(0xFF1E1E1E),
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                height: 1.2,
+              ),
+              children: [
+                TextSpan(text: 'Payment Method : $paymentMethod '),
+                TextSpan(
+                  text: paid ? '(paid)' : '(pending)',
+                  style: TextStyle(
+                    color: paid
+                        ? const Color(0xFF47AD2A)
+                        : const Color(0xFFE53935),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.title,
+    required this.borderColor,
+    required this.backgroundColor,
+    required this.onTap,
+    this.leading,
+  });
+
+  final String title;
+  final Color borderColor;
+  final Color backgroundColor;
+  final VoidCallback onTap;
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Ink(
+          height: 44,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: borderColor, width: 1.2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (leading != null) ...[leading!, const SizedBox(width: 6)],
+              Text(
+                title,
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  height: 1.2,
+                ),
+              ),
             ],
           ),
         ),

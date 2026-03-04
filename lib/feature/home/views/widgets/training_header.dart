@@ -142,32 +142,7 @@ class _TrainingHeaderState extends State<TrainingHeader> {
                 );
               },
               borderRadius: BorderRadius.circular(12),
-              child: CircleAvatar(
-                radius: 12,
-                backgroundColor: const Color(0xFF2A2F39),
-                child: ClipOval(
-                  child: _avatarUrl.trim().isNotEmpty
-                      ? Image.network(
-                          _avatarUrl,
-                          width: 24,
-                          height: 24,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Image.asset(
-                                Images.profileImage,
-                                width: 24,
-                                height: 24,
-                                fit: BoxFit.cover,
-                              ),
-                        )
-                      : Image.asset(
-                          Images.profileImage,
-                          width: 24,
-                          height: 24,
-                          fit: BoxFit.cover,
-                        ),
-                ),
-              ),
+              child: _HeaderAvatar(avatarUrl: _avatarUrl),
             ),
           ],
         ),
@@ -179,6 +154,47 @@ class _TrainingHeaderState extends State<TrainingHeader> {
         const SizedBox(height: 12),
         _DateCard(title: widget.dateTitle, date: widget.dateValue),
       ],
+    );
+  }
+}
+
+class _HeaderAvatar extends StatelessWidget {
+  const _HeaderAvatar({required this.avatarUrl});
+
+  final String avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmedUrl = avatarUrl.trim();
+    if (trimmedUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 12,
+        backgroundColor: const Color(0xFF2A2F39),
+        child: ClipOval(
+          child: Image.network(
+            trimmedUrl,
+            width: 24,
+            height: 24,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                const _AvatarPlaceholder(),
+          ),
+        ),
+      );
+    }
+    return const _AvatarPlaceholder();
+  }
+}
+
+class _AvatarPlaceholder extends StatelessWidget {
+  const _AvatarPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const CircleAvatar(
+      radius: 12,
+      backgroundColor: Color(0xFF2A2F39),
+      child: Icon(Icons.person, size: 14, color: Color(0xFFC9CDD3)),
     );
   }
 }

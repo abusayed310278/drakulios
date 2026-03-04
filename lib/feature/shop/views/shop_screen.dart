@@ -204,6 +204,15 @@ class _ShopScreenState extends State<ShopScreen> {
                     else
                       ...List.generate(filteredFallbackItems.length, (index) {
                         final item = filteredFallbackItems[index];
+                        final productPayload = <String, dynamic>{
+                          'name': item['title']!,
+                          'priceText': item['price']!,
+                          'price': item['price']!.replaceAll('\$', ''),
+                          'description':
+                              'Premium training product designed for gym performance.',
+                          'image': [item['image']!],
+                          'size': const <String>['M', 'XL', 'XXL'],
+                        };
                         return Padding(
                           padding: EdgeInsets.only(
                             bottom: index == filteredFallbackItems.length - 1
@@ -214,6 +223,8 @@ class _ShopScreenState extends State<ShopScreen> {
                             title: item['title']!,
                             price: item['price']!,
                             image: item['image']!,
+                            product: productPayload,
+                            fallbackImage: item['image']!,
                           ),
                         );
                       }),
@@ -236,11 +247,12 @@ class _ShopScreenState extends State<ShopScreen> {
                       final title = (item['name'] ?? 'Product').toString();
                       final price = (item['price'] ?? item['priceMonthly'] ?? 0)
                           .toString();
-                      final image = [
+                      final fallbackImage = [
                         Images.gym1Image,
                         Images.gym2Image,
                         Images.gym3Image,
                       ][index % 3];
+                      final image = _resolveCardImage(item, fallbackImage);
                       final productId = (item['_id'] ?? item['id'] ?? '')
                           .toString();
                       return Padding(
@@ -251,6 +263,8 @@ class _ShopScreenState extends State<ShopScreen> {
                           title: title,
                           price: '\$$price',
                           image: image,
+                          product: item,
+                          fallbackImage: fallbackImage,
                           onAdd: productId.isNotEmpty
                               ? () => _addToCart(productId)
                               : null,
@@ -368,12 +382,16 @@ class _ProductCard extends StatelessWidget {
     required this.title,
     required this.price,
     required this.image,
+    required this.product,
+    required this.fallbackImage,
     this.onAdd,
   });
 
   final String title;
   final String price;
   final String image;
+  final Map<String, dynamic> product;
+  final String fallbackImage;
   final VoidCallback? onAdd;
 
   @override
@@ -383,7 +401,12 @@ class _ProductCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ProductDetailScreen()),
+            MaterialPageRoute(
+              builder: (_) => ProductDetailScreen(
+                product: product,
+                fallbackImage: fallbackImage,
+              ),
+            ),
           );
         },
         borderRadius: BorderRadius.circular(12),
@@ -400,7 +423,7 @@ class _ProductCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(12),
                 ),
-                child: Image.asset(image, height: 150, fit: BoxFit.cover),
+                child: _CardImage(path: image),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
@@ -464,4 +487,40 @@ class _ProductCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CardImage extends StatelessWidget {
+  const _CardImage({required this.path});
+
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    final isNetwork = path.startsWith('http://') || path.startsWith('https://');
+    if (isNetwork) {
+      return Image.network(
+        path,
+        height: 150,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            Image.asset(Images.gym1Image, height: 150, fit: BoxFit.cover),
+      );
+    }
+
+    return Image.asset(path, height: 150, fit: BoxFit.cover);
+  }
+}
+
+String _resolveCardImage(Map<String, dynamic> item, String fallbackImage) {
+  final raw = item['image'];
+  if (raw is List && raw.isNotEmpty) {
+    final first = raw.first;
+    if (first is Map && first['url'] != null) {
+      final url = first['url'].toString().trim();
+      if (url.isNotEmpty) return url;
+    }
+    final direct = first.toString().trim();
+    if (direct.isNotEmpty) return direct;
+  }
+  return fallbackImage;
 }

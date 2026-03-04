@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/constants/assets.dart';
 import '../../../../core/network/api_service/notification_api_service.dart';
+import '../../../../core/network/socket/notification_socket_service.dart';
 import '../../../../core/network/api_service/user_api_service.dart';
 import '../../../../core/common/widgets/custom_snackbar.dart';
 import '../../../notifications/views/notification_screen.dart';
@@ -29,13 +32,34 @@ class ShopHeader extends StatefulWidget {
 class _ShopHeaderState extends State<ShopHeader> {
   final UserApiService _userApi = UserApiService();
   final NotificationApiService _notificationApi = NotificationApiService();
+  final NotificationSocketService _socket = NotificationSocketService.instance;
   String _avatarUrl = '';
+  StreamSubscription<NotificationSocketEvent>? _socketSub;
 
   @override
   void initState() {
     super.initState();
     _loadAvatar();
     _loadNotificationCount();
+    _initSocket();
+  }
+
+  Future<void> _initSocket() async {
+    await _socket.connect();
+    if (!mounted) return;
+    _socketSub = _socket.events.listen((event) {
+      if (!mounted) return;
+      switch (event.type) {
+        case NotificationSocketEventType.created:
+        case NotificationSocketEventType.updated:
+        case NotificationSocketEventType.deleted:
+          _loadNotificationCount();
+          break;
+        case NotificationSocketEventType.connected:
+        case NotificationSocketEventType.disconnected:
+          break;
+      }
+    });
   }
 
   Future<void> _loadAvatar() async {
@@ -62,6 +86,12 @@ class _ShopHeaderState extends State<ShopHeader> {
       final count = items.where((e) => e['isRead'] != true).length;
       ShopBadgeState.setNotificationCount(count);
     } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _socketSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -143,36 +173,54 @@ class _ShopHeaderState extends State<ShopHeader> {
               _loadAvatar();
             },
             borderRadius: BorderRadius.circular(12),
-            child: CircleAvatar(
-              radius: 12,
-              backgroundColor: const Color(0xFF2A2F39),
-              child: ClipOval(
-                child: _avatarUrl.trim().isNotEmpty
-                    ? Image.network(
-                        _avatarUrl,
-                        width: 24,
-                        height: 24,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Image.asset(
-                            Images.profileImage,
-                            width: 24,
-                            height: 24,
-                            fit: BoxFit.cover,
-                          );
-                        },
-                      )
-                    : Image.asset(
-                        Images.profileImage,
-                        width: 24,
-                        height: 24,
-                        fit: BoxFit.cover,
-                      ),
-              ),
-            ),
+            child: _ProfileAvatar(avatarUrl: _avatarUrl),
           ),
         ],
       ],
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.avatarUrl});
+
+  final String avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmedUrl = avatarUrl.trim();
+
+    if (trimmedUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 12,
+        backgroundColor: const Color(0xFF2A2F39),
+        child: ClipOval(
+          child: Image.network(
+            trimmedUrl,
+            width: 24,
+            height: 24,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const _AvatarPlaceholder();
+            },
+          ),
+        ),
+      );
+    }
+
+    return const _AvatarPlaceholder();
+  }
+}
+
+class _AvatarPlaceholder extends StatelessWidget {
+  const _AvatarPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const CircleAvatar(
+      radius: 12,
+      backgroundColor: Color(0xFF2A2F39),
+      child: Icon(Icons.person, size: 14, color: Color(0xFFC9CDD3)),
     );
   }
 }
