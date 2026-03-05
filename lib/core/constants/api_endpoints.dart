@@ -51,6 +51,8 @@ base class ApiEndpoints {
   static const String paymentConfig = _Payment.config;
   static const String paymentHistory = _Payment.history;
   static const String paymentMembershipSummary = _Payment.membershipSummary;
+  static const String paymentFreezeMembership = _Payment.freezeMembership;
+  static const String paymentFreezeMembershipStatus = _Payment.freezeStatus;
 
   // ---------------------- USER -----------------------------
   static const String user = '$baseUrl/user';
@@ -205,6 +207,8 @@ class _Payment {
   static const String confirm = '$_route/confirm-payment';
   static const String history = '$_route/history';
   static const String membershipSummary = '$_route/membership-summary';
+  static const String freezeMembership = '${ApiEndpoints.baseUrl}/membership-freeze';
+  static const String freezeStatus = '$freezeMembership/status';
 }
 
 class _Attendance {

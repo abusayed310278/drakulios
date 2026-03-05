@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/common/widgets/custom_snackbar.dart';
+import '../../../core/network/api_service/training_shop_api_service.dart';
 
 class FreezeAccountScreen extends StatefulWidget {
   const FreezeAccountScreen({
@@ -26,8 +28,49 @@ class FreezeAccountScreen extends StatefulWidget {
 }
 
 class _FreezeAccountScreenState extends State<FreezeAccountScreen> {
+  final TrainingShopApiService _api = TrainingShopApiService();
   DateTime? _selectedDate;
   bool _indefinite = true;
+  bool _isSubmitting = false;
+  bool _isLoadingStatus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFreezeStatus();
+  }
+
+  Future<void> _loadFreezeStatus() async {
+    setState(() => _isLoadingStatus = true);
+    try {
+      final res = await _api.getFreezeMembershipStatus();
+      final dataRaw = res['data'];
+      if (dataRaw is! Map || !mounted) return;
+      final data = Map<String, dynamic>.from(dataRaw);
+      final isFrozen = data['isFrozen'] == true;
+      if (!isFrozen) return;
+
+      final indefinite = data['indefinite'] == true;
+      final endDateRaw = data['endDate']?.toString();
+      DateTime? parsedDate;
+      if (!indefinite &&
+          endDateRaw != null &&
+          endDateRaw.trim().isNotEmpty) {
+        parsedDate = DateTime.tryParse(endDateRaw)?.toLocal();
+      }
+
+      setState(() {
+        _indefinite = indefinite;
+        _selectedDate = parsedDate;
+      });
+    } catch (_) {
+      // Keep screen usable even if status fetch fails.
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingStatus = false);
+      }
+    }
+  }
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
@@ -50,13 +93,49 @@ class _FreezeAccountScreenState extends State<FreezeAccountScreen> {
     return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
   }
 
-  void _confirmFreeze() {
-    CustomSnackbar.show(
-      _indefinite
-          ? 'Membership freeze set to indefinite'
-          : 'Membership freeze set until ${_dateLabel()}',
-    );
-    Navigator.of(context).pop();
+  Future<void> _confirmFreeze() async {
+    if (_isSubmitting) return;
+
+    if (!_indefinite && _selectedDate == null) {
+      CustomSnackbar.show('Please select freeze end date');
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    try {
+      final res = await _api.freezeMembership(
+        indefinite: _indefinite,
+        endDate: _indefinite ? null : _selectedDate,
+      );
+      if (!mounted) return;
+      CustomSnackbar.show(
+        (res['message'] ?? 'Membership freeze updated successfully').toString(),
+      );
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (!mounted) return;
+      CustomSnackbar.show(_extractErrorMessage(error));
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  String _extractErrorMessage(Object error) {
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map) {
+        final message =
+            data['message']?.toString() ??
+            data['error']?.toString() ??
+            data['details']?.toString();
+        if (message != null && message.trim().isNotEmpty) {
+          return message;
+        }
+      }
+    }
+    return 'Failed to freeze membership. Please try again.';
   }
 
   @override
@@ -149,7 +228,9 @@ class _FreezeAccountScreenState extends State<FreezeAccountScreen> {
                         child: _OptionButton(
                           text: _dateLabel(),
                           selected: !_indefinite,
-                          onTap: _pickDate,
+                          onTap: (_isSubmitting || _isLoadingStatus)
+                              ? () {}
+                              : _pickDate,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -157,7 +238,9 @@ class _FreezeAccountScreenState extends State<FreezeAccountScreen> {
                         child: _OptionButton(
                           text: 'Indefinite',
                           selected: _indefinite,
-                          onTap: () => setState(() => _indefinite = true),
+                          onTap: (_isSubmitting || _isLoadingStatus)
+                              ? () {}
+                              : () => setState(() => _indefinite = true),
                         ),
                       ),
                     ],
@@ -170,17 +253,23 @@ class _FreezeAccountScreenState extends State<FreezeAccountScreen> {
                           title: 'Cancel',
                           bg: const Color(0xFF2A2513),
                           border: const Color(0xFFF2B31A),
-                          onTap: () => Navigator.of(context).pop(),
+                          onTap: (_isSubmitting || _isLoadingStatus)
+                              ? () {}
+                              : () => Navigator.of(context).pop(),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _BottomButton(
-                          title: 'Confirm Freeze',
+                          title: _isSubmitting
+                              ? 'Freezing...'
+                              : 'Confirm Freeze',
                           bg: const Color(0xFFF2B31A),
                           border: const Color(0xFFF2B31A),
                           textColor: Colors.white,
-                          onTap: _confirmFreeze,
+                          onTap: (_isSubmitting || _isLoadingStatus)
+                              ? () {}
+                              : _confirmFreeze,
                         ),
                       ),
                     ],

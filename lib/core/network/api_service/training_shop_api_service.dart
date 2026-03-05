@@ -174,6 +174,28 @@ class TrainingShopApiService {
     return Map<String, dynamic>.from(res.data as Map);
   }
 
+  Future<Map<String, dynamic>> freezeMembership({
+    required bool indefinite,
+    DateTime? endDate,
+  }) async {
+    final Response res = await _client.post(
+      ApiEndpoints.paymentFreezeMembership,
+      data: {
+        'indefinite': indefinite,
+        if (!indefinite && endDate != null)
+          'endDate': endDate.toUtc().toIso8601String(),
+      },
+    );
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  Future<Map<String, dynamic>> getFreezeMembershipStatus() async {
+    final Response res = await _client.get(
+      ApiEndpoints.paymentFreezeMembershipStatus,
+    );
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
   Future<Map<String, dynamic>> getMyAttendance({int? year, int? month}) async {
     final query = <String, dynamic>{};
     if (year != null) query['year'] = year;

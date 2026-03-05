@@ -402,17 +402,6 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                           isActive: hasMembership,
                           paid: paid,
                         ),
-                        const SizedBox(height: 10),
-                        _MembershipCard(
-                          planName: 'Training Plan',
-                          priceLabel: hasMembership
-                              ? 'One-time payment'
-                              : 'N/A',
-                          renewalDate: renewalDate,
-                          paymentMethod: paymentMethod,
-                          isActive: hasMembership,
-                          paid: paid,
-                        ),
                         const SizedBox(height: 12),
                         Row(
                           children: [
