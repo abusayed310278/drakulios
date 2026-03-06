@@ -85,10 +85,10 @@ class _RemoteServer {
 // ignore: unused_element
 class _LocalHostWifi {
   // ignore: unused_field
-  static const String socketUrl = 'http://10.10.5.98:5001';
+  static const String socketUrl = 'http://10.10.5.98:5002';
 
   // ignore: unused_field
-  static const String baseUrl = 'http://10.10.5.98:5001/api/v1';
+  static const String baseUrl = 'http://10.10.5.98:5002/api/v1';
 }
 
 abstract class _Auth {

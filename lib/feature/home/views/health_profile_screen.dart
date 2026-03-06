@@ -7,7 +7,12 @@ import '../../paymentandsubscription/views/payment_flow_destination.dart';
 import '../../paymentandsubscription/views/payment_method_screen.dart';
 
 class HealthProfileScreen extends StatefulWidget {
-  const HealthProfileScreen({super.key});
+  const HealthProfileScreen({
+    super.key,
+    this.flowDestination = PaymentFlowDestination.onlineCoaching,
+  });
+
+  final PaymentFlowDestination flowDestination;
 
   @override
   State<HealthProfileScreen> createState() => _HealthProfileScreenState();
@@ -93,9 +98,8 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => const PaymentMethodScreen(
-          flowDestination: PaymentFlowDestination.training,
-        ),
+        builder: (_) =>
+            PaymentMethodScreen(flowDestination: widget.flowDestination),
       ),
     );
   }

@@ -6,10 +6,15 @@ import '../../core/constants/api_endpoints.dart';
 import '../../core/common/widgets/custom_snackbar.dart';
 import '../../core/network/api_service/api_client.dart';
 import '../../core/network/api_service/token_meneger.dart';
+import '../../core/network/api_service/training_shop_api_service.dart';
 import 'code_verification_screen.dart';
 import 'create_account_screen.dart';
+import '../home/views/daily_training_plan_screen.dart';
 import '../home/views/home_menu_screen.dart';
+import '../home/views/personal_training_plan_screen.dart';
+import '../home/views/training_nutrition_screen.dart';
 import '../paymentandsubscription/views/payment_and_subscription_screen.dart';
+import '../paymentandsubscription/views/payment_flow_destination.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
   late final ApiClient _apiClient;
+  final TrainingShopApiService _trainingApi = TrainingShopApiService();
 
   @override
   void initState() {
@@ -60,15 +66,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFFC9CDD3)),
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new,
+                        size: 18,
+                        color: Color(0xFFC9CDD3),
+                      ),
                       splashRadius: 18,
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                      constraints: const BoxConstraints(
+                        minWidth: 24,
+                        minHeight: 24,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 10),
                   Center(
-                    child: SizedBox(width: 60, height: 53, child: Image.asset(Images.appLogo, fit: BoxFit.contain)),
+                    child: SizedBox(
+                      width: 60,
+                      height: 53,
+                      child: Image.asset(Images.appLogo, fit: BoxFit.contain),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   const SizedBox(
@@ -77,7 +94,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       'Welcome Back',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xFFF5F6F8), fontSize: 19, fontWeight: FontWeight.w600, height: 1.2, letterSpacing: 0),
+                      style: TextStyle(
+                        color: Color(0xFFF5F6F8),
+                        fontSize: 19,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
+                        letterSpacing: 0,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -87,7 +110,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       'Access your Pro Factory Club Account securely.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 12, fontWeight: FontWeight.w400, height: 1.2, letterSpacing: 0),
+                      style: TextStyle(
+                        color: Color(0xFFFFFFFF),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        height: 1.2,
+                        letterSpacing: 0,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 22),
@@ -110,7 +139,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         });
                       },
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
                         size: 18,
                         color: const Color(0xFFA8ADB3),
                       ),
@@ -134,17 +165,27 @@ class _LoginScreenState extends State<LoginScreen> {
                               await TokenManager.clearRememberedCredentials();
                             }
                           },
-                          side: const BorderSide(color: Color(0xFF8B8F94), width: 1.2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+                          side: const BorderSide(
+                            color: Color(0xFF8B8F94),
+                            width: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(3),
+                          ),
                           activeColor: const Color(0xFFF3B41A),
                           checkColor: Colors.black,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
                       const SizedBox(width: 8),
                       const Text(
                         'Remember me',
-                        style: TextStyle(color: Color(0xFFBFC3C8), fontSize: 14, fontWeight: FontWeight.w400),
+                        style: TextStyle(
+                          color: Color(0xFFBFC3C8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                       const Spacer(),
                       TextButton(
@@ -155,7 +196,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text('Forgot your password?', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400)),
+                        child: const Text(
+                          'Forgot your password?',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -168,10 +215,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         backgroundColor: const Color(0xFFF3B41A),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isLoading
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.white,
+                              ),
+                            )
                           : const Text(
                               'Log in',
                               style: TextStyle(
@@ -221,15 +277,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         const Text(
                           'Don’t have an account? ',
-                          style: TextStyle(color: Color(0xFF9A9EA4), fontSize: 14, fontWeight: FontWeight.w400),
+                          style: TextStyle(
+                            color: Color(0xFF9A9EA4),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CreateAccountScreen()));
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const CreateAccountScreen(),
+                              ),
+                            );
                           },
                           child: const Text(
                             'Sign up',
-                            style: TextStyle(color: Color(0xFFF3B41A), fontSize: 14, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: Color(0xFFF3B41A),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -272,7 +340,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final response = await _apiClient.post(ApiEndpoints.login, data: {'email': email, 'password': password});
+      final response = await _apiClient.post(
+        ApiEndpoints.login,
+        data: {'email': email, 'password': password},
+      );
       final data = response.data;
       final success = data['success'] == true;
       final backendMessage = (data['message'] ?? '').toString();
@@ -297,12 +368,16 @@ class _LoginScreenState extends State<LoginScreen> {
         uid: (payload['_id'] ?? payload['user']?['_id'] ?? '').toString(),
         userName: (payload['user']?['name'] ?? '').toString(),
         userEmail: (payload['user']?['email'] ?? email).toString(),
-        userRole: (payload['role'] ?? payload['user']?['role'] ?? '').toString(),
+        userRole: (payload['role'] ?? payload['user']?['role'] ?? '')
+            .toString(),
       );
 
       await TokenManager.setRememberMe(_rememberMe);
       if (_rememberMe) {
-        await TokenManager.saveRememberedCredentials(email: email, password: password);
+        await TokenManager.saveRememberedCredentials(
+          email: email,
+          password: password,
+        );
       } else {
         await TokenManager.clearRememberedCredentials();
       }
@@ -312,11 +387,11 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (!mounted) return;
-      final hasActivePlan = await _resolveHasActivePlan();
+      final nextScreen = await _resolveNextScreen();
       if (!mounted) return;
       Navigator.of(
         context,
-      ).push(MaterialPageRoute(builder: (_) => hasActivePlan ? const HomeMenuScreen() : const PaymentAndSubscriptionScreen()));
+      ).pushReplacement(MaterialPageRoute(builder: (_) => nextScreen));
     } on DioException catch (e) {
       final resData = e.response?.data;
       String message = 'Login failed';
@@ -360,6 +435,51 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<Widget> _resolveNextScreen() async {
+    try {
+      final membership = await _trainingApi.getMembershipSummary();
+      final data = membership['data'];
+      if (data is Map && data['hasActiveMembership'] == true) {
+        final planName = (data['planName'] ?? '').toString();
+        final destination = _destinationFromPlanName(planName);
+        if (destination != null) return _screenForDestination(destination);
+        return const HomeMenuScreen();
+      }
+    } catch (_) {}
+
+    final hasActivePlan = await _resolveHasActivePlan();
+    if (hasActivePlan) return const HomeMenuScreen();
+    return const PaymentAndSubscriptionScreen();
+  }
+
+  PaymentFlowDestination? _destinationFromPlanName(String planName) {
+    final name = planName.toLowerCase();
+    if (name.contains('personal training') || name.contains('personal')) {
+      return PaymentFlowDestination.personalTraining;
+    }
+    if (name.contains('online coaching') || name.contains('coaching')) {
+      return PaymentFlowDestination.onlineCoaching;
+    }
+    if (name.contains('training plan') || name.contains('daily training')) {
+      return PaymentFlowDestination.trainingPlan;
+    }
+    return null;
+  }
+
+  Widget _screenForDestination(PaymentFlowDestination destination) {
+    switch (destination) {
+      case PaymentFlowDestination.onlineCoaching:
+        return const TrainingNutritionScreen();
+      case PaymentFlowDestination.trainingPlan:
+        return const DailyTrainingPlanScreen();
+      case PaymentFlowDestination.personalTraining:
+        return const PersonalTrainingPlanScreen();
+      case PaymentFlowDestination.shop:
+      case PaymentFlowDestination.homeMenu:
+        return const HomeMenuScreen();
+    }
+  }
+
   Future<void> _handleForgotPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
@@ -369,13 +489,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final response = await _apiClient.post(ApiEndpoints.forgetPassword, data: {'email': email});
+      final response = await _apiClient.post(
+        ApiEndpoints.forgetPassword,
+        data: {'email': email},
+      );
       final data = response.data;
       final message = (data['message'] ?? 'OTP sent to your email').toString();
       _showMessage(message);
 
       if (!mounted) return;
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => CodeVerificationScreen(email: email)));
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => CodeVerificationScreen(email: email)),
+      );
     } on DioException catch (e) {
       final resData = e.response?.data;
       String message = 'Failed to send OTP';
@@ -428,7 +553,11 @@ class _AuthTextField extends StatelessWidget {
         style: const TextStyle(color: Color(0xFFF5F6F8), fontSize: 14),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFFA8ADB3), fontSize: 14, fontWeight: FontWeight.w400),
+          hintStyle: const TextStyle(
+            color: Color(0xFFA8ADB3),
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+          ),
           prefixIcon: Icon(icon, size: 18, color: const Color(0xFFA8ADB3)),
           suffixIcon: suffixIcon,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -467,9 +596,16 @@ class _SocialButton extends StatelessWidget {
         width: 64,
         height: 48,
         // padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Center(
-          child: SizedBox(width: 50, height: 50, child: Image.asset(asset, fit: BoxFit.contain)),
+          child: SizedBox(
+            width: 50,
+            height: 50,
+            child: Image.asset(asset, fit: BoxFit.contain),
+          ),
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/assets.dart';
+import '../../paymentandsubscription/views/payment_flow_destination.dart';
 import 'health_profile_screen.dart';
 import 'terms_conditions_screen.dart';
 
@@ -9,7 +10,8 @@ class ChooseTrainingPlanScreen extends StatefulWidget {
   const ChooseTrainingPlanScreen({super.key});
 
   @override
-  State<ChooseTrainingPlanScreen> createState() => _ChooseTrainingPlanScreenState();
+  State<ChooseTrainingPlanScreen> createState() =>
+      _ChooseTrainingPlanScreenState();
 }
 
 class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
@@ -17,8 +19,23 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
 
   int get _selectedPlanIndex => _selectedPlan ?? 0;
 
+  PaymentFlowDestination get _selectedFlowDestination {
+    switch (_selectedPlanIndex) {
+      case 0:
+        return PaymentFlowDestination.onlineCoaching;
+      case 1:
+        return PaymentFlowDestination.trainingPlan;
+      case 2:
+        return PaymentFlowDestination.personalTraining;
+      default:
+        return PaymentFlowDestination.onlineCoaching;
+    }
+  }
+
   Future<void> _openTermsFlow() async {
-    final accepted = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const TermsConditionsScreen()));
+    final accepted = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const TermsConditionsScreen()),
+    );
     if (!mounted) return;
     if (accepted == true) {
       await _showBodyGoalsDialog();
@@ -34,7 +51,10 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
         insetPadding: const EdgeInsets.symmetric(horizontal: 34),
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-          decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(16)),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -46,7 +66,11 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
                     borderRadius: BorderRadius.circular(12),
                     child: const Padding(
                       padding: EdgeInsets.all(2),
-                      child: Icon(Icons.close, size: 20, color: Color(0xFF1F222A)),
+                      child: Icon(
+                        Icons.close,
+                        size: 20,
+                        color: Color(0xFF1F222A),
+                      ),
                     ),
                   ),
                 ],
@@ -55,7 +79,12 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
               Text(
                 'To help us build the best possible plan for you, please tell us a little bit about your body and goals',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(color: const Color(0xFF1E2024), fontSize: 12, fontWeight: FontWeight.w500, height: 1.35),
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFF1E2024),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  height: 1.35,
+                ),
               ),
               const SizedBox(height: 14),
               SizedBox(
@@ -66,23 +95,40 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
                     Navigator.of(dialogContext).pop();
                     await Future<void>.delayed(Duration.zero);
                     if (!mounted) return;
-                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HealthProfileScreen()));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => HealthProfileScreen(
+                          flowDestination: _selectedFlowDestination,
+                        ),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF2B31A),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         'Continue',
-                        style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 18, fontWeight: FontWeight.w500, height: 1.2),
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFFFFFFFF),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          height: 1.2,
+                        ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward, size: 18, color: Color(0xFFFFFFFF)),
+                      const Icon(
+                        Icons.arrow_forward,
+                        size: 18,
+                        color: Color(0xFFFFFFFF),
+                      ),
                     ],
                   ),
                 ),
@@ -103,7 +149,10 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
         insetPadding: const EdgeInsets.symmetric(horizontal: 34),
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-          decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -115,7 +164,11 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
                     borderRadius: BorderRadius.circular(12),
                     child: const Padding(
                       padding: EdgeInsets.all(2),
-                      child: Icon(Icons.close, size: 22, color: Color(0xFF1F222A)),
+                      child: Icon(
+                        Icons.close,
+                        size: 22,
+                        color: Color(0xFF1F222A),
+                      ),
                     ),
                   ),
                 ],
@@ -124,7 +177,11 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
               Text(
                 'By accepting this you agree with our',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(color: const Color(0xFF1E2024), fontSize: 12, fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFF1E2024),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 2),
               GestureDetector(
@@ -135,7 +192,11 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
                 child: Text(
                   'Terms And Conditions.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(color: const Color(0xFFF2B31A), fontSize: 12, fontWeight: FontWeight.w500),
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFFF2B31A),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
@@ -147,12 +208,21 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(dialogContext).pop(),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFFF2B31A), width: 1),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          side: const BorderSide(
+                            color: Color(0xFFF2B31A),
+                            width: 1,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         child: Text(
                           'Deny',
-                          style: GoogleFonts.outfit(color: const Color(0xFFF2B31A), fontSize: 16, fontWeight: FontWeight.w500),
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFF2B31A),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
@@ -172,11 +242,17 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
                           backgroundColor: const Color(0xFFF2B31A),
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         child: Text(
                           'Accept',
-                          style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 16, fontWeight: FontWeight.w500),
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFFFFFFF),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
@@ -204,7 +280,11 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
           'When choosing this plan the user will access the objectives questionnaire and from there to the payment gateway.',
           'After a period of 24/48 they will be able to see in their profile the following:',
         ],
-        numberedItems: ['Daily personalized training plan.', 'Complete nutrition plan.', 'Weekly online reviews to be agreed in calendar.'],
+        numberedItems: [
+          'Daily personalized training plan.',
+          'Complete nutrition plan.',
+          'Weekly online reviews to be agreed in calendar.',
+        ],
       ),
       const _TrainingPlanModel(
         title: 'Training Plan',
@@ -258,13 +338,27 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
                             onPressed: () => Navigator.of(context).maybePop(),
                             splashRadius: 18,
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                            icon: const Icon(Icons.arrow_back_ios_new, size: 16, color: Color(0xFFE4E6EB)),
+                            constraints: const BoxConstraints(
+                              minWidth: 24,
+                              minHeight: 24,
+                            ),
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new,
+                              size: 16,
+                              color: Color(0xFFE4E6EB),
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Center(child: Image.asset(Images.appLogo, width: 60, height: 53, fit: BoxFit.contain)),
+                      Center(
+                        child: Image.asset(
+                          Images.appLogo,
+                          width: 60,
+                          height: 53,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         'Choose Your Training Plan',
@@ -291,7 +385,9 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
                       ...List.generate(plans.length, (index) {
                         final plan = plans[index];
                         return Padding(
-                          padding: EdgeInsets.only(bottom: index == plans.length - 1 ? 0 : 10),
+                          padding: EdgeInsets.only(
+                            bottom: index == plans.length - 1 ? 0 : 10,
+                          ),
                           child: _TrainingPlanCard(
                             plan: plan,
                             selected: _selectedPlanIndex == index,
@@ -310,17 +406,27 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
                             backgroundColor: const Color(0xFFF2B31A),
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 'Continue',
-                                style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 14, fontWeight: FontWeight.w600),
+                                style: GoogleFonts.outfit(
+                                  color: const Color(0xFFFFFFFF),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                               const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward, size: 16, color: Color(0xFFFFFFFF)),
+                              const Icon(
+                                Icons.arrow_forward,
+                                size: 16,
+                                color: Color(0xFFFFFFFF),
+                              ),
                             ],
                           ),
                         ),
@@ -338,7 +444,11 @@ class _ChooseTrainingPlanScreenState extends State<ChooseTrainingPlanScreen> {
 }
 
 class _TrainingPlanCard extends StatelessWidget {
-  const _TrainingPlanCard({required this.plan, required this.selected, required this.onTap});
+  const _TrainingPlanCard({
+    required this.plan,
+    required this.selected,
+    required this.onTap,
+  });
 
   final _TrainingPlanModel plan;
   final bool selected;
@@ -356,8 +466,21 @@ class _TrainingPlanCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: plan.backgroundColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: selected ? plan.borderColor : plan.borderColor.withValues(alpha: 0.75), width: selected ? 2.1 : 1.1),
-            boxShadow: selected ? [BoxShadow(color: plan.borderColor.withValues(alpha: 0.22), blurRadius: 12, spreadRadius: 0.6)] : null,
+            border: Border.all(
+              color: selected
+                  ? plan.borderColor
+                  : plan.borderColor.withValues(alpha: 0.75),
+              width: selected ? 2.1 : 1.1,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: plan.borderColor.withValues(alpha: 0.22),
+                      blurRadius: 12,
+                      spreadRadius: 0.6,
+                    ),
+                  ]
+                : null,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,7 +499,10 @@ class _TrainingPlanCard extends StatelessWidget {
                             child: Container(
                               width: 8,
                               height: 8,
-                              decoration: BoxDecoration(shape: BoxShape.circle, color: plan.markerColor),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: plan.markerColor,
+                              ),
                             ),
                           )
                         : null,
@@ -385,7 +511,12 @@ class _TrainingPlanCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       plan.title,
-                      style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 24, fontWeight: FontWeight.w600, height: 1.2),
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFFFFFFFF),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
+                      ),
                     ),
                   ),
                 ],
@@ -400,7 +531,10 @@ class _TrainingPlanCard extends StatelessWidget {
               ...List.generate(plan.numberedItems.length, (index) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 3),
-                  child: _LineText(leading: '${index + 1}.', text: plan.numberedItems[index]),
+                  child: _LineText(
+                    leading: '${index + 1}.',
+                    text: plan.numberedItems[index],
+                  ),
                 );
               }),
             ],
@@ -426,14 +560,24 @@ class _LineText extends StatelessWidget {
           width: 16,
           child: Text(
             leading,
-            style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 14, fontWeight: FontWeight.w500, height: 1.5),
+            style: GoogleFonts.outfit(
+              color: const Color(0xFFFFFFFF),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              height: 1.5,
+            ),
           ),
         ),
         const SizedBox(width: 2),
         Expanded(
           child: Text(
             text,
-            style: GoogleFonts.outfit(color: const Color(0xFFFFFFFF), fontSize: 14, fontWeight: FontWeight.w500, height: 1.5),
+            style: GoogleFonts.outfit(
+              color: const Color(0xFFFFFFFF),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              height: 1.5,
+            ),
           ),
         ),
       ],

@@ -51,21 +51,24 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
   Future<void> _loadTraining() async {
     try {
       final payload = await _api.getTodayTrainingsBundle();
-      final dataRaw = payload['data'];
-      final data = dataRaw is List
-          ? dataRaw
-                .whereType<Map>()
-                .map((e) => Map<String, dynamic>.from(e))
-                .toList()
-          : <Map<String, dynamic>>[];
+      final data = _toMapList(payload['data']);
       final meta = payload['meta'];
       DateTime? serverDate;
       if (meta is Map && meta['serverDate'] != null) {
         serverDate = DateTime.tryParse(meta['serverDate'].toString());
       }
+      var resolved = data;
+      if (resolved.isEmpty) {
+        final mine = await _api.getMyTrainings();
+        final today = DateTime.now();
+        final filtered = mine
+            .where((e) => _isSameDay(_tryParseItemDate(e), today))
+            .toList();
+        resolved = filtered.isNotEmpty ? filtered : mine;
+      }
       if (!mounted) return;
       setState(() {
-        _trainings = data;
+        _trainings = resolved;
         _trainingServerDate = serverDate;
       });
     } on DioException catch (e) {
@@ -170,7 +173,12 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
                       else if (_trainings.isEmpty)
                         const _EmptyState(text: 'No training found for today')
                       else
-                        _TrainingCard(rows: _trainings),
+                        _TrainingCard(
+                          rows: _trainings,
+                          imageUrl: _extractImageUrl(
+                            _trainings.isNotEmpty ? _trainings.first : null,
+                          ),
+                        ),
                     ] else ...[
                       if (_loadingNutrition)
                         const Center(
@@ -229,6 +237,20 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
     return <Map<String, dynamic>>[];
   }
 
+  String? _extractImageUrl(Map<String, dynamic>? row) {
+    if (row == null) return null;
+    final imageRaw = row['image'];
+    if (imageRaw is Map && imageRaw['url'] != null) {
+      final url = imageRaw['url'].toString().trim();
+      return url.isEmpty ? null : url;
+    }
+    if (imageRaw is String) {
+      final url = imageRaw.trim();
+      return url.isEmpty ? null : url;
+    }
+    return null;
+  }
+
   bool _isSameDay(DateTime? a, DateTime b) {
     if (a == null) return false;
     return a.year == b.year && a.month == b.month && a.day == b.day;
@@ -271,9 +293,10 @@ class _TrainingNutritionScreenState extends State<TrainingNutritionScreen> {
 }
 
 class _TrainingCard extends StatelessWidget {
-  const _TrainingCard({required this.rows});
+  const _TrainingCard({required this.rows, this.imageUrl});
 
   final List<Map<String, dynamic>> rows;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -288,20 +311,23 @@ class _TrainingCard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              Images.gym1Image,
-              height: 170,
-              fit: BoxFit.cover,
-            ),
+            child: imageUrl != null && imageUrl!.isNotEmpty
+                ? Image.network(
+                    imageUrl!,
+                    height: 170,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, error, stackTrace) => Image.asset(
+                      Images.gym1Image,
+                      height: 170,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Image.asset(Images.gym1Image, height: 170, fit: BoxFit.cover),
           ),
           const SizedBox(height: 12),
           ...List.generate(rows.length, (index) {
             final item = rows[index];
-            final chips = <String>[
-              '${item['reps'] ?? '-'} Reps',
-              '${item['rest'] ?? '-'} Rest',
-              '${item['weight'] ?? '-'} kg',
-            ];
+            final chips = _buildChips(item);
             return Padding(
               padding: EdgeInsets.only(
                 bottom: index == rows.length - 1 ? 0 : 8,
@@ -315,6 +341,24 @@ class _TrainingCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<String> _buildChips(Map<String, dynamic> item) {
+    final chips = <String>[];
+    void addChip(dynamic raw, String suffix) {
+      if (raw == null) return;
+      final v = raw.toString().trim();
+      if (v.isEmpty || v == '-') return;
+      chips.add('$v $suffix');
+    }
+
+    addChip(item['sets'] ?? item['set'], 'Set');
+    addChip(item['weight'], 'kg');
+    addChip(item['reps'], 'Reps');
+    addChip(item['rest'], 'Rest');
+
+    if (chips.isEmpty) chips.add('No details');
+    return chips.take(3).toList();
   }
 }
 

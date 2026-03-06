@@ -3,9 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/assets.dart';
+import '../../core/network/api_service/training_shop_api_service.dart';
 import '../../core/network/api_service/token_meneger.dart';
+import '../home/views/daily_training_plan_screen.dart';
 import '../home/views/home_menu_screen.dart';
+import '../home/views/personal_training_plan_screen.dart';
+import '../home/views/training_nutrition_screen.dart';
 import '../onboarding/onboarding_screen.dart';
+import '../paymentandsubscription/views/payment_and_subscription_screen.dart';
+import '../paymentandsubscription/views/payment_flow_destination.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,6 +22,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+  final TrainingShopApiService _trainingApi = TrainingShopApiService();
   Timer? _timer;
   late final AnimationController _controller;
   late final Animation<double> _opacity;
@@ -49,13 +56,58 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     final loggedIn = await TokenManager.isLoggedIn();
     if (!mounted) return;
+    Widget nextScreen = const OnboardingScreen();
+    if (loggedIn) {
+      nextScreen = await _resolveScreenForLoggedInUser();
+      if (!mounted) return;
+    }
     Navigator.of(
       context,
-    ).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => loggedIn ? const HomeMenuScreen() : const OnboardingScreen(),
-      ),
-    );
+    ).pushReplacement(MaterialPageRoute(builder: (_) => nextScreen));
+  }
+
+  Future<Widget> _resolveScreenForLoggedInUser() async {
+    try {
+      final membership = await _trainingApi.getMembershipSummary();
+      final data = membership['data'];
+      if (data is Map && data['hasActiveMembership'] == true) {
+        final planName = (data['planName'] ?? '').toString();
+        final destination = _destinationFromPlanName(planName);
+        if (destination != null) return _screenForDestination(destination);
+        return const HomeMenuScreen();
+      }
+      return const PaymentAndSubscriptionScreen();
+    } catch (_) {
+      return const HomeMenuScreen();
+    }
+  }
+
+  PaymentFlowDestination? _destinationFromPlanName(String planName) {
+    final name = planName.toLowerCase();
+    if (name.contains('personal training') || name.contains('personal')) {
+      return PaymentFlowDestination.personalTraining;
+    }
+    if (name.contains('online coaching') || name.contains('coaching')) {
+      return PaymentFlowDestination.onlineCoaching;
+    }
+    if (name.contains('training plan') || name.contains('daily training')) {
+      return PaymentFlowDestination.trainingPlan;
+    }
+    return null;
+  }
+
+  Widget _screenForDestination(PaymentFlowDestination destination) {
+    switch (destination) {
+      case PaymentFlowDestination.onlineCoaching:
+        return const TrainingNutritionScreen();
+      case PaymentFlowDestination.trainingPlan:
+        return const DailyTrainingPlanScreen();
+      case PaymentFlowDestination.personalTraining:
+        return const PersonalTrainingPlanScreen();
+      case PaymentFlowDestination.shop:
+      case PaymentFlowDestination.homeMenu:
+        return const HomeMenuScreen();
+    }
   }
 
   @override
