@@ -3,12 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get.dart';
 
+import 'core/constants/payment_config.dart';
 import 'feature/splash/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    const stripePk = String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
+    const stripePk = PaymentConfig.stripePublishableKey;
     if (stripePk.isNotEmpty) {
       Stripe.publishableKey = stripePk;
       await Stripe.instance.applySettings();

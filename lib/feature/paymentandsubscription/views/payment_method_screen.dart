@@ -4,6 +4,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:dio/dio.dart';
 
 import '../../../core/constants/assets.dart';
+import '../../../core/constants/payment_config.dart';
 import '../../../core/common/widgets/custom_snackbar.dart';
 import '../../../core/network/api_service/token_meneger.dart';
 import '../../../core/network/api_service/training_shop_api_service.dart';
@@ -34,6 +35,58 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
   int _selectedMethod = 0;
   bool _isPaying = false;
 
+  String _friendlyDioError(
+    DioException error, {
+    required String fallback,
+  }) {
+    final data = error.response?.data;
+    String? message;
+
+    if (data is Map) {
+      message =
+          data['error']?.toString() ??
+          data['message']?.toString() ??
+          data['details']?.toString();
+    } else if (data != null) {
+      message = data.toString();
+    }
+
+    final normalized = message?.trim();
+    if (normalized != null && normalized.isNotEmpty) {
+      final lower = normalized.toLowerCase();
+      final looksLikeHtml =
+          lower.contains('<!doctype html') ||
+          lower.contains('<html') ||
+          lower.contains('</html>') ||
+          lower.contains('<body');
+      final looksLikeHostError =
+          lower.contains('unexpected error') ||
+          lower.contains('try again in a few seconds') ||
+          lower.contains('server error');
+
+      if (!looksLikeHtml && !looksLikeHostError) {
+        return normalized;
+      }
+    }
+
+    if (error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout) {
+      return 'Payment server timed out. Please try again';
+    }
+
+    if (error.type == DioExceptionType.connectionError) {
+      return 'Cannot reach payment server. Check your internet connection';
+    }
+
+    final statusCode = error.response?.statusCode;
+    if (statusCode != null && statusCode >= 500) {
+      return 'Payment server is unavailable right now. Please try again shortly';
+    }
+
+    return fallback;
+  }
+
   String _friendlyError(Object error, {required String fallback}) {
     final asString = error.toString().trim();
     if (asString.isNotEmpty && !asString.startsWith('Instance of')) {
@@ -54,6 +107,23 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       if (existingKey.trim().isNotEmpty) return true;
     } catch (_) {
       // Continue and load key from backend config.
+    }
+    const localKey = PaymentConfig.stripePublishableKey;
+    if (localKey.isNotEmpty && localKey.startsWith('pk_')) {
+      try {
+        Stripe.publishableKey = localKey;
+        await Stripe.instance.applySettings();
+        return true;
+      } on MissingPluginException {
+        CustomSnackbar.show(
+          'Stripe SDK not loaded. Rebuild app: flutter clean, pub get, pod install, run.',
+        );
+        return false;
+      } on StripeConfigException catch (e) {
+        final msg = e.message.trim();
+        CustomSnackbar.show(msg.isEmpty ? 'Stripe configuration error' : msg);
+        return false;
+      }
     }
     try {
       final config = await _api.getPaymentConfig();
@@ -76,20 +146,8 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       );
       return false;
     } on DioException catch (e) {
-      final data = e.response?.data;
-      String? backendMessage;
-      if (data is Map) {
-        backendMessage =
-            data['error']?.toString() ??
-            data['message']?.toString() ??
-            data['details']?.toString();
-      } else if (data != null) {
-        backendMessage = data.toString();
-      }
       CustomSnackbar.show(
-        backendMessage == null || backendMessage.trim().isEmpty
-            ? 'Failed to load payment config'
-            : backendMessage,
+        _friendlyDioError(e, fallback: 'Failed to load payment config'),
       );
       return false;
     } on StripeConfigException catch (e) {
@@ -108,6 +166,12 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     if (_isPaying) return;
     setState(() => _isPaying = true);
     try {
+      final token = await TokenManager.getToken();
+      if (token == null || token.trim().isEmpty) {
+        CustomSnackbar.show('Your session has expired. Please log in again');
+        return;
+      }
+
       final stripeReady = await _ensureStripeConfigured();
       if (!stripeReady) return;
 
@@ -206,21 +270,12 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         ),
       );
     } on DioException catch (e) {
-      final data = e.response?.data;
-      String? backendMessage;
-      if (data is Map) {
-        backendMessage =
-            data['error']?.toString() ??
-            data['message']?.toString() ??
-            data['details']?.toString();
-      } else if (data != null) {
-        backendMessage = data.toString();
+      if (e.response?.statusCode == 401) {
+        CustomSnackbar.show('Your session has expired. Please log in again');
+        return;
       }
-      CustomSnackbar.show(
-        backendMessage == null || backendMessage.trim().isEmpty
-            ? 'Payment failed'
-            : backendMessage,
-      );
+
+      CustomSnackbar.show(_friendlyDioError(e, fallback: 'Payment failed'));
     } catch (e) {
       CustomSnackbar.show(
         _friendlyError(e, fallback: 'Payment failed. Please try again'),

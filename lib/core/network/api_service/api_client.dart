@@ -130,7 +130,7 @@ class ApiClient {
     );
 
     final response = await refreshDio.post(
-      "/auth/refresh-token",
+      ApiEndpoints.refreshToken,
       data: {"refreshToken": refreshToken},
     );
 

@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 base class ApiEndpoints {
-  static const String socketUrl = _LocalHostWifi.socketUrl;
+  // static const String socketUrl = _LocalHostWifi.socketUrl;
 
-  static const String baseUrl = _LocalHostWifi.baseUrl;
+  // static const String baseUrl = _LocalHostWifi.baseUrl;
 
-  // static const String socketUrl = _RemoteServer.socketUrl;
+  static const String socketUrl = _RemoteServer.socketUrl;
 
-  // static const String baseUrl = _RemoteServer.baseUrl;
+  static const String baseUrl = _RemoteServer.baseUrl;
 
   // ---------------------- AUTH -----------------------------
   static const String login = _Auth.login;
@@ -77,18 +77,21 @@ base class ApiEndpoints {
 }
 
 class _RemoteServer {
-  static const String socketUrl = 'https://api.handynaijaapp.com';
+  // static const String socketUrl = 'https://api.handynaijaapp.com';
+  static const String socketUrl = 'https://backend-darkolius-2xqo.onrender.com';
 
-  static const String baseUrl = 'https://api.handynaijaapp.com/api/v1';
+  // static const String baseUrl = 'https://api.handynaijaapp.com/api/v1';
+
+  static const String baseUrl = "https://backend-darkolius-2xqo.onrender.com/api/v1";
 }
 
 // ignore: unused_element
 class _LocalHostWifi {
   // ignore: unused_field
-  static const String socketUrl = 'http://10.10.5.98:5002';
+  static const String socketUrl = 'http://10.10.5.98:5005';
 
   // ignore: unused_field
-  static const String baseUrl = 'http://10.10.5.98:5002/api/v1';
+  static const String baseUrl = 'http://10.10.5.98:5005/api/v1';
 }
 
 abstract class _Auth {
