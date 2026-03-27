@@ -7,6 +7,8 @@ class StatusManager {
   factory StatusManager() => _instance;
   StatusManager._internal();
 
+  bool _loadingSheetOpen = false;
+
   /// Show status (loading, success, error, warning)
   Future<StatusType?> showStatus(
     BuildContext context, {
@@ -36,16 +38,20 @@ class StatusManager {
         break;
     }
 
+    final navigator = Navigator.of(context, rootNavigator: true);
+
     if (status == StatusType.loading) {
+      _loadingSheetOpen = true;
       Future.delayed(loadingDuration, () {
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context, StatusType.loading);
+        if (_loadingSheetOpen && navigator.mounted && navigator.canPop()) {
+          navigator.pop(StatusType.loading);
         }
       });
     }
 
     return showModalBottomSheet<StatusType>(
       context: context,
+      useRootNavigator: true,
       isDismissible: status != StatusType.loading,
       enableDrag: status != StatusType.loading,
       backgroundColor: Colors.transparent,
@@ -101,7 +107,11 @@ class StatusManager {
           ),
         );
       },
-    );
+    ).whenComplete(() {
+      if (status == StatusType.loading) {
+        _loadingSheetOpen = false;
+      }
+    });
   }
 
   /// Universal handler for any async task
@@ -112,13 +122,27 @@ class StatusManager {
     String successMessage = "Success!",
     String errorMessage = "Something went wrong!",
   }) async {
+    if (!context.mounted) return null;
+
+    final navigator = Navigator.of(context, rootNavigator: true);
+    Future<StatusType?>? loadingFuture;
+
     try {
-      await showStatus(
+      loadingFuture = showStatus(
         context,
         status: StatusType.loading,
         message: loadingMessage,
       );
+
       final result = await task();
+
+      if (_loadingSheetOpen && navigator.mounted && navigator.canPop()) {
+        navigator.pop(StatusType.loading);
+      }
+      await loadingFuture;
+
+      if (!context.mounted) return result;
+
       await showStatus(
         context,
         status: StatusType.success,
@@ -126,6 +150,14 @@ class StatusManager {
       );
       return result;
     } catch (e) {
+      if (_loadingSheetOpen && navigator.mounted && navigator.canPop()) {
+        navigator.pop(StatusType.loading);
+      }
+      if (loadingFuture != null) {
+        await loadingFuture;
+      }
+      if (!context.mounted) return null;
+
       await showStatus(
         context,
         status: StatusType.error,
