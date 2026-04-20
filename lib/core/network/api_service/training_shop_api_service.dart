@@ -127,6 +127,8 @@ class TrainingShopApiService {
     String? userId,
     String? subscriptionId,
     String? billingPeriod,
+    String? serviceType,
+    String? shippingAddress,
     String? paymentMethod,
     bool useTestStripe = false,
   }) async {
@@ -139,6 +141,10 @@ class TrainingShopApiService {
           'subscriptionId': subscriptionId,
         if (billingPeriod != null && billingPeriod.trim().isNotEmpty)
           'billingPeriod': billingPeriod,
+        if (serviceType != null && serviceType.trim().isNotEmpty)
+          'serviceType': serviceType,
+        if (shippingAddress != null && shippingAddress.trim().isNotEmpty)
+          'shippingAddress': shippingAddress,
         if (paymentMethod != null && paymentMethod.trim().isNotEmpty)
           'paymentMethod': paymentMethod,
         'useTestStripe': useTestStripe,

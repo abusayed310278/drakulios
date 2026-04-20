@@ -11,7 +11,9 @@ import '../../shop/views/widgets/shop_badge_state.dart';
 import 'notification_details_screen.dart';
 
 class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({super.key});
+  const NotificationScreen({super.key, this.showBackButton = true});
+
+  final bool showBackButton;
 
   @override
   State<NotificationScreen> createState() => _NotificationScreenState();
@@ -149,21 +151,24 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     height: 24,
                     child: Row(
                       children: [
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: InkWell(
-                            onTap: () => Navigator.of(context).pop(),
-                            borderRadius: BorderRadius.circular(12),
-                            child: const Center(
-                              child: Icon(
-                                Icons.arrow_back_ios_new,
-                                color: Color(0xFFC9CDD3),
-                                size: 18,
+                        if (widget.showBackButton)
+                          SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: InkWell(
+                              onTap: () => Navigator.of(context).pop(),
+                              borderRadius: BorderRadius.circular(12),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.arrow_back_ios_new,
+                                  color: Color(0xFFC9CDD3),
+                                  size: 18,
+                                ),
                               ),
                             ),
-                          ),
-                        ),
+                          )
+                        else
+                          const SizedBox(width: 24, height: 24),
                         const SizedBox(width: 12),
                         Text(
                           'Notifications',

@@ -29,10 +29,11 @@ class FreezeAccountScreen extends StatefulWidget {
 
 class _FreezeAccountScreenState extends State<FreezeAccountScreen> {
   final TrainingShopApiService _api = TrainingShopApiService();
-  DateTime? _selectedDate;
-  bool _indefinite = true;
+  DateTime? _selectedStartDate;
+  int? _selectedWeeks;
   bool _isSubmitting = false;
   bool _isLoadingStatus = false;
+  static const List<int> _weekOptions = <int>[1, 2, 3, 4];
 
   @override
   void initState() {
@@ -50,18 +51,29 @@ class _FreezeAccountScreenState extends State<FreezeAccountScreen> {
       final isFrozen = data['isFrozen'] == true;
       if (!isFrozen) return;
 
-      final indefinite = data['indefinite'] == true;
-      final endDateRaw = data['endDate']?.toString();
-      DateTime? parsedDate;
-      if (!indefinite &&
-          endDateRaw != null &&
-          endDateRaw.trim().isNotEmpty) {
-        parsedDate = DateTime.tryParse(endDateRaw)?.toLocal();
+      final startDate = _parseDateFromAnyKey(data, <String>[
+        'startDate',
+        'freezeStartDate',
+        'fromDate',
+      ]);
+      final endDate = _parseDateFromAnyKey(data, <String>[
+        'endDate',
+        'freezeEndDate',
+        'toDate',
+      ]);
+
+      DateTime? resolvedStart = startDate;
+      int? resolvedWeeks;
+      if (endDate != null) {
+        resolvedStart ??= _normalizeDate(DateTime.now());
+        final diffDays = endDate.difference(resolvedStart).inDays;
+        final calculatedWeeks = diffDays <= 0 ? 1 : (diffDays / 7).ceil();
+        resolvedWeeks = calculatedWeeks.clamp(1, 4);
       }
 
       setState(() {
-        _indefinite = indefinite;
-        _selectedDate = parsedDate;
+        _selectedStartDate = resolvedStart;
+        _selectedWeeks = resolvedWeeks;
       });
     } catch (_) {
       // Keep screen usable even if status fetch fails.
@@ -72,40 +84,79 @@ class _FreezeAccountScreenState extends State<FreezeAccountScreen> {
     }
   }
 
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
+  DateTime? _parseDateFromAnyKey(Map<String, dynamic> data, List<String> keys) {
+    for (final key in keys) {
+      final raw = data[key]?.toString();
+      if (raw == null || raw.trim().isEmpty) continue;
+      final parsed = DateTime.tryParse(raw)?.toLocal();
+      if (parsed != null) return _normalizeDate(parsed);
+    }
+    return null;
+  }
+
+  Future<void> _pickStartDate() async {
+    final now = _normalizeDate(DateTime.now());
     final picked = await showDatePicker(
       context: context,
-      initialDate: now.add(const Duration(days: 1)),
+      initialDate: _selectedStartDate ?? now,
       firstDate: now,
-      lastDate: DateTime(now.year + 5),
+      lastDate: now.add(const Duration(days: 365)),
     );
     if (picked == null) return;
     setState(() {
-      _selectedDate = picked;
-      _indefinite = false;
+      _selectedStartDate = _normalizeDate(picked);
     });
   }
 
-  String _dateLabel() {
-    final d = _selectedDate;
-    if (d == null) return 'Enter end Date..';
+  String _startDateLabel() {
+    final d = _selectedStartDate;
+    if (d == null) return 'Enter start date..';
     return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
+
+  DateTime? _calculatedEndDate() {
+    final start = _selectedStartDate;
+    final weeks = _selectedWeeks;
+    if (start == null || weeks == null) return null;
+    return _normalizeDate(start.add(Duration(days: weeks * 7)));
+  }
+
+  String _freezeSummaryLabel() {
+    final start = _selectedStartDate;
+    final weeks = _selectedWeeks;
+    final end = _calculatedEndDate();
+    if (start == null || weeks == null || end == null) {
+      return 'Select start date and duration (1-4 weeks).';
+    }
+    final startText =
+        '${start.day.toString().padLeft(2, '0')}/${start.month.toString().padLeft(2, '0')}/${start.year}';
+    final endText =
+        '${end.day.toString().padLeft(2, '0')}/${end.month.toString().padLeft(2, '0')}/${end.year}';
+    return 'Freeze duration: $weeks week${weeks > 1 ? 's' : ''} ($startText to $endText)';
   }
 
   Future<void> _confirmFreeze() async {
     if (_isSubmitting) return;
 
-    if (!_indefinite && _selectedDate == null) {
-      CustomSnackbar.show('Please select freeze end date');
+    final startDate = _selectedStartDate;
+    if (startDate == null) {
+      CustomSnackbar.show('Please select freeze start date');
       return;
     }
+    final selectedWeeks = _selectedWeeks;
+    if (selectedWeeks == null) {
+      CustomSnackbar.show('Please select freeze duration (1-4 weeks)');
+      return;
+    }
+    final endDate = _normalizeDate(
+      startDate.add(Duration(days: selectedWeeks * 7)),
+    );
 
     setState(() => _isSubmitting = true);
     try {
       final res = await _api.freezeMembership(
-        indefinite: _indefinite,
-        endDate: _indefinite ? null : _selectedDate,
+        indefinite: false,
+        endDate: endDate,
       );
       if (!mounted) return;
       CustomSnackbar.show(
@@ -136,6 +187,10 @@ class _FreezeAccountScreenState extends State<FreezeAccountScreen> {
       }
     }
     return 'Failed to freeze membership. Please try again.';
+  }
+
+  DateTime _normalizeDate(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
   }
 
   @override
@@ -222,28 +277,36 @@ class _FreezeAccountScreenState extends State<FreezeAccountScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _OptionButton(
-                          text: _dateLabel(),
-                          selected: !_indefinite,
-                          onTap: (_isSubmitting || _isLoadingStatus)
-                              ? () {}
-                              : _pickDate,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _OptionButton(
-                          text: 'Indefinite',
-                          selected: _indefinite,
-                          onTap: (_isSubmitting || _isLoadingStatus)
-                              ? () {}
-                              : () => setState(() => _indefinite = true),
-                        ),
-                      ),
-                    ],
+                  _OptionButton(
+                    text: _startDateLabel(),
+                    selected: _selectedStartDate != null,
+                    onTap: (_isSubmitting || _isLoadingStatus)
+                        ? () {}
+                        : _pickStartDate,
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _weekOptions.map((week) {
+                      return _WeekOptionButton(
+                        week: week,
+                        selected: _selectedWeeks == week,
+                        onTap: (_isSubmitting || _isLoadingStatus)
+                            ? () {}
+                            : () => setState(() => _selectedWeeks = week),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _freezeSummaryLabel(),
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF8FA0BF),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      height: 1.3,
+                    ),
                   ),
                   const SizedBox(height: 40),
                   Row(
@@ -374,6 +437,50 @@ class _BottomButton extends StatelessWidget {
             style: GoogleFonts.outfit(
               color: textColor,
               fontSize: 16 / 1.3,
+              fontWeight: FontWeight.w500,
+              height: 1.2,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WeekOptionButton extends StatelessWidget {
+  const _WeekOptionButton({
+    required this.week,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final int week;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = '$week Week${week > 1 ? 's' : ''}';
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Ink(
+        height: 36,
+        width: 86,
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF0C224E) : const Color(0xFF1E2024),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? const Color(0xFF2C6CFF) : const Color(0xFF3A3F47),
+            width: 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.outfit(
+              color: selected ? Colors.white : const Color(0xFFE3E6EC),
+              fontSize: 11,
               fontWeight: FontWeight.w500,
               height: 1.2,
             ),

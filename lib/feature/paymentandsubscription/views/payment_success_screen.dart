@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../home/views/daily_training_plan_screen.dart';
-import '../../home/views/home_menu_screen.dart';
-import '../../home/views/personal_training_plan_screen.dart';
-import '../../shop/views/shop_screen.dart';
-import '../../home/views/training_nutrition_screen.dart';
+import '../../navigation/views/app_shell_screen.dart';
 import 'payment_flow_destination.dart';
 
 class PaymentSuccessScreen extends StatelessWidget {
@@ -108,27 +104,23 @@ class PaymentSuccessScreen extends StatelessWidget {
                     height: 48,
                     child: ElevatedButton(
                       onPressed: () {
-                        final Widget destinationScreen;
-                        switch (flowDestination) {
-                          case PaymentFlowDestination.shop:
-                            destinationScreen = const ShopScreen();
-                            break;
-                          case PaymentFlowDestination.onlineCoaching:
-                            destinationScreen = const TrainingNutritionScreen();
-                            break;
-                          case PaymentFlowDestination.trainingPlan:
-                            destinationScreen = const DailyTrainingPlanScreen();
-                            break;
-                          case PaymentFlowDestination.personalTraining:
-                            destinationScreen =
-                                const PersonalTrainingPlanScreen();
-                            break;
-                          case PaymentFlowDestination.homeMenu:
-                            destinationScreen = const HomeMenuScreen();
-                            break;
-                        }
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => destinationScreen),
+                        final tab = AppShellScreen.tabForFlowDestination(
+                          flowDestination,
+                        );
+                        Navigator.of(
+                          context,
+                          rootNavigator: true,
+                        ).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (_) => AppShellScreen(
+                              initialTab: tab,
+                              initialTrainingDestination:
+                                  tab == AppShellTab.trainings
+                                  ? flowDestination
+                                  : null,
+                            ),
+                          ),
+                          (route) => false,
                         );
                       },
                       style: ElevatedButton.styleFrom(

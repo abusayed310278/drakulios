@@ -134,6 +134,7 @@ class _MemberProfileDetailsScreenState
     final memberId = (_profile['_id'] ?? '').toString();
     final phone = (_profile['phone'] ?? _profile['contact'] ?? '').toString();
     final email = (_profile['email'] ?? '').toString();
+    final address = (_profile['address'] ?? '').toString();
     final since = _memberSince((_profile['createdAt'] ?? '').toString());
 
     if (_loading && _profile.isEmpty) {
@@ -256,6 +257,10 @@ class _MemberProfileDetailsScreenState
                                   style: profileInfoStyle,
                                 ),
                                 Text('Email : $email', style: profileInfoStyle),
+                                Text(
+                                  'Address : ${address.isEmpty ? 'N/A' : address}',
+                                  style: profileInfoStyle,
+                                ),
                                 Text(
                                   'Member Since : $since',
                                   style: profileInfoStyle,

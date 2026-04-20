@@ -26,11 +26,11 @@ base class ApiEndpoints {
   static const String bookingRequests = _Services.bookingRequests;
   static const String applyCoupon = _Coupons.applyCoupon;
   static const String myCoupons = _Coupons.myCoupons;
-  static const String updateProfessionalStatus = _Professional.updateProfessionalStatus;
+  static const String updateProfessionalStatus =
+      _Professional.updateProfessionalStatus;
   static const String getProfile = _User.getProfile;
   static const String updateProfile = _User.updateProfile;
   static const String profileChangePassword = _User.changePassword;
-  static const String deleteAccount = _User.deleteAccount;
   static const String trainingToday = _Training.today;
   static const String trainingMine = _Training.mine;
   static const String trainingCreate = _Training.create;
@@ -61,11 +61,14 @@ base class ApiEndpoints {
   // ---------------------- category -----------------------------
   static const String categories = '$baseUrl/categories';
   static String serviceById(String id) => _Services.serviceById(id);
-  static String bookingRequestById(String id) => _Services.bookingRequestById(id);
+  static String bookingRequestById(String id) =>
+      _Services.bookingRequestById(id);
   static String cancelService(String id) => _Services.cancelService(id);
-  static String cancelBookingRequest(String id) => _Services.cancelBookingRequest(id);
+  static String cancelBookingRequest(String id) =>
+      _Services.cancelBookingRequest(id);
   static String repeatService(String id) => _Services.repeatService(id);
-  static String repeatBookingRequest(String id) => _Services.repeatBookingRequest(id);
+  static String repeatBookingRequest(String id) =>
+      _Services.repeatBookingRequest(id);
   static String productById(String id) => _Product.byId(id);
   static String updateProduct(String id) => _Product.update(id);
   static String deleteProduct(String id) => _Product.delete(id);
@@ -73,7 +76,8 @@ base class ApiEndpoints {
 
   //---------------------subcategory-------------------------
   // ✅ subcategory by categoryId
-  static String subcategoriesByCategoryId(String categoryId) => '$baseUrl/subcategories/category/$categoryId';
+  static String subcategoriesByCategoryId(String categoryId) =>
+      '$baseUrl/subcategories/category/$categoryId';
 }
 
 class _RemoteServer {
@@ -82,7 +86,8 @@ class _RemoteServer {
 
   // static const String baseUrl = 'https://api.handynaijaapp.com/api/v1';
 
-  static const String baseUrl = "https://backend-darkolius-2xqo.onrender.com/api/v1";
+  static const String baseUrl =
+      "https://backend-darkolius-2xqo.onrender.com/api/v1";
 }
 
 // ignore: unused_element
@@ -126,15 +131,19 @@ class _Services {
   static String serviceById(String id) => '$services/$id';
   static String bookingRequestById(String id) => '$bookingRequests/$id';
   static String cancelService(String id) => '$services/$id/cancel';
-  static String cancelBookingRequest(String id) => '$bookingRequests/$id/cancel';
+  static String cancelBookingRequest(String id) =>
+      '$bookingRequests/$id/cancel';
   static String repeatService(String id) => '$services/$id/repeat';
-  static String repeatBookingRequest(String id) => '$bookingRequests/$id/repeat';
+  static String repeatBookingRequest(String id) =>
+      '$bookingRequests/$id/repeat';
 }
 
 class _Professional {
   @protected
-  static const String _professionalRoute = '${ApiEndpoints.baseUrl}/professional';
-  static const String updateProfessionalStatus = '$_professionalRoute/update-status';
+  static const String _professionalRoute =
+      '${ApiEndpoints.baseUrl}/professional';
+  static const String updateProfessionalStatus =
+      '$_professionalRoute/update-status';
 }
 
 class _Coupons {
@@ -150,7 +159,6 @@ class _User {
   static const String getProfile = '$_userRoute/profile';
   static const String updateProfile = '$_userRoute/update-profile';
   static const String changePassword = '$_userRoute/change-password';
-  static const String deleteAccount = '$_userRoute/delete-account';
 }
 
 class _Training {
@@ -210,7 +218,7 @@ class _Payment {
   static const String confirm = '$_route/confirm-payment';
   static const String history = '$_route/history';
   static const String membershipSummary = '$_route/membership-summary';
-  static const String freezeMembership = '${ApiEndpoints.baseUrl}/membership-freeze';
+  static const String freezeMembership = '$_route/membership-freeze';
   static const String freezeStatus = '$freezeMembership/status';
 }
 

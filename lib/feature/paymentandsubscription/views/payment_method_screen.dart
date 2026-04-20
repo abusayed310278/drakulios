@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -19,12 +21,14 @@ class PaymentMethodScreen extends StatefulWidget {
     this.amount = 49,
     this.subscriptionId,
     this.billingPeriod,
+    this.shippingAddress,
   });
 
   final PaymentFlowDestination flowDestination;
   final double amount;
   final String? subscriptionId;
   final String? billingPeriod;
+  final String? shippingAddress;
 
   @override
   State<PaymentMethodScreen> createState() => _PaymentMethodScreenState();
@@ -34,11 +38,11 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
   final TrainingShopApiService _api = TrainingShopApiService();
   int _selectedMethod = 0;
   bool _isPaying = false;
+  bool _navigatedToSuccess = false;
+  static const Duration _paymentRequestTimeout = Duration(seconds: 20);
+  static const Duration _stripeSettingsTimeout = Duration(seconds: 15);
 
-  String _friendlyDioError(
-    DioException error, {
-    required String fallback,
-  }) {
+  String _friendlyDioError(DioException error, {required String fallback}) {
     final data = error.response?.data;
     String? message;
 
@@ -100,65 +104,152 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     return fallback;
   }
 
-  Future<bool> _ensureStripeConfigured() async {
-    // Accessing Stripe.publishableKey can throw if not initialized yet.
+  Future<bool> _applyStripeKey(String key) async {
+    final normalized = key.trim();
+    if (normalized.isEmpty || !normalized.startsWith('pk_')) return false;
     try {
-      final existingKey = Stripe.publishableKey;
-      if (existingKey.trim().isNotEmpty) return true;
-    } catch (_) {
-      // Continue and load key from backend config.
-    }
-    const localKey = PaymentConfig.stripePublishableKey;
-    if (localKey.isNotEmpty && localKey.startsWith('pk_')) {
-      try {
-        Stripe.publishableKey = localKey;
-        await Stripe.instance.applySettings();
-        return true;
-      } on MissingPluginException {
-        CustomSnackbar.show(
-          'Stripe SDK not loaded. Rebuild app: flutter clean, pub get, pod install, run.',
-        );
-        return false;
-      } on StripeConfigException catch (e) {
-        final msg = e.message.trim();
-        CustomSnackbar.show(msg.isEmpty ? 'Stripe configuration error' : msg);
-        return false;
+      final current = (() {
+        try {
+          return Stripe.publishableKey.trim();
+        } catch (_) {
+          return '';
+        }
+      })();
+      if (current != normalized) {
+        Stripe.publishableKey = normalized;
       }
-    }
-    try {
-      final config = await _api.getPaymentConfig();
-      final data = config['data'];
-      final key = data is Map ? data['publishableKey']?.toString() : null;
-      if (key == null || key.trim().isEmpty) {
-        CustomSnackbar.show('Stripe publishable key is missing');
-        return false;
-      }
-      if (!key.startsWith('pk_')) {
-        CustomSnackbar.show('Invalid Stripe publishable key on server');
-        return false;
-      }
-      Stripe.publishableKey = key;
-      await Stripe.instance.applySettings();
+      Stripe.urlScheme = PaymentConfig.stripeUrlScheme;
+      await Stripe.instance.applySettings().timeout(
+        _stripeSettingsTimeout,
+        onTimeout: () =>
+            throw TimeoutException('Stripe settings apply timed out'),
+      );
       return true;
     } on MissingPluginException {
       CustomSnackbar.show(
         'Stripe SDK not loaded. Rebuild app: flutter clean, pub get, pod install, run.',
       );
       return false;
-    } on DioException catch (e) {
-      CustomSnackbar.show(
-        _friendlyDioError(e, fallback: 'Failed to load payment config'),
-      );
-      return false;
     } on StripeConfigException catch (e) {
       final msg = e.message.trim();
       CustomSnackbar.show(msg.isEmpty ? 'Stripe configuration error' : msg);
       return false;
-    } catch (e) {
+    } on TimeoutException {
       CustomSnackbar.show(
-        _friendlyError(e, fallback: 'Failed to initialize Stripe'),
+        'Stripe setup timed out. Please restart app and try again',
       );
       return false;
+    }
+  }
+
+  Future<bool> _ensureStripeConfigured() async {
+    // Always prefer backend key so it matches the server secret key/account.
+    try {
+      final config = await _api.getPaymentConfig().timeout(
+        _paymentRequestTimeout,
+        onTimeout: () => throw TimeoutException(
+          'Loading payment configuration is taking too long',
+        ),
+      );
+      final data = config['data'];
+      final serverKey = data is Map ? data['publishableKey']?.toString() : null;
+      if (serverKey != null && serverKey.trim().isNotEmpty) {
+        final applied = await _applyStripeKey(serverKey);
+        if (applied) return true;
+      }
+    } on TimeoutException catch (e) {
+      debugPrint('Stripe config timeout: ${e.message}');
+      // Fallback to local/env key below.
+    } on DioException catch (e) {
+      debugPrint(
+        'Stripe config request failed: ${_friendlyDioError(e, fallback: e.toString())}',
+      );
+      // Fallback to local/env key below.
+    } catch (e) {
+      debugPrint('Stripe config unexpected error: $e');
+      // Fallback to local/env key below.
+    }
+
+    const localKey = PaymentConfig.stripePublishableKey;
+    if (localKey.isNotEmpty) {
+      final applied = await _applyStripeKey(localKey);
+      if (applied) {
+        return true;
+      }
+    }
+
+    // Final fallback: try currently loaded key if any.
+    try {
+      final existing = Stripe.publishableKey.trim();
+      if (existing.isNotEmpty) {
+        final applied = await _applyStripeKey(existing);
+        if (applied) return true;
+      }
+    } catch (_) {}
+
+    CustomSnackbar.show('Stripe publishable key is missing or invalid');
+    return false;
+  }
+
+  String _friendlyStripeError(StripeException e) {
+    final stripeMsg = e.error.localizedMessage?.trim();
+    if (stripeMsg == null || stripeMsg.isEmpty) return 'Payment failed';
+    final lower = stripeMsg.toLowerCase();
+    if (lower.contains('no such payment_intent') ||
+        lower.contains('payment intent') && lower.contains('invalid')) {
+      return 'Stripe key mismatch. Please sync publishable key with backend';
+    }
+    return stripeMsg;
+  }
+
+  String? _serviceTypeForDestination(PaymentFlowDestination destination) {
+    switch (destination) {
+      case PaymentFlowDestination.onlineCoaching:
+        return 'online coaching';
+      case PaymentFlowDestination.trainingPlan:
+        return 'training plan';
+      case PaymentFlowDestination.personalTraining:
+        return 'personal training';
+      case PaymentFlowDestination.homeMenu:
+      case PaymentFlowDestination.shop:
+        return null;
+    }
+  }
+
+  Future<void> _cachePurchasedTrainingType() async {
+    final serviceType = _serviceTypeForDestination(widget.flowDestination);
+    if (serviceType == null) return;
+    await TokenManager.saveServiceType(serviceType);
+  }
+
+  void _goToSuccessScreen() {
+    if (!mounted || _navigatedToSuccess) return;
+    _navigatedToSuccess = true;
+    if (widget.flowDestination == PaymentFlowDestination.shop) {
+      ShopBadgeState.setCartCount(0);
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            PaymentSuccessScreen(flowDestination: widget.flowDestination),
+      ),
+    );
+  }
+
+  Future<void> _confirmPaymentInBackground(String paymentIntentId) async {
+    try {
+      final confirmRes = await _api
+          .confirmPayment(paymentIntentId: paymentIntentId)
+          .timeout(
+            _paymentRequestTimeout,
+            onTimeout: () =>
+                throw TimeoutException('Payment confirmation timed out'),
+          );
+      if (confirmRes['success'] != true) {
+        debugPrint('Payment confirm API returned non-success: $confirmRes');
+      }
+    } catch (e) {
+      debugPrint('Payment confirm API failed: $e');
     }
   }
 
@@ -171,8 +262,17 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         CustomSnackbar.show('Your session has expired. Please log in again');
         return;
       }
+      final normalizedShippingAddress = widget.shippingAddress?.trim() ?? '';
+      if (widget.flowDestination == PaymentFlowDestination.shop &&
+          normalizedShippingAddress.isEmpty) {
+        CustomSnackbar.show('Shipping address is required before payment');
+        return;
+      }
 
-      final stripeReady = await _ensureStripeConfigured();
+      final stripeReady = await _ensureStripeConfigured().timeout(
+        _paymentRequestTimeout,
+        onTimeout: () => false,
+      );
       if (!stripeReady) return;
 
       final hasSubscriptionInfo =
@@ -184,14 +284,24 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       final uid =
           await TokenManager.getUid() ?? await TokenManager.getUidFromToken();
 
-      final paymentRes = await _api.createPayment(
-        userId: uid,
-        price: widget.amount,
-        subscriptionId: hasSubscriptionInfo ? widget.subscriptionId : null,
-        billingPeriod: hasSubscriptionInfo ? widget.billingPeriod : null,
-        paymentMethod: _selectedMethod == 0 ? 'card' : 'stripe',
-        useTestStripe: false,
-      );
+      final paymentRes = await _api
+          .createPayment(
+            userId: uid,
+            price: widget.amount,
+            subscriptionId: hasSubscriptionInfo ? widget.subscriptionId : null,
+            billingPeriod: hasSubscriptionInfo ? widget.billingPeriod : null,
+            serviceType: _serviceTypeForDestination(widget.flowDestination),
+            shippingAddress: normalizedShippingAddress.isEmpty
+                ? null
+                : normalizedShippingAddress,
+            paymentMethod: _selectedMethod == 0 ? 'card' : 'stripe',
+            useTestStripe: false,
+          )
+          .timeout(
+            _paymentRequestTimeout,
+            onTimeout: () =>
+                throw TimeoutException('Payment request timed out'),
+          );
 
       if (paymentRes['success'] != true &&
           paymentRes['paymentIntentId'] == null) {
@@ -211,24 +321,30 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       }
 
       try {
+        debugPrint('Stripe: init payment sheet');
         await Stripe.instance.initPaymentSheet(
           paymentSheetParameters: SetupPaymentSheetParameters(
             merchantDisplayName: 'Drakulios',
             paymentIntentClientSecret: clientSecret,
+            returnURL: '${PaymentConfig.stripeUrlScheme}://stripe-redirect',
           ),
         );
+        debugPrint('Stripe: present payment sheet');
         await Stripe.instance.presentPaymentSheet();
-
-        final confirmRes = await _api.confirmPayment(
-          paymentIntentId: paymentIntentId,
-        );
-        if (confirmRes['success'] != true) {
-          CustomSnackbar.show('Payment could not be confirmed');
-          return;
-        }
+        debugPrint('Stripe: payment sheet completed');
+        await _cachePurchasedTrainingType();
+        _goToSuccessScreen();
+        unawaited(_confirmPaymentInBackground(paymentIntentId));
+        return;
       } on MissingPluginException {
         CustomSnackbar.show(
           'Stripe SDK not loaded. Rebuild app: flutter clean, pub get, pod install, run.',
+        );
+        return;
+      } on TimeoutException catch (e) {
+        final msg = e.message?.trim();
+        CustomSnackbar.show(
+          msg != null && msg.isNotEmpty ? msg : 'Payment timed out',
         );
         return;
       } on PlatformException catch (e) {
@@ -246,29 +362,13 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         final isCanceled =
             e.error.code == FailureCode.Canceled ||
             localized.contains('cancel');
-        final stripeMsg = e.error.localizedMessage?.trim();
         if (isCanceled) {
           CustomSnackbar.show('Payment Canceled');
         } else {
-          CustomSnackbar.show(
-            stripeMsg != null && stripeMsg.isNotEmpty
-                ? stripeMsg
-                : 'Payment failed',
-          );
+          CustomSnackbar.show(_friendlyStripeError(e));
         }
         return;
       }
-
-      if (!mounted) return;
-      if (widget.flowDestination == PaymentFlowDestination.shop) {
-        ShopBadgeState.setCartCount(0);
-      }
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) =>
-              PaymentSuccessScreen(flowDestination: widget.flowDestination),
-        ),
-      );
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         CustomSnackbar.show('Your session has expired. Please log in again');
@@ -276,6 +376,13 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       }
 
       CustomSnackbar.show(_friendlyDioError(e, fallback: 'Payment failed'));
+    } on TimeoutException catch (e) {
+      final msg = e.message?.trim();
+      CustomSnackbar.show(
+        msg != null && msg.isNotEmpty
+            ? msg
+            : 'Payment is taking too long. Please try again',
+      );
     } catch (e) {
       CustomSnackbar.show(
         _friendlyError(e, fallback: 'Payment failed. Please try again'),

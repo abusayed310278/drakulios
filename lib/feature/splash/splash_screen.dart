@@ -5,12 +5,8 @@ import 'package:flutter/material.dart';
 import '../../core/constants/assets.dart';
 import '../../core/network/api_service/training_shop_api_service.dart';
 import '../../core/network/api_service/token_meneger.dart';
-import '../home/views/daily_training_plan_screen.dart';
-import '../home/views/home_menu_screen.dart';
-import '../home/views/personal_training_plan_screen.dart';
-import '../home/views/training_nutrition_screen.dart';
+import '../navigation/views/app_shell_screen.dart';
 import '../onboarding/onboarding_screen.dart';
-import '../paymentandsubscription/views/payment_and_subscription_screen.dart';
 import '../paymentandsubscription/views/payment_flow_destination.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -73,12 +69,12 @@ class _SplashScreenState extends State<SplashScreen>
       if (data is Map && data['hasActiveMembership'] == true) {
         final planName = (data['planName'] ?? '').toString();
         final destination = _destinationFromPlanName(planName);
-        if (destination != null) return _screenForDestination(destination);
-        return const HomeMenuScreen();
+        if (destination != null) return _shellForDestination(destination);
+        return const AppShellScreen();
       }
-      return const PaymentAndSubscriptionScreen();
+      return const AppShellScreen(initialTab: AppShellTab.trainings);
     } catch (_) {
-      return const HomeMenuScreen();
+      return const AppShellScreen();
     }
   }
 
@@ -96,18 +92,14 @@ class _SplashScreenState extends State<SplashScreen>
     return null;
   }
 
-  Widget _screenForDestination(PaymentFlowDestination destination) {
-    switch (destination) {
-      case PaymentFlowDestination.onlineCoaching:
-        return const TrainingNutritionScreen();
-      case PaymentFlowDestination.trainingPlan:
-        return const DailyTrainingPlanScreen();
-      case PaymentFlowDestination.personalTraining:
-        return const PersonalTrainingPlanScreen();
-      case PaymentFlowDestination.shop:
-      case PaymentFlowDestination.homeMenu:
-        return const HomeMenuScreen();
-    }
+  Widget _shellForDestination(PaymentFlowDestination destination) {
+    final tab = AppShellScreen.tabForFlowDestination(destination);
+    return AppShellScreen(
+      initialTab: tab,
+      initialTrainingDestination: tab == AppShellTab.trainings
+          ? destination
+          : null,
+    );
   }
 
   @override

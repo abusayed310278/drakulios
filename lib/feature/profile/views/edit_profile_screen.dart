@@ -25,6 +25,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _memberIdController = TextEditingController();
 
   final TextEditingController _currentWeightController =
@@ -69,6 +70,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _addressController.dispose();
     _memberIdController.dispose();
     _currentWeightController.dispose();
     _targetWeightController.dispose();
@@ -109,6 +111,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.text = _pickString(data, ['name']);
     _phoneController.text = _pickString(data, ['phone', 'contact']);
     _emailController.text = _pickString(data, ['email']);
+    _addressController.text = _pickString(data, [
+      'address',
+      'shippingAddress',
+      'location',
+    ]);
     _memberIdController.text = _pickString(data, ['_id', 'id', 'memberId']);
 
     _currentWeightController.text = _pickString(bodyDetails, ['currentWeight']);
@@ -188,6 +195,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         name: name,
         phone: _phoneController.text.trim(),
         email: _emailController.text.trim(),
+        address: _addressController.text.trim(),
         avatarPath: _selectedAvatar?.path,
         personalBodyDetails: {
           'currentWeight': _currentWeightController.text.trim(),
@@ -259,198 +267,283 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 50, 18, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_isLoading)
-                    const LinearProgressIndicator(
-                      minHeight: 1.5,
-                      color: Color(0xFFF3B41A),
-                      backgroundColor: Colors.transparent,
-                    ),
-                  Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 50, 18, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Transform.translate(
-                        offset: const Offset(-12, 0),
-                        child: IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(
-                            Icons.arrow_back_ios_new,
-                            size: 18,
-                            color: Color(0xFFC9CDD3),
-                          ),
-                          splashRadius: 18,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 24,
-                            minHeight: 24,
-                          ),
+                      if (_isLoading)
+                        const LinearProgressIndicator(
+                          minHeight: 1.5,
+                          color: Color(0xFFF3B41A),
+                          backgroundColor: Colors.transparent,
                         ),
-                      ),
-                      Text(
-                        'Edit Profile',
-                        style: GoogleFonts.outfit(
-                          color: const Color(0xFFB1B1B1),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
-                          height: 1.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  Center(
-                    child: _Avatar(
-                      imageUrl: avatarUrl,
-                      localImagePath: _selectedAvatar?.path,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Center(
-                    child: InkWell(
-                      onTap: _pickAvatar,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      Row(
                         children: [
-                          const Icon(
-                            Icons.edit,
-                            size: 12,
-                            color: Color(0xFFB1B1B1),
+                          Transform.translate(
+                            offset: const Offset(-12, 0),
+                            child: IconButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              icon: const Icon(
+                                Icons.arrow_back_ios_new,
+                                size: 18,
+                                color: Color(0xFFC9CDD3),
+                              ),
+                              splashRadius: 18,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 24,
+                                minHeight: 24,
+                              ),
+                            ),
                           ),
-                          const SizedBox(width: 4),
                           Text(
-                            'Change Photo',
+                            'Edit Profile',
                             style: GoogleFonts.outfit(
                               color: const Color(0xFFB1B1B1),
-                              fontSize: 14,
+                              fontSize: 18,
                               fontWeight: FontWeight.w400,
                               height: 1.2,
                             ),
                           ),
                         ],
                       ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.fromLTRB(
+                      18,
+                      0,
+                      18,
+                      24 + MediaQuery.of(context).viewInsets.bottom,
+                    ),
+                    child: _FormContent(
+                      avatarUrl: avatarUrl,
+                      selectedAvatarPath: _selectedAvatar?.path,
+                      onPickAvatar: _pickAvatar,
+                      nameController: _nameController,
+                      phoneController: _phoneController,
+                      emailController: _emailController,
+                      addressController: _addressController,
+                      memberIdController: _memberIdController,
+                      currentWeightController: _currentWeightController,
+                      targetWeightController: _targetWeightController,
+                      recentWeightChangesController:
+                          _recentWeightChangesController,
+                      bodyTypeController: _bodyTypeController,
+                      currentHeightController: _currentHeightController,
+                      sleepPatternsController: _sleepPatternsController,
+                      appetiteHungerController: _appetiteHungerController,
+                      typicalMealsController: _typicalMealsController,
+                      waterIntakeController: _waterIntakeController,
+                      surgicalHistoryController: _surgicalHistoryController,
+                      physicalPainsController: _physicalPainsController,
+                      digestionGutController: _digestionGutController,
+                      supplementsController: _supplementsController,
+                      isSaving: _isSaving,
+                      onSave: _saveProfile,
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  _FieldLabel(text: 'Username'),
-                  _InputField(controller: _nameController),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Contact Number'),
-                  _InputField(controller: _phoneController),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Email'),
-                  _InputField(controller: _emailController),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Member ID'),
-                  _InputField(controller: _memberIdController),
-                  const SizedBox(height: 18),
-                  _SectionHeading(
-                    text: 'Personal Body Details :',
-                    color: const Color(0xFFF3B41A),
-                  ),
-                  const SizedBox(height: 8),
-
-                  _SectionHeading(text: 'Weight :'),
-                  _FieldLabel(text: 'Current Weight'),
-                  _InputField(controller: _currentWeightController),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Target Weight'),
-                  _InputField(controller: _targetWeightController),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Recent Weight Changes (if any)'),
-                  _InputField(
-                    controller: _recentWeightChangesController,
-                    minLines: 3,
-                  ),
-                  const SizedBox(height: 14),
-
-                  _SectionHeading(text: 'Body :'),
-                  _FieldLabel(text: 'Body Type'),
-                  _InputField(controller: _bodyTypeController, minLines: 3),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Current Height'),
-                  _InputField(controller: _currentHeightController),
-                  const SizedBox(height: 14),
-
-                  _SectionHeading(text: 'Sleep :'),
-                  _FieldLabel(text: 'Sleep Patterns'),
-                  _InputField(controller: _sleepPatternsController),
-                  const SizedBox(height: 14),
-
-                  _SectionHeading(text: 'Nutrition Assessment :'),
-                  _FieldLabel(text: 'Appetite & Hunger'),
-                  _InputField(
-                    controller: _appetiteHungerController,
-                    minLines: 3,
-                  ),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Typical Daily Meals'),
-                  _InputField(controller: _typicalMealsController),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Water & Fluid Intake'),
-                  _InputField(controller: _waterIntakeController, minLines: 2),
-                  const SizedBox(height: 14),
-
-                  _SectionHeading(text: 'Other Information:'),
-                  _FieldLabel(text: 'Surgical History (if any)'),
-                  _InputField(
-                    controller: _surgicalHistoryController,
-                    minLines: 3,
-                  ),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Current Physical Pains (if any)'),
-                  _InputField(
-                    controller: _physicalPainsController,
-                    minLines: 2,
-                  ),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Digestion & Gut Health'),
-                  _InputField(controller: _digestionGutController, minLines: 2),
-                  const SizedBox(height: 10),
-                  _FieldLabel(text: 'Supplements Currently Used'),
-                  _InputField(controller: _supplementsController, minLines: 2),
-                  const SizedBox(height: 18),
-
-                  SizedBox(
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _saveProfile,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF3B41A),
-                        disabledBackgroundColor: const Color(0xFF8A6A1A),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: _isSaving
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              'Update',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                height: 1.2,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FormContent extends StatelessWidget {
+  const _FormContent({
+    required this.avatarUrl,
+    required this.selectedAvatarPath,
+    required this.onPickAvatar,
+    required this.nameController,
+    required this.phoneController,
+    required this.emailController,
+    required this.addressController,
+    required this.memberIdController,
+    required this.currentWeightController,
+    required this.targetWeightController,
+    required this.recentWeightChangesController,
+    required this.bodyTypeController,
+    required this.currentHeightController,
+    required this.sleepPatternsController,
+    required this.appetiteHungerController,
+    required this.typicalMealsController,
+    required this.waterIntakeController,
+    required this.surgicalHistoryController,
+    required this.physicalPainsController,
+    required this.digestionGutController,
+    required this.supplementsController,
+    required this.isSaving,
+    required this.onSave,
+  });
+
+  final String avatarUrl;
+  final String? selectedAvatarPath;
+  final VoidCallback onPickAvatar;
+  final TextEditingController nameController;
+  final TextEditingController phoneController;
+  final TextEditingController emailController;
+  final TextEditingController addressController;
+  final TextEditingController memberIdController;
+  final TextEditingController currentWeightController;
+  final TextEditingController targetWeightController;
+  final TextEditingController recentWeightChangesController;
+  final TextEditingController bodyTypeController;
+  final TextEditingController currentHeightController;
+  final TextEditingController sleepPatternsController;
+  final TextEditingController appetiteHungerController;
+  final TextEditingController typicalMealsController;
+  final TextEditingController waterIntakeController;
+  final TextEditingController surgicalHistoryController;
+  final TextEditingController physicalPainsController;
+  final TextEditingController digestionGutController;
+  final TextEditingController supplementsController;
+  final bool isSaving;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 6),
+        Center(
+          child: _Avatar(
+            imageUrl: avatarUrl,
+            localImagePath: selectedAvatarPath,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Center(
+          child: InkWell(
+            onTap: onPickAvatar,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.edit, size: 12, color: Color(0xFFB1B1B1)),
+                const SizedBox(width: 4),
+                Text(
+                  'Change Photo',
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFFB1B1B1),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        _FieldLabel(text: 'Username'),
+        _InputField(controller: nameController),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Contact Number'),
+        _InputField(controller: phoneController),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Email'),
+        _InputField(controller: emailController),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Address'),
+        _InputField(controller: addressController, minLines: 2),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Member ID'),
+        _InputField(controller: memberIdController),
+        const SizedBox(height: 18),
+        _SectionHeading(
+          text: 'Personal Body Details :',
+          color: const Color(0xFFF3B41A),
+        ),
+        const SizedBox(height: 8),
+        _SectionHeading(text: 'Weight :'),
+        _FieldLabel(text: 'Current Weight'),
+        _InputField(controller: currentWeightController),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Target Weight'),
+        _InputField(controller: targetWeightController),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Recent Weight Changes (if any)'),
+        _InputField(controller: recentWeightChangesController, minLines: 3),
+        const SizedBox(height: 14),
+        _SectionHeading(text: 'Body :'),
+        _FieldLabel(text: 'Body Type'),
+        _InputField(controller: bodyTypeController, minLines: 3),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Current Height'),
+        _InputField(controller: currentHeightController),
+        const SizedBox(height: 14),
+        _SectionHeading(text: 'Sleep :'),
+        _FieldLabel(text: 'Sleep Patterns'),
+        _InputField(controller: sleepPatternsController),
+        const SizedBox(height: 14),
+        _SectionHeading(text: 'Nutrition Assessment :'),
+        _FieldLabel(text: 'Appetite & Hunger'),
+        _InputField(controller: appetiteHungerController, minLines: 3),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Typical Daily Meals'),
+        _InputField(controller: typicalMealsController),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Water & Fluid Intake'),
+        _InputField(controller: waterIntakeController, minLines: 2),
+        const SizedBox(height: 14),
+        _SectionHeading(text: 'Other Information:'),
+        _FieldLabel(text: 'Surgical History (if any)'),
+        _InputField(controller: surgicalHistoryController, minLines: 3),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Current Physical Pains (if any)'),
+        _InputField(controller: physicalPainsController, minLines: 2),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Digestion & Gut Health'),
+        _InputField(controller: digestionGutController, minLines: 2),
+        const SizedBox(height: 10),
+        _FieldLabel(text: 'Supplements Currently Used'),
+        _InputField(controller: supplementsController, minLines: 2),
+        const SizedBox(height: 18),
+        SizedBox(
+          height: 48,
+          child: ElevatedButton(
+            onPressed: isSaving ? null : onSave,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF3B41A),
+              disabledBackgroundColor: const Color(0xFF8A6A1A),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    'Update',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      height: 1.2,
+                    ),
+                  ),
+          ),
+        ),
+      ],
     );
   }
 }

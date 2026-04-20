@@ -16,7 +16,9 @@ import 'purchase_history_screen.dart';
 import 'security_screen.dart';
 
 class MemberProfileScreen extends StatefulWidget {
-  const MemberProfileScreen({super.key});
+  const MemberProfileScreen({super.key, this.showBackButton = true});
+
+  final bool showBackButton;
 
   @override
   State<MemberProfileScreen> createState() => _MemberProfileScreenState();
@@ -195,6 +197,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       (_profile['phone'] ?? _profile['contact'] ?? '').toString(),
     );
     final email = (_profile['email'] ?? '').toString();
+    final address = (_profile['address'] ?? '').toString();
     final since = _formatMemberSince((_profile['createdAt'] ?? '').toString());
     final hasMembership = _membership['hasActiveMembership'] == true;
     final planName = (_membership['planName'] ?? 'No Active Plan').toString();
@@ -246,23 +249,26 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                           ),
                         Row(
                           children: [
-                            Transform.translate(
-                              offset: const Offset(-15, 0),
-                              child: IconButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                icon: const Icon(
-                                  Icons.arrow_back_ios_new,
-                                  size: 18,
-                                  color: Color(0xFFC9CDD3),
+                            if (widget.showBackButton)
+                              Transform.translate(
+                                offset: const Offset(-15, 0),
+                                child: IconButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  icon: const Icon(
+                                    Icons.arrow_back_ios_new,
+                                    size: 18,
+                                    color: Color(0xFFC9CDD3),
+                                  ),
+                                  splashRadius: 18,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 24,
+                                    minHeight: 24,
+                                  ),
                                 ),
-                                splashRadius: 18,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(
-                                  minWidth: 24,
-                                  minHeight: 24,
-                                ),
-                              ),
-                            ),
+                              )
+                            else
+                              const SizedBox(width: 8),
                             const SizedBox(width: 6),
                             const Text(
                               'Member Profile',
@@ -352,6 +358,14 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                   ),
                                   Text(
                                     'Email : ${email.isEmpty ? 'stella1212j@gmail.com' : email}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Address : ${address.isEmpty ? 'N/A' : address}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,

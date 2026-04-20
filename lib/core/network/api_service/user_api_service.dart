@@ -59,9 +59,4 @@ class UserApiService {
     );
     return Map<String, dynamic>.from(response.data as Map);
   }
-
-  Future<Map<String, dynamic>> deleteAccount() async {
-    final Response response = await _client.delete(ApiEndpoints.deleteAccount);
-    return Map<String, dynamic>.from(response.data as Map);
-  }
 }

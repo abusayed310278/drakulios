@@ -9,11 +9,7 @@ import '../../core/network/api_service/token_meneger.dart';
 import '../../core/network/api_service/training_shop_api_service.dart';
 import 'code_verification_screen.dart';
 import 'create_account_screen.dart';
-import '../home/views/daily_training_plan_screen.dart';
-import '../home/views/home_menu_screen.dart';
-import '../home/views/personal_training_plan_screen.dart';
-import '../home/views/training_nutrition_screen.dart';
-import '../paymentandsubscription/views/payment_and_subscription_screen.dart';
+import '../navigation/views/app_shell_screen.dart';
 import '../paymentandsubscription/views/payment_flow_destination.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -63,234 +59,225 @@ class _LoginScreenState extends State<LoginScreen> {
                 18,
                 24 + MediaQuery.of(context).viewInsets.bottom,
               ),
-              keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior.onDrag,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                          const SizedBox(height: 8),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: IconButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              icon: const Icon(
-                                Icons.arrow_back_ios_new,
-                                size: 18,
-                                color: Color(0xFFC9CDD3),
-                              ),
-                              splashRadius: 18,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 24,
-                                minHeight: 24,
-                              ),
-                            ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new,
+                        size: 18,
+                        color: Color(0xFFC9CDD3),
+                      ),
+                      splashRadius: 18,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 24,
+                        minHeight: 24,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: SizedBox(
+                      width: 60,
+                      height: 53,
+                      child: Image.asset(Images.appLogo, fit: BoxFit.contain),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const SizedBox(
+                    width: 344,
+                    height: 23,
+                    child: Text(
+                      'Welcome Back',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Color(0xFFF5F6F8),
+                        fontSize: 19,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const SizedBox(
+                    width: 344,
+                    height: 14,
+                    child: Text(
+                      'Access your Pro Factory Club Account securely.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Color(0xFFFFFFFF),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        height: 1.2,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  _AuthTextField(
+                    hint: 'Email or Phone Number',
+                    icon: Icons.mail_outline,
+                    keyboardType: TextInputType.emailAddress,
+                    controller: _emailController,
+                  ),
+                  const SizedBox(height: 12),
+                  _AuthTextField(
+                    hint: 'Password',
+                    icon: Icons.lock_outline,
+                    obscureText: _obscurePassword,
+                    controller: _passwordController,
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        size: 18,
+                        color: const Color(0xFFA8ADB3),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: Checkbox(
+                          value: _rememberMe,
+                          onChanged: (value) async {
+                            final remember = value ?? false;
+                            setState(() {
+                              _rememberMe = remember;
+                            });
+                            await TokenManager.setRememberMe(remember);
+                            if (!remember) {
+                              await TokenManager.clearRememberedCredentials();
+                            }
+                          },
+                          side: const BorderSide(
+                            color: Color(0xFF8B8F94),
+                            width: 1.2,
                           ),
-                          const SizedBox(height: 10),
-                          Center(
-                            child: SizedBox(
-                              width: 60,
-                              height: 53,
-                              child: Image.asset(
-                                Images.appLogo,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(3),
                           ),
-                          const SizedBox(height: 20),
-                          const SizedBox(
-                            width: 344,
-                            height: 23,
-                            child: Text(
-                              'Welcome Back',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Color(0xFFF5F6F8),
-                                fontSize: 19,
-                                fontWeight: FontWeight.w600,
-                                height: 1.2,
-                                letterSpacing: 0,
-                              ),
-                            ),
+                          activeColor: const Color(0xFFF3B41A),
+                          checkColor: Colors.black,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Remember me',
+                        style: TextStyle(
+                          color: Color(0xFFBFC3C8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: _isLoading ? null : _handleForgotPassword,
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFBFC3C8),
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text(
+                          'Forgot your password?',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
                           ),
-                          const SizedBox(height: 16),
-                          const SizedBox(
-                            width: 344,
-                            height: 14,
-                            child: Text(
-                              'Access your Pro Factory Club Account securely.',
-                              textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF3B41A),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Log in',
                               style: TextStyle(
                                 color: Color(0xFFFFFFFF),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w400,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
                                 height: 1.2,
                                 letterSpacing: 0,
                               ),
                             ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        const Text(
+                          'Don’t have an account? ',
+                          style: TextStyle(
+                            color: Color(0xFF9A9EA4),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
                           ),
-                          const SizedBox(height: 22),
-                          _AuthTextField(
-                            hint: 'Email or Phone Number',
-                            icon: Icons.mail_outline,
-                            keyboardType: TextInputType.emailAddress,
-                            controller: _emailController,
-                          ),
-                          const SizedBox(height: 12),
-                          _AuthTextField(
-                            hint: 'Password',
-                            icon: Icons.lock_outline,
-                            obscureText: _obscurePassword,
-                            controller: _passwordController,
-                            suffixIcon: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                                size: 18,
-                                color: const Color(0xFFA8ADB3),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const CreateAccountScreen(),
                               ),
+                            );
+                          },
+                          child: const Text(
+                            'Sign up',
+                            style: TextStyle(
+                              color: Color(0xFFF3B41A),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: Checkbox(
-                                  value: _rememberMe,
-                                  onChanged: (value) async {
-                                    final remember = value ?? false;
-                                    setState(() {
-                                      _rememberMe = remember;
-                                    });
-                                    await TokenManager.setRememberMe(remember);
-                                    if (!remember) {
-                                      await TokenManager
-                                          .clearRememberedCredentials();
-                                    }
-                                  },
-                                  side: const BorderSide(
-                                    color: Color(0xFF8B8F94),
-                                    width: 1.2,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                  activeColor: const Color(0xFFF3B41A),
-                                  checkColor: Colors.black,
-                                  materialTapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Remember me',
-                                style: TextStyle(
-                                  color: Color(0xFFBFC3C8),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                              const Spacer(),
-                              TextButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : _handleForgotPassword,
-                                style: TextButton.styleFrom(
-                                  foregroundColor: const Color(0xFFBFC3C8),
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: const Text(
-                                  'Forgot your password?',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          SizedBox(
-                            height: 48,
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleLogin,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFF3B41A),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Log in',
-                                      style: TextStyle(
-                                        color: Color(0xFFFFFFFF),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.2,
-                                        letterSpacing: 0,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          const SizedBox(height: 24),
-                          Center(
-                            child: Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                const Text(
-                                  'Don’t have an account? ',
-                                  style: TextStyle(
-                                    color: Color(0xFF9A9EA4),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const CreateAccountScreen(),
-                                      ),
-                                    );
-                                  },
-                                  child: const Text(
-                                    'Sign up',
-                                    style: TextStyle(
-                                      color: Color(0xFFF3B41A),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
           ),
@@ -428,14 +415,16 @@ class _LoginScreenState extends State<LoginScreen> {
       if (data is Map && data['hasActiveMembership'] == true) {
         final planName = (data['planName'] ?? '').toString();
         final destination = _destinationFromPlanName(planName);
-        if (destination != null) return _screenForDestination(destination);
-        return const HomeMenuScreen();
+        if (destination != null) return _shellForDestination(destination);
+        return const AppShellScreen();
       }
     } catch (_) {}
 
     final hasActivePlan = await _resolveHasActivePlan();
-    if (hasActivePlan) return const HomeMenuScreen();
-    return const PaymentAndSubscriptionScreen();
+    if (hasActivePlan) {
+      return const AppShellScreen(initialTab: AppShellTab.home);
+    }
+    return const AppShellScreen(initialTab: AppShellTab.trainings);
   }
 
   PaymentFlowDestination? _destinationFromPlanName(String planName) {
@@ -452,18 +441,14 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  Widget _screenForDestination(PaymentFlowDestination destination) {
-    switch (destination) {
-      case PaymentFlowDestination.onlineCoaching:
-        return const TrainingNutritionScreen();
-      case PaymentFlowDestination.trainingPlan:
-        return const DailyTrainingPlanScreen();
-      case PaymentFlowDestination.personalTraining:
-        return const PersonalTrainingPlanScreen();
-      case PaymentFlowDestination.shop:
-      case PaymentFlowDestination.homeMenu:
-        return const HomeMenuScreen();
-    }
+  Widget _shellForDestination(PaymentFlowDestination destination) {
+    final tab = AppShellScreen.tabForFlowDestination(destination);
+    return AppShellScreen(
+      initialTab: tab,
+      initialTrainingDestination: tab == AppShellTab.trainings
+          ? destination
+          : null,
+    );
   }
 
   Future<void> _handleForgotPassword() async {
@@ -560,37 +545,6 @@ class _AuthTextField extends StatelessWidget {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: Color(0xFFF3B41A), width: 1.2),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  const _SocialButton({required this.asset, required this.onTap});
-
-  final String asset;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        width: 64,
-        height: 48,
-        // padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: SizedBox(
-            width: 50,
-            height: 50,
-            child: Image.asset(asset, fit: BoxFit.contain),
           ),
         ),
       ),

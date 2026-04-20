@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import '../../../core/common/widgets/custom_snackbar.dart';
 import '../../../core/constants/assets.dart';
 import '../../../core/network/api_service/training_shop_api_service.dart';
+import '../../../core/network/api_service/user_api_service.dart';
 import '../../paymentandsubscription/views/payment_flow_destination.dart';
 import '../../paymentandsubscription/views/payment_method_screen.dart';
 import 'widgets/shop_badge_state.dart';
 
 class ShoppingCartScreen extends StatefulWidget {
-  const ShoppingCartScreen({super.key});
+  const ShoppingCartScreen({super.key, this.showBackButton = true});
+
+  final bool showBackButton;
 
   @override
   State<ShoppingCartScreen> createState() => _ShoppingCartScreenState();
@@ -17,6 +20,9 @@ class ShoppingCartScreen extends StatefulWidget {
 
 class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
   final TrainingShopApiService _api = TrainingShopApiService();
+  final UserApiService _userApi = UserApiService();
+  final TextEditingController _shippingAddressController =
+      TextEditingController();
   bool _loading = true;
   List<_CartItemUi> _items = <_CartItemUi>[];
   double _subtotal = 0;
@@ -26,7 +32,27 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
   @override
   void initState() {
     super.initState();
+    _loadShippingAddress();
     _loadCart();
+  }
+
+  @override
+  void dispose() {
+    _shippingAddressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadShippingAddress() async {
+    try {
+      final res = await _userApi.getProfile();
+      final dataRaw = res['data'];
+      if (dataRaw is! Map) return;
+      final address = (dataRaw['address'] ?? '').toString().trim();
+      if (!mounted || address.isEmpty) return;
+      _shippingAddressController.text = address;
+    } catch (_) {
+      // Keep checkout usable even when profile prefill fails.
+    }
   }
 
   Future<void> _loadCart() async {
@@ -132,23 +158,26 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                 children: [
                   Row(
                     children: [
-                      Transform.translate(
-                        offset: const Offset(-15, 0),
-                        child: IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(
-                            Icons.arrow_back_ios_new,
-                            size: 18,
-                            color: Color(0xFFC9CDD3),
+                      if (widget.showBackButton)
+                        Transform.translate(
+                          offset: const Offset(-15, 0),
+                          child: IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new,
+                              size: 18,
+                              color: Color(0xFFC9CDD3),
+                            ),
+                            splashRadius: 18,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 24,
+                              minHeight: 24,
+                            ),
                           ),
-                          splashRadius: 18,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 24,
-                            minHeight: 24,
-                          ),
-                        ),
-                      ),
+                        )
+                      else
+                        const SizedBox(width: 8),
                       const SizedBox(width: 6),
                       const Text(
                         'Shopping Cart',
@@ -217,6 +246,59 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                       },
                     ),
                   const SizedBox(height: 16),
+                  const Text(
+                    'Shipping Address',
+                    style: TextStyle(
+                      color: Color(0xFFE6E8EC),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _shippingAddressController,
+                    minLines: 2,
+                    maxLines: 3,
+                    style: const TextStyle(
+                      color: Color(0xFFF5F6F8),
+                      fontSize: 13,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Enter shipping address',
+                      hintStyle: const TextStyle(
+                        color: Color(0xFFA8ADB3),
+                        fontSize: 13,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFF090B0F),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFF3B41A),
+                          width: 1,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFF3B41A),
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFF3B41A),
+                          width: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   _SummaryRow(
                     label: 'Subtotal',
                     value: '\$${_subtotal.toStringAsFixed(2)}',
@@ -239,12 +321,22 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                       onPressed: _items.isEmpty
                           ? null
                           : () {
+                              final shippingAddress = _shippingAddressController
+                                  .text
+                                  .trim();
+                              if (shippingAddress.isEmpty) {
+                                CustomSnackbar.show(
+                                  'Please enter shipping address before payment',
+                                );
+                                return;
+                              }
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (_) => PaymentMethodScreen(
                                     flowDestination:
                                         PaymentFlowDestination.shop,
                                     amount: _total,
+                                    shippingAddress: shippingAddress,
                                   ),
                                 ),
                               );

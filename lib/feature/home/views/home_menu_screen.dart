@@ -9,8 +9,8 @@ import '../../../core/network/api_service/api_client.dart';
 import '../../../core/network/api_service/token_meneger.dart';
 import '../../auth/login_screen.dart';
 import '../../shop/views/shop_screen.dart';
-import 'choose_training_plan_screen.dart';
 import 'qr_home_screen.dart';
+import 'training_entry_screen.dart';
 
 class HomeMenuScreen extends StatelessWidget {
   const HomeMenuScreen({super.key});
@@ -46,7 +46,7 @@ class HomeMenuScreen extends StatelessWidget {
 
     if (!context.mounted) return;
     CustomSnackbar.show(message);
-    Navigator.of(context).pushAndRemoveUntil(
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
@@ -133,8 +133,7 @@ class HomeMenuScreen extends StatelessWidget {
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    const ChooseTrainingPlanScreen(),
+                                builder: (_) => const TrainingEntryScreen(),
                               ),
                             );
                           },

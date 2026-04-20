@@ -21,6 +21,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   bool _obscureConfirmPassword = true;
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
+  late final TextEditingController _addressController;
   late final TextEditingController _passwordController;
   late final TextEditingController _confirmPasswordController;
   late final ApiClient _apiClient;
@@ -30,6 +31,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     super.initState();
     _nameController = TextEditingController();
     _emailController = TextEditingController();
+    _addressController = TextEditingController();
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
     _apiClient = ApiClient(ApiEndpoints.baseUrl);
@@ -39,6 +41,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _addressController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -64,7 +67,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
                     child: IntrinsicHeight(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -144,6 +149,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             icon: Icons.mail_outline,
                             keyboardType: TextInputType.emailAddress,
                             controller: _emailController,
+                          ),
+                          const SizedBox(height: 12),
+                          _AuthTextField(
+                            hint: 'Address',
+                            icon: Icons.location_on_outlined,
+                            controller: _addressController,
                           ),
                           const SizedBox(height: 12),
                           _AuthTextField(
@@ -316,10 +327,15 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   Future<void> _handleCreateAccount() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
+    final address = _addressController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    if (name.isEmpty ||
+        email.isEmpty ||
+        address.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       CustomSnackbar.show('Please fill in all fields');
       return;
     }
@@ -336,17 +352,27 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     try {
       final response = await _apiClient.post(
         ApiEndpoints.register,
-        data: {'name': name, 'email': email, 'password': password, 'confirmPassword': confirmPassword},
+        data: {
+          'name': name,
+          'email': email,
+          'address': address,
+          'password': password,
+          'confirmPassword': confirmPassword,
+        },
       );
       final data = response.data;
       final success = data['success'] == true;
       final backendMessage = (data['message'] ?? '').toString();
 
-      CustomSnackbar.show(backendMessage.isEmpty ? 'Registration completed' : backendMessage);
+      CustomSnackbar.show(
+        backendMessage.isEmpty ? 'Registration completed' : backendMessage,
+      );
       if (!success) return;
 
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
     } on DioException catch (e) {
       final resData = e.response?.data;
       String message = 'Registration failed';
@@ -394,7 +420,11 @@ class _AuthTextField extends StatelessWidget {
         style: const TextStyle(color: Color(0xFFF5F6F8), fontSize: 14),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFFA8ADB3), fontSize: 14, fontWeight: FontWeight.w400),
+          hintStyle: const TextStyle(
+            color: Color(0xFFA8ADB3),
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+          ),
           prefixIcon: Icon(icon, size: 18, color: const Color(0xFFA8ADB3)),
           suffixIcon: suffixIcon,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),

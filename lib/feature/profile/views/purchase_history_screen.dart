@@ -72,10 +72,10 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
     }
   }
 
-  String _formatDate(String raw) {
-    if (raw.trim().isEmpty) return 'No purchase yet';
+  String _formatDate(String raw, {String fallback = 'No purchase yet'}) {
+    if (raw.trim().isEmpty) return fallback;
     final dt = DateTime.tryParse(raw);
-    if (dt == null) return 'No purchase yet';
+    if (dt == null) return fallback;
     const months = <String>[
       'January',
       'February',
@@ -91,6 +91,19 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
       'December',
     ];
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+  }
+
+  Map<String, dynamic> _asMap(dynamic value) {
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return <String, dynamic>{};
+  }
+
+  String _firstNonEmpty(List<dynamic> values, {String fallback = ''}) {
+    for (final value in values) {
+      final text = (value ?? '').toString().trim();
+      if (text.isNotEmpty) return text;
+    }
+    return fallback;
   }
 
   String _toPrice(dynamic value) {
@@ -116,6 +129,195 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
               '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}',
         )
         .join(' ');
+  }
+
+  String _resolveOrderId(Map<String, dynamic> item) {
+    final order = _asMap(item['order']);
+    return _firstNonEmpty([
+      item['orderId'],
+      item['_id'],
+      order['orderId'],
+      order['_id'],
+      order['id'],
+    ], fallback: 'N/A');
+  }
+
+  String _resolveTitle(Map<String, dynamic> item) {
+    final product = _asMap(item['product']);
+    return _firstNonEmpty([
+      item['title'],
+      item['name'],
+      item['productName'],
+      product['name'],
+      product['title'],
+    ], fallback: 'Product');
+  }
+
+  double _resolvePrice(Map<String, dynamic> item) {
+    final product = _asMap(item['product']);
+    final values = [
+      item['price'],
+      item['amount'],
+      item['total'],
+      item['totalPrice'],
+      item['unitPrice'],
+      product['price'],
+    ];
+    for (final value in values) {
+      final parsed = value is num
+          ? value.toDouble()
+          : double.tryParse((value ?? '').toString());
+      if (parsed != null && parsed >= 0) return parsed;
+    }
+    return 0;
+  }
+
+  String _resolveImageUrl(Map<String, dynamic> item) {
+    final product = _asMap(item['product']);
+    final imageValue =
+        item['imageUrl'] ??
+        item['image'] ??
+        product['imageUrl'] ??
+        product['thumbnail'] ??
+        product['image'];
+
+    if (imageValue is List && imageValue.isNotEmpty) {
+      final first = imageValue.first;
+      if (first is Map) {
+        final url = first['url']?.toString().trim() ?? '';
+        if (url.isNotEmpty) return url;
+      }
+      final direct = first.toString().trim();
+      if (direct.isNotEmpty) return direct;
+    }
+    if (imageValue is Map) {
+      final url = imageValue['url']?.toString().trim() ?? '';
+      if (url.isNotEmpty) return url;
+    }
+    return imageValue?.toString().trim() ?? '';
+  }
+
+  int _resolveQuantity(Map<String, dynamic> item) {
+    final values = [item['quantity'], item['qty'], item['count']];
+    for (final value in values) {
+      final parsed = value is num
+          ? value.toInt()
+          : int.tryParse((value ?? '').toString());
+      if (parsed != null && parsed > 0) return parsed;
+    }
+    return 1;
+  }
+
+  String _resolveStatus(Map<String, dynamic> item) {
+    final order = _asMap(item['order']);
+    final raw = _firstNonEmpty([
+      item['status'],
+      item['orderStatus'],
+      item['deliveryStatus'],
+      order['status'],
+      order['orderStatus'],
+      order['deliveryStatus'],
+    ], fallback: 'pending').toLowerCase();
+
+    if (raw.contains('deliver')) return 'Delivered';
+    if (raw.contains('ship') ||
+        raw.contains('send') ||
+        raw.contains('dispatch')) {
+      return 'Sent';
+    }
+    if (raw.contains('process')) return 'Processing';
+    if (raw.contains('cancel')) return 'Canceled';
+    return 'Pending';
+  }
+
+  Color _statusColor(String status) {
+    final normalized = status.toLowerCase();
+    if (normalized == 'delivered') return const Color(0xFF3ECF8E);
+    if (normalized == 'sent') return const Color(0xFF59B7FF);
+    if (normalized == 'processing') return const Color(0xFFF3B41A);
+    if (normalized == 'canceled') return const Color(0xFFFF7B7B);
+    return const Color(0xFFE4A312);
+  }
+
+  String _resolvePurchaseDate(Map<String, dynamic> item) {
+    final order = _asMap(item['order']);
+    final raw = _firstNonEmpty([
+      item['purchasedAt'],
+      item['purchaseDate'],
+      item['createdAt'],
+      item['date'],
+      order['purchasedAt'],
+      order['createdAt'],
+      order['date'],
+    ]);
+    return _formatDate(raw, fallback: 'N/A');
+  }
+
+  String _resolveShippingAddress(Map<String, dynamic> item) {
+    final order = _asMap(item['order']);
+    return _firstNonEmpty([
+      item['shippingAddress'],
+      item['address'],
+      order['shippingAddress'],
+      order['address'],
+    ], fallback: 'N/A');
+  }
+
+  Future<void> _openPurchaseDetails(Map<String, dynamic> item) async {
+    final orderId = _resolveOrderId(item);
+    final title = _resolveTitle(item);
+    final status = _resolveStatus(item);
+    final purchaseDate = _resolvePurchaseDate(item);
+    final price = _toPrice(_resolvePrice(item));
+    final quantity = _resolveQuantity(item);
+    final shippingAddress = _resolveShippingAddress(item);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF10151E),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFF2D3747), width: 1),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Purchase Details',
+                      style: TextStyle(
+                        color: Color(0xFFF5F7FA),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    _StatusBadge(label: status, color: _statusColor(status)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _DetailRow(label: 'Order ID', value: orderId),
+                _DetailRow(label: 'Product', value: title),
+                _DetailRow(label: 'Price', value: price),
+                _DetailRow(label: 'Quantity', value: '$quantity'),
+                _DetailRow(label: 'Purchase Date', value: purchaseDate),
+                _DetailRow(label: 'Shipping Address', value: shippingAddress),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -282,15 +484,24 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
                       else
                         ...List.generate(_purchases.length, (index) {
                           final item = _purchases[index];
+                          final orderId = _resolveOrderId(item);
+                          final title = _resolveTitle(item);
+                          final price = _toPrice(_resolvePrice(item));
+                          final imageUrl = _resolveImageUrl(item);
+                          final status = _resolveStatus(item);
+                          final purchaseDate = _resolvePurchaseDate(item);
                           return Padding(
                             padding: EdgeInsets.only(
                               bottom: index == _purchases.length - 1 ? 0 : 10,
                             ),
                             child: _PurchaseCard(
-                              orderId: (item['orderId'] ?? 'N/A').toString(),
-                              title: (item['title'] ?? 'Product').toString(),
-                              price: _toPrice(item['price']),
-                              imageUrl: (item['imageUrl'] ?? '').toString(),
+                              orderId: orderId,
+                              title: title,
+                              price: price,
+                              imageUrl: imageUrl,
+                              status: status,
+                              purchaseDate: purchaseDate,
+                              onTap: () => _openPurchaseDetails(item),
                             ),
                           );
                         }),
@@ -351,84 +562,202 @@ class _PurchaseCard extends StatelessWidget {
     required this.title,
     required this.price,
     required this.imageUrl,
+    required this.status,
+    required this.purchaseDate,
+    required this.onTap,
   });
 
   final String orderId;
   final String title;
   final String price;
   final String imageUrl;
+  final String status;
+  final String purchaseDate;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedStatus = status.toLowerCase();
+    final statusColor = normalizedStatus == 'delivered'
+        ? const Color(0xFF3ECF8E)
+        : normalizedStatus == 'sent'
+        ? const Color(0xFF59B7FF)
+        : normalizedStatus == 'processing'
+        ? const Color(0xFFF3B41A)
+        : normalizedStatus == 'canceled'
+        ? const Color(0xFFFF7B7B)
+        : const Color(0xFFE4A312);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(9),
+        child: Ink(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF3B2D08),
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(color: const Color(0xFFF3B41A), width: 1),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(5),
+                child: imageUrl.trim().isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        width: 102,
+                        height: 82,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Image.asset(
+                              Images.gym1Image,
+                              width: 102,
+                              height: 82,
+                              fit: BoxFit.cover,
+                            ),
+                      )
+                    : Image.asset(
+                        Images.gym1Image,
+                        width: 102,
+                        height: 82,
+                        fit: BoxFit.cover,
+                      ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Order ID: #$orderId',
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFFE3E6EC),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      price,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _StatusBadge(label: status, color: statusColor),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            purchaseDate,
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFFD0D5DD),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              height: 1.2,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: Color(0xFFF3B41A),
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.label, required this.color});
+
+  final String label;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF3B2D08),
-        borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: const Color(0xFFF3B41A), width: 1),
+        color: color.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color, width: 1),
       ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: imageUrl.trim().isNotEmpty
-                ? Image.network(
-                    imageUrl,
-                    width: 102,
-                    height: 82,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Image.asset(
-                      Images.gym1Image,
-                      width: 102,
-                      height: 82,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Image.asset(
-                    Images.gym1Image,
-                    width: 102,
-                    height: 82,
-                    fit: BoxFit.cover,
-                  ),
+          SizedBox(
+            width: 116,
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                color: Color(0xFFBFC6D2),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                height: 1.3,
+              ),
+            ),
           ),
-          const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Order ID: #$orderId',
-                  style: GoogleFonts.outfit(
-                    color: const Color(0xFFE3E6EC),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w500,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  price,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    height: 1.2,
-                  ),
-                ),
-              ],
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Color(0xFFE6EAF0),
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                height: 1.3,
+              ),
             ),
           ),
         ],

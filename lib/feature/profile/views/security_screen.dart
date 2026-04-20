@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/common/widgets/custom_snackbar.dart';
 import '../../../core/constants/assets.dart';
-import '../../../core/network/api_service/token_meneger.dart';
-import '../../../core/network/api_service/user_api_service.dart';
-import '../../auth/create_account_screen.dart';
 import 'change_password_screen.dart';
 
 class SecurityScreen extends StatelessWidget {
   const SecurityScreen({super.key});
+
+  static const String _supportPhone = '8801623769661';
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +32,17 @@ class SecurityScreen extends StatelessWidget {
                         offset: const Offset(-12, 0),
                         child: IconButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFF2C6CFF)),
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new,
+                            size: 18,
+                            color: Color(0xFF2C6CFF),
+                          ),
                           splashRadius: 18,
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                          constraints: const BoxConstraints(
+                            minWidth: 24,
+                            minHeight: 24,
+                          ),
                         ),
                       ),
                       Text(
@@ -56,29 +62,41 @@ class SecurityScreen extends StatelessWidget {
                     labelColor: Colors.white,
                     leading: Padding(
                       padding: const EdgeInsets.only(left: 2, top: 1),
-                      child: Image.asset(Images.passowrdImage, width: 20, height: 20, color: Colors.white),
+                      child: Image.asset(
+                        Images.passowrdImage,
+                        width: 20,
+                        height: 20,
+                        color: Colors.white,
+                      ),
                     ),
                     chevronColor: const Color(0xFFB58A12),
                     background: const Color(0x3DF3B41A),
                     borderColor: const Color(0xFFF3B41A),
                     onTap: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const ChangePasswordScreen(),
+                        ),
                       );
                     },
                   ),
                   const SizedBox(height: 10),
                   _SecurityTile(
-                    label: 'Delete Account',
-                    labelColor: const Color(0xFFFF3B30),
+                    label: 'Cancel Membership',
+                    labelColor: Colors.white,
                     leading: Padding(
                       padding: const EdgeInsets.only(left: 2, top: 1),
-                      child: Image.asset(Images.deleteImage, width: 20, height: 20, color: const Color(0xFFFF3B30)),
+                      child: Image.asset(
+                        Images.cancelImage,
+                        width: 20,
+                        height: 20,
+                        color: Colors.white,
+                      ),
                     ),
-                    chevronColor: const Color(0xFFFF3B30),
-                    background: const Color(0x140E234D),
+                    chevronColor: const Color(0xFFF3B41A),
+                    background: const Color(0x2C13441E),
                     borderColor: const Color(0xFFF3B41A),
-                    onTap: () => _showDeleteDialog(context),
+                    onTap: () => _openCancelMembership(context),
                   ),
                 ],
               ),
@@ -89,120 +107,18 @@ class SecurityScreen extends StatelessWidget {
     );
   }
 
-  void _showDeleteDialog(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Are you sure to delete your account?',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    color: const Color(0xFF24262B),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 42,
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            backgroundColor: const Color(0xFFE9E9E9),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: GoogleFonts.outfit(
-                              color: const Color(0xFFFF3B30),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              height: 1.2,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: SizedBox(
-                        height: 42,
-                        child: ElevatedButton(
-                          onPressed: () => _deleteAccount(context),
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            backgroundColor: const Color(0xFFF3B41A),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: Text(
-                            'Delete',
-                            style: GoogleFonts.outfit(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  Future<void> _openCancelMembership(BuildContext context) async {
+    const message =
+        'CANCEL_MEMBERSHIP\n'
+        'Hello, I want to cancel my membership.\n'
+        'Please send the cancellation information and connect me directly with support on WhatsApp.';
+    final encodedMessage = Uri.encodeComponent(message);
+    final uri = Uri.parse('https://wa.me/$_supportPhone?text=$encodedMessage');
 
-  Future<void> _deleteAccount(BuildContext context) async {
-    Navigator.of(context).pop();
-    final api = UserApiService();
-    String message = 'Account deleted successfully';
-    try {
-      final res = await api.deleteAccount();
-      message = (res['message'] ?? message).toString();
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      message = data is Map && data['message'] != null ? data['message'].toString() : 'Delete account failed';
-      CustomSnackbar.show(message);
-      return;
-    } catch (_) {
-      CustomSnackbar.show('Delete account failed');
-      return;
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      CustomSnackbar.show('Unable to open WhatsApp');
     }
-
-    await TokenManager.clearToken();
-    await TokenManager.clearRole();
-    await TokenManager.clearUid();
-    await TokenManager.clearUserName();
-    await TokenManager.clearServiceType();
-
-    if (!context.mounted) return;
-    CustomSnackbar.show(message);
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const CreateAccountScreen()),
-      (route) => false,
-    );
   }
 }
 
@@ -247,7 +163,12 @@ class _SecurityTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: GoogleFonts.outfit(color: labelColor, fontSize: 24 / 2, fontWeight: FontWeight.w500, height: 1.2),
+                  style: GoogleFonts.outfit(
+                    color: labelColor,
+                    fontSize: 24 / 2,
+                    fontWeight: FontWeight.w500,
+                    height: 1.2,
+                  ),
                 ),
               ),
               Icon(Icons.chevron_right, size: 16, color: chevronColor),

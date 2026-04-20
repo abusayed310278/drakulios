@@ -11,6 +11,7 @@ Future<void> main() async {
   try {
     const stripePk = PaymentConfig.stripePublishableKey;
     if (stripePk.isNotEmpty) {
+      Stripe.urlScheme = PaymentConfig.stripeUrlScheme;
       Stripe.publishableKey = stripePk;
       await Stripe.instance.applySettings();
     }
@@ -29,10 +30,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Drakulios',
       scrollBehavior: const _AppScrollBehavior(),
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF2B31A)),
-        useMaterial3: true,
-      ),
+      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF2B31A)), useMaterial3: true),
       home: const SplashScreen(),
     );
   }
@@ -47,11 +45,7 @@ class _AppScrollBehavior extends MaterialScrollBehavior {
   }
 
   @override
-  Widget buildOverscrollIndicator(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) {
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) {
     return child;
   }
 }
