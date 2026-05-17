@@ -1,0 +1,296 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import '../../../core/language/translated_text.dart';
+import 'package:dio/dio.dart';
+
+import '../../../../core/constants/assets.dart';
+import '../../../../core/network/api_service/notification_api_service.dart';
+import '../../../../core/network/socket/notification_socket_service.dart';
+import '../../../../core/network/api_service/user_api_service.dart';
+import '../../../../core/common/widgets/custom_snackbar.dart';
+import '../../notifications/view/notification_screen.dart';
+import '../../profile/view/member_profile_screen.dart';
+import '../view/shopping_cart_screen.dart';
+import 'shop_badge_state.dart';
+
+class ShopHeader extends StatefulWidget {
+  const ShopHeader({
+    super.key,
+    required this.title,
+    this.onBack,
+    this.showIcons = true,
+  });
+
+  final String title;
+  final VoidCallback? onBack;
+  final bool showIcons;
+
+  @override
+  State<ShopHeader> createState() => _ShopHeaderState();
+}
+
+class _ShopHeaderState extends State<ShopHeader> {
+  final UserApiService _userApi = UserApiService();
+  final NotificationApiService _notificationApi = NotificationApiService();
+  final NotificationSocketService _socket = NotificationSocketService.instance;
+  String _avatarUrl = '';
+  StreamSubscription<NotificationSocketEvent>? _socketSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvatar();
+    _loadNotificationCount();
+    _initSocket();
+  }
+
+  Future<void> _initSocket() async {
+    await _socket.connect();
+    if (!mounted) return;
+    _socketSub = _socket.events.listen((event) {
+      if (!mounted) return;
+      switch (event.type) {
+        case NotificationSocketEventType.created:
+          ShopBadgeState.incrementNotification();
+          _loadNotificationCount();
+          break;
+        case NotificationSocketEventType.updated:
+          _loadNotificationCount();
+          break;
+        case NotificationSocketEventType.deleted:
+          ShopBadgeState.decrementNotification();
+          _loadNotificationCount();
+          break;
+        case NotificationSocketEventType.connected:
+        case NotificationSocketEventType.disconnected:
+          break;
+      }
+    });
+  }
+
+  Future<void> _loadAvatar() async {
+    try {
+      final res = await _userApi.getProfile();
+      final data = (res['data'] ?? {}) as Map;
+      final avatar = (data['avatar']?['url'] ?? '').toString();
+      if (!mounted) return;
+      setState(() => _avatarUrl = avatar);
+    } on DioException catch (e) {
+      final payload = e.response?.data;
+      final msg = payload is Map && payload['message'] != null
+          ? payload['message'].toString()
+          : '';
+      if (msg.isNotEmpty) {
+        CustomSnackbar.show(msg);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final items = await _notificationApi.getMyNotifications();
+      final count = items.where((e) => e['isRead'] != true).length;
+      ShopBadgeState.setNotificationCount(count);
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _socketSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Transform.translate(
+          offset: const Offset(-15, 0),
+          child: IconButton(
+            onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              size: 18,
+              color: Color(0xFFC9CDD3),
+            ),
+            splashRadius: 18,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+          ),
+        ),
+        const SizedBox(width: 6),
+        TranslatedText(
+          widget.title,
+          style: const TextStyle(
+            color: Color(0xFFB1B1B1),
+            fontSize: 18,
+            fontWeight: FontWeight.w400,
+            height: 1.2,
+          ),
+          autoSize: true,
+        ),
+        if (widget.showIcons) ...[
+          const Spacer(),
+          ValueListenableBuilder<int>(
+            valueListenable: ShopBadgeState.cartCount,
+            builder: (context, cartCount, _) {
+              return _BadgeIcon(
+                count: cartCount,
+                icon: Images.cartImage,
+                color: const Color(0xFFF3B41A),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ShoppingCartScreen(),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          const SizedBox(width: 12),
+          ValueListenableBuilder<int>(
+            valueListenable: ShopBadgeState.notificationCount,
+            builder: (context, notificationCount, _) {
+              return _BadgeIcon(
+                count: notificationCount,
+                icon: Images.bellImage,
+                color: notificationCount > 0
+                    ? const Color(0xFFF3B41A)
+                    : const Color(0xFFC9CDD3),
+                onTap: () {
+                  Navigator.of(context)
+                      .push(
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationScreen(),
+                        ),
+                      )
+                      .then((_) => _loadNotificationCount());
+                },
+              );
+            },
+          ),
+          const SizedBox(width: 10),
+          InkWell(
+            onTap: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const MemberProfileScreen()),
+              );
+              if (!mounted) return;
+              _loadAvatar();
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: _ProfileAvatar(avatarUrl: _avatarUrl),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.avatarUrl});
+
+  final String avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmedUrl = avatarUrl.trim();
+
+    if (trimmedUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 12,
+        backgroundColor: const Color(0xFF2A2F39),
+        child: ClipOval(
+          child: Image.network(
+            trimmedUrl,
+            width: 24,
+            height: 24,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const _AvatarPlaceholder();
+            },
+          ),
+        ),
+      );
+    }
+
+    return const _AvatarPlaceholder();
+  }
+}
+
+class _AvatarPlaceholder extends StatelessWidget {
+  const _AvatarPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const CircleAvatar(
+      radius: 12,
+      backgroundColor: Color(0xFF2A2F39),
+      child: Icon(Icons.person, size: 14, color: Color(0xFFC9CDD3)),
+    );
+  }
+}
+
+class _BadgeIcon extends StatelessWidget {
+  const _BadgeIcon({
+    required this.count,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final int count;
+  final String icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Center(
+              child: Image.asset(icon, width: 24, height: 24, color: color),
+            ),
+            if (count > 0)
+              Positioned(
+                top: -3,
+                right: -4,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 14,
+                    minHeight: 14,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE53935),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Center(
+                    child: TranslatedText(
+                      count > 99 ? '99+' : '$count',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

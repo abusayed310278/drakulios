@@ -4,7 +4,8 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get.dart';
 
 import 'core/constants/payment_config.dart';
-import 'feature/splash/splash_screen.dart';
+import 'core/language/language_controller.dart';
+import 'feature/splash/view/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,8 @@ Future<void> main() async {
   } on MissingPluginException {
     // Stripe plugin may be unavailable on hot-reload / unsupported runtime.
   }
+  Get.put(LanguageController());
+  LanguageController.instance.detectDeviceLanguage();
   runApp(const MyApp());
 }
 
@@ -30,7 +33,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Drakulios',
       scrollBehavior: const _AppScrollBehavior(),
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF2B31A)), useMaterial3: true),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF2B31A)),
+        useMaterial3: true,
+      ),
       home: const SplashScreen(),
     );
   }
@@ -45,7 +51,11 @@ class _AppScrollBehavior extends MaterialScrollBehavior {
   }
 
   @override
-  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) {
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
     return child;
   }
 }

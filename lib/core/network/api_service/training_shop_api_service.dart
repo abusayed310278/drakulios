@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../constants/api_endpoints.dart';
 import 'api_client.dart';
+import 'response_mapper.dart';
 
 class TrainingShopApiService {
   TrainingShopApiService({ApiClient? client})
@@ -11,42 +12,57 @@ class TrainingShopApiService {
 
   Future<List<Map<String, dynamic>>> getTodayTrainings() async {
     final Response res = await _client.get(ApiEndpoints.trainingToday);
-    return _toList(res.data);
+    return ResponseMapper.toList(
+      res.data,
+      candidateKeys: const <String>['data', 'products'],
+    );
   }
 
   Future<Map<String, dynamic>> getTodayTrainingsBundle() async {
     final Response res = await _client.get(ApiEndpoints.trainingToday);
-    return _toBundle(res.data);
+    return ResponseMapper.toBundle(res.data);
   }
 
   Future<List<Map<String, dynamic>>> getTodayNutritions() async {
     final Response res = await _client.get(ApiEndpoints.nutritionToday);
-    return _toList(res.data);
+    return ResponseMapper.toList(
+      res.data,
+      candidateKeys: const <String>['data', 'products'],
+    );
   }
 
   Future<Map<String, dynamic>> getTodayNutritionsBundle() async {
     final Response res = await _client.get(ApiEndpoints.nutritionToday);
-    return _toBundle(res.data);
+    return ResponseMapper.toBundle(res.data);
   }
 
   Future<List<Map<String, dynamic>>> getMyNutritions() async {
     final Response res = await _client.get(ApiEndpoints.nutritionMine);
-    return _toList(res.data);
+    return ResponseMapper.toList(
+      res.data,
+      candidateKeys: const <String>['data', 'products'],
+    );
   }
 
   Future<List<Map<String, dynamic>>> getSubscriptions() async {
     final Response res = await _client.get(ApiEndpoints.subscriptions);
-    return _toList(res.data);
+    return ResponseMapper.toList(
+      res.data,
+      candidateKeys: const <String>['data', 'products'],
+    );
   }
 
   Future<List<Map<String, dynamic>>> getProducts() async {
     final Response res = await _client.get(ApiEndpoints.products);
-    return _toList(res.data);
+    return ResponseMapper.toList(
+      res.data,
+      candidateKeys: const <String>['data', 'products'],
+    );
   }
 
   Future<Map<String, dynamic>> getProductById(String id) async {
     final Response res = await _client.get(ApiEndpoints.productById(id));
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> createProduct(
@@ -56,7 +72,7 @@ class TrainingShopApiService {
       ApiEndpoints.createProduct,
       data: payload,
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> updateProduct(
@@ -67,12 +83,12 @@ class TrainingShopApiService {
       ApiEndpoints.updateProduct(id),
       data: payload,
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> deleteProduct(String id) async {
     final Response res = await _client.delete(ApiEndpoints.deleteProduct(id));
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> addToCart({
@@ -88,12 +104,12 @@ class TrainingShopApiService {
         if (size != null && size.trim().isNotEmpty) 'size': size,
       },
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> getCart() async {
     final Response res = await _client.get(ApiEndpoints.cart);
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> updateCartItemQuantity({
@@ -104,7 +120,7 @@ class TrainingShopApiService {
       ApiEndpoints.cartUpdateQuantity,
       data: {'productId': productId, 'action': action},
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> removeCartItem({
@@ -114,12 +130,12 @@ class TrainingShopApiService {
       ApiEndpoints.cartRemoveItem,
       data: {'productId': productId},
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> clearCart() async {
     final Response res = await _client.delete(ApiEndpoints.cartClear);
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> createPayment({
@@ -150,7 +166,7 @@ class TrainingShopApiService {
         'useTestStripe': useTestStripe,
       },
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> confirmPayment({
@@ -160,24 +176,24 @@ class TrainingShopApiService {
       ApiEndpoints.paymentConfirm,
       data: {'paymentIntentId': paymentIntentId},
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> getPaymentConfig() async {
     final Response res = await _client.get(ApiEndpoints.paymentConfig);
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> getPurchaseHistory() async {
     final Response res = await _client.get(ApiEndpoints.paymentHistory);
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> getMembershipSummary() async {
     final Response res = await _client.get(
       ApiEndpoints.paymentMembershipSummary,
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> freezeMembership({
@@ -192,14 +208,14 @@ class TrainingShopApiService {
           'endDate': endDate.toUtc().toIso8601String(),
       },
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> getFreezeMembershipStatus() async {
     final Response res = await _client.get(
       ApiEndpoints.paymentFreezeMembershipStatus,
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> getMyAttendance({int? year, int? month}) async {
@@ -210,7 +226,7 @@ class TrainingShopApiService {
       ApiEndpoints.attendanceMine,
       query: query.isEmpty ? null : query,
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<Map<String, dynamic>> createTraining(
@@ -220,50 +236,14 @@ class TrainingShopApiService {
       ApiEndpoints.trainingCreate,
       data: payload,
     );
-    return Map<String, dynamic>.from(res.data as Map);
+    return ResponseMapper.toMap(res.data);
   }
 
   Future<List<Map<String, dynamic>>> getMyTrainings() async {
     final Response res = await _client.get(ApiEndpoints.trainingMine);
-    return _toList(res.data);
-  }
-
-  List<Map<String, dynamic>> _toList(dynamic raw) {
-    if (raw is List) {
-      return raw
-          .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
-    }
-    if (raw is Map && raw['data'] is List) {
-      return (raw['data'] as List)
-          .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
-    }
-    if (raw is Map && raw['products'] is List) {
-      return (raw['products'] as List)
-          .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
-    }
-    return <Map<String, dynamic>>[];
-  }
-
-  Map<String, dynamic> _toBundle(dynamic raw) {
-    if (raw is Map) return Map<String, dynamic>.from(raw);
-    if (raw is List) {
-      return <String, dynamic>{
-        'data': raw
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList(),
-        'meta': <String, dynamic>{},
-      };
-    }
-    return <String, dynamic>{
-      'data': <Map<String, dynamic>>[],
-      'meta': <String, dynamic>{},
-    };
+    return ResponseMapper.toList(
+      res.data,
+      candidateKeys: const <String>['data', 'products'],
+    );
   }
 }

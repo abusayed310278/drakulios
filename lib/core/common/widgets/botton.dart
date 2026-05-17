@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../language/translated_text.dart';
+
 enum StatusType { success, error, warning, loading }
 
 class StatusManager {
@@ -79,7 +81,7 @@ class StatusManager {
                   ? CircularProgressIndicator(color: color, strokeWidth: 4)
                   : Icon(icon, color: color, size: 60),
               SizedBox(height: 20),
-              Text(
+              TranslatedText(
                 message ?? status.name.toUpperCase(),
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
@@ -97,7 +99,7 @@ class StatusManager {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: Text(
+                    child: const TranslatedText(
                       "OK",
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),

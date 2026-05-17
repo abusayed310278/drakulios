@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../language/language_controller.dart';
 
 class CustomSnackbar {
   const CustomSnackbar._();
 
   static void show(String message) {
-    final text = message.trim();
+    final rawText = message.trim();
+    final controller = LanguageController.instance;
+    final text = controller.translateStatic(rawText) ?? rawText;
     if (text.isEmpty) return;
 
     if (Get.isSnackbarOpen) {

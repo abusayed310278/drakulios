@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../constants/api_endpoints.dart';
 import 'api_client.dart';
+import 'response_mapper.dart';
 
 class UserApiService {
   UserApiService({ApiClient? client})
@@ -11,7 +12,7 @@ class UserApiService {
 
   Future<Map<String, dynamic>> getProfile() async {
     final Response response = await _client.get(ApiEndpoints.getProfile);
-    return Map<String, dynamic>.from(response.data as Map);
+    return ResponseMapper.toMap(response.data);
   }
 
   Future<Map<String, dynamic>> updateProfile({
@@ -41,7 +42,7 @@ class UserApiService {
       ApiEndpoints.updateProfile,
       data: formData,
     );
-    return Map<String, dynamic>.from(response.data as Map);
+    return ResponseMapper.toMap(response.data);
   }
 
   Future<Map<String, dynamic>> changePassword({
@@ -57,6 +58,6 @@ class UserApiService {
         'confirmPassword': confirmPassword,
       },
     );
-    return Map<String, dynamic>.from(response.data as Map);
+    return ResponseMapper.toMap(response.data);
   }
 }
