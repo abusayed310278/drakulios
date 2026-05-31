@@ -36,9 +36,13 @@ dependencies:
   cupertino_icons: ^1.0.8
   get: ^4.7.3
   dio: ^5.9.1
-  flutter_dotenv: ^6.0.0
   pretty_dio_logger: ^1.4.0
   flutter_secure_storage: ^10.0.0
+  google_fonts: ^6.2.1
+  url_launcher: ^6.3.1
+  image_picker: ^1.2.0
+  flutter_stripe: ^12.4.0
+  socket_io_client: ^3.1.2
 
 dev_dependencies:
   flutter_test:

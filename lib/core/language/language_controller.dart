@@ -1,39 +1,53 @@
-
-
 import 'package:get/get.dart';
-import 'translation_services.dart';
+
+import 'static_text_localizer.dart';
+import 'translaction_service.dart';
 
 class LanguageController extends GetxController {
+  static LanguageController get instance => Get.find<LanguageController>();
+
   final TranslationService _service = TranslationService();
-  var selectedLang = 'en'.obs; // default English
+  var selectedLang = 'en'.obs;
+
+  // lang+text → translated result cache
   final Map<String, String> _cache = {};
 
-  // Translate any text
+  // Static lookup — instant, no API call
+  String? translateStatic(String text) {
+    return StaticTextLocalizer.lookup(text, selectedLang.value);
+  }
+
+  // Dynamic lookup — static first, then Google Translate API with cache
   Future<String> translate(String text) async {
     if (selectedLang.value == 'en') return text;
 
-    final key = '$text-${selectedLang.value}';
-    if (_cache.containsKey(key)) return _cache[key]!;
+    final staticResult = StaticTextLocalizer.lookup(text, selectedLang.value);
+    if (staticResult != null) return staticResult;
 
-    try {
-      final translated = await _service.translateText(text, selectedLang.value);
-      _cache[key] = translated;
-      return translated;
-    } catch (e) {
-      print('Translation error: $e');
-      return text;
-    }
+    final cacheKey = '${selectedLang.value}:$text';
+    if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!;
+
+    // ignore: avoid_print
+    print('[Translate] API call → "$text" → ${selectedLang.value}');
+    final translated = await _service.translateText(text, selectedLang.value);
+    // ignore: avoid_print
+    print('[Translate] Result → "$translated"');
+    _cache[cacheKey] = translated;
+    return translated;
   }
 
-  // Change language
   void changeLanguage(String lang) {
     selectedLang.value = lang;
-    _cache.clear();
   }
 
-  // Detect device language
+  Future<String?> changeLanguageWithValidation(String lang) async {
+    changeLanguage(lang);
+    return null;
+  }
+
   void detectDeviceLanguage() {
-    final lang = Get.deviceLocale?.languageCode ?? 'en';
-    selectedLang.value = lang;
+    final deviceLang = Get.deviceLocale?.languageCode ?? 'en';
+    const supported = {'en', 'bn', 'es'};
+    selectedLang.value = supported.contains(deviceLang) ? deviceLang : 'en';
   }
 }
