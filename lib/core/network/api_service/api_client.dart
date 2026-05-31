@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:darkolious/core/constants/api_endpoints.dart';
+import 'package:darkolious/feature/auth/view/login_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
@@ -8,6 +9,8 @@ import 'token_meneger.dart';
 
 class ApiClient {
   final Dio _dio;
+
+  bool _isRefreshing = false;
 
   ApiClient(String baseUrl)
     : _dio = Dio(
@@ -46,7 +49,7 @@ class ApiClient {
         onError: (DioException e, handler) async {
           Get.closeAllSnackbars();
 
-          bool _bypassAuthHandling(String path) {
+          bool bypassAuthHandling(String path) {
             return path.contains("/auth/login") ||
                 path.contains("/auth/social-login") ||
                 path.contains("/auth/signup") ||
@@ -57,23 +60,38 @@ class ApiClient {
                 path.contains("/users/me");
           }
 
-          // Skip logout for auth/register + professional create endpoints
-          if (_bypassAuthHandling(e.requestOptions.path)) {
-            return handler.next(e); // just pass error
+          if (bypassAuthHandling(e.requestOptions.path)) {
+            return handler.next(e);
           }
 
           final token = await TokenManager.getToken();
 
-          // Token missing → force logout
           if (token == null || token.trim().isEmpty) {
             print("Token missing → logout...");
-            await TokenManager.clearToken();
-            // Get.offAll(() => HandyEmailLoginScreen());
+            await _forceLogout();
             return handler.reject(e);
           }
 
-          // Token expired → refresh and retry
           if (e.response?.statusCode == 401) {
+            // Race condition guard — queue concurrent 401s
+            if (_isRefreshing) {
+              final completer = Future<String?>(() async {
+                await Future.doWhile(() async {
+                  await Future.delayed(const Duration(milliseconds: 100));
+                  return _isRefreshing;
+                });
+                return TokenManager.getToken();
+              });
+              final newToken = await completer;
+              if (newToken != null && newToken.trim().isNotEmpty) {
+                e.requestOptions.headers['Authorization'] = "Bearer $newToken";
+                final retry = await _dio.fetch(e.requestOptions);
+                return handler.resolve(retry);
+              }
+              return handler.reject(e);
+            }
+
+            _isRefreshing = true;
             try {
               await _refreshToken();
               final newToken = await TokenManager.getToken();
@@ -84,9 +102,10 @@ class ApiClient {
               return handler.resolve(retryResponse);
             } catch (err) {
               print("⚠ Token refresh failed. Logging out...");
-              await TokenManager.clearToken();
-              // Get.offAll(() => HandyEmailLoginScreen());
+              await _forceLogout();
               return handler.reject(e);
+            } finally {
+              _isRefreshing = false;
             }
           }
 
@@ -130,7 +149,7 @@ class ApiClient {
     );
 
     final response = await refreshDio.post(
-      "/auth/refresh-token",
+      ApiEndpoints.refreshToken,
       data: {"refreshToken": refreshToken},
     );
 
@@ -138,8 +157,11 @@ class ApiClient {
 
     await TokenManager.accessToken(data["accessToken"]);
     await TokenManager.refreshToken(data["refreshToken"]);
+  }
 
-    print("✅ Token refreshed successfully");
+  Future<void> _forceLogout() async {
+    await TokenManager.clearAll();
+    Get.offAll(() => const LoginScreen());
   }
 
   // --- HTTP methods ---
