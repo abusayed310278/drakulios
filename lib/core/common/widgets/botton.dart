@@ -54,7 +54,7 @@ class StatusManager {
 // constraints: BoxConstraints(maxHeight: 200),
 // constraints: BoxConstraints(maxHeight: 200),
 // constraints: BoxConstraints(maxHeight: 200),
-
+// NEED TO FIX: If user triggers multiple loading states, they can stack up and cause issues. Consider using a queue or stack to manage multiple status sheets and ensure only one is shown at a time.
     return showModalBottomSheet<StatusType>(
       context: context,
       useRootNavigator: true,
