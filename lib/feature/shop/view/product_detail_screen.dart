@@ -11,11 +11,7 @@ import '../widgets/shop_badge_state.dart';
 import '../widgets/shop_header.dart';
 
 class ProductDetailScreen extends StatefulWidget {
-  const ProductDetailScreen({
-    super.key,
-    required this.product,
-    required this.fallbackImage,
-  });
+  const ProductDetailScreen({super.key, required this.product, required this.fallbackImage});
 
   final Map<String, dynamic> product;
   final String fallbackImage;
@@ -29,29 +25,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   late ShopProductData _product;
   int _selectedImageIndex = 0;
-  String? _selectedSize;
+  String? _selectedOption;
   bool _adding = false;
 
   @override
   void initState() {
     super.initState();
     _product = ShopProductData.fromRaw(widget.product, widget.fallbackImage);
-    if (_product.sizes.isNotEmpty) {
-      _selectedSize = _product.sizes.first;
+    if (_product.optionValues.isNotEmpty) {
+      _selectedOption = _product.optionValues.first;
     }
     _loadFullProduct();
   }
 
   Future<void> _loadFullProduct() async {
-    final full = await _controller.loadFullProduct(
-      current: _product,
-      fallbackImage: widget.fallbackImage,
-    );
+    final full = await _controller.loadFullProduct(current: _product, fallbackImage: widget.fallbackImage);
     if (full == null || !mounted) return;
     setState(() {
       _product = full;
-      if (_product.sizes.isNotEmpty && !_product.sizes.contains(_selectedSize)) {
-        _selectedSize = _product.sizes.first;
+      if (_product.optionValues.isNotEmpty && !_product.optionValues.contains(_selectedOption)) {
+        _selectedOption = _product.optionValues.first;
       }
       if (_selectedImageIndex >= _product.gallery.length) {
         _selectedImageIndex = 0;
@@ -61,9 +54,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Future<void> _addToCartAndOpen() async {
     if (_product.id.isEmpty || _adding) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const ShoppingCartScreen()));
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShoppingCartScreen()));
       return;
     }
 
@@ -71,7 +62,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     try {
       final result = await _controller.addToCart(
         productId: _product.id,
-        size: _selectedSize,
+        size: _product.usesFlavourOptions ? null : _selectedOption,
+        flavour: _product.usesFlavourOptions ? _selectedOption : null,
       );
       if (!result.success) {
         CustomSnackbar.show(result.message);
@@ -79,9 +71,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
       ShopBadgeState.incrementCart();
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const ShoppingCartScreen()));
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShoppingCartScreen()));
     } finally {
       if (mounted) setState(() => _adding = false);
     }
@@ -100,7 +90,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 6, 18, 24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const ShopHeader(title: 'Product Details'),
                   const SizedBox(height: 14),
@@ -116,11 +106,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         onTap: _product.gallery.length > 1
                             ? () {
                                 setState(() {
-                                  _selectedImageIndex =
-                                      (_selectedImageIndex -
-                                          1 +
-                                          _product.gallery.length) %
-                                      _product.gallery.length;
+                                  _selectedImageIndex = (_selectedImageIndex - 1 + _product.gallery.length) % _product.gallery.length;
                                 });
                               }
                             : null,
@@ -132,14 +118,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: _product.gallery.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(width: 6),
+                            separatorBuilder: (context, index) => const SizedBox(width: 6),
                             itemBuilder: (context, index) {
                               return _Thumb(
                                 image: _product.gallery[index],
                                 selected: index == _selectedImageIndex,
-                                onTap: () =>
-                                    setState(() => _selectedImageIndex = index),
+                                onTap: () => setState(() => _selectedImageIndex = index),
                               );
                             },
                           ),
@@ -151,9 +135,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         onTap: _product.gallery.length > 1
                             ? () {
                                 setState(() {
-                                  _selectedImageIndex =
-                                      (_selectedImageIndex + 1) %
-                                      _product.gallery.length;
+                                  _selectedImageIndex = (_selectedImageIndex + 1) % _product.gallery.length;
                                 });
                               }
                             : null,
@@ -167,12 +149,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       _product.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        height: 1.2,
-                      ),
+                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600, height: 1.2),
                       autoSize: true,
                     ),
                   ),
@@ -185,27 +162,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         _product.priceText,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          height: 1,
-                        ),
+                        style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500, height: 1),
                       ),
                     ),
                   ),
-                  if (_product.sizes.isNotEmpty) ...[
+                  if (_product.optionValues.isNotEmpty) ...[
                     const SizedBox(height: 14),
                     SizedBox(
                       height: 22,
                       child: TranslatedText(
-                        'Available Sizes',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          height: 1.2,
-                        ),
+                        _product.optionTitle,
+                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, height: 1.2),
                         autoSize: true,
                       ),
                     ),
@@ -213,12 +180,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: _product.sizes
+                      children: _product.optionValues
                           .map(
-                            (size) => _SizeChip(
-                              label: size,
-                              selected: _selectedSize == size,
-                              onTap: () => setState(() => _selectedSize = size),
+                            (option) => _SizeChip(
+                              label: option,
+                              selected: _selectedOption == option,
+                              onTap: () => setState(() => _selectedOption = option),
                             ),
                           )
                           .toList(),
@@ -227,29 +194,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 18),
                   TranslatedText(
                     _product.subtitle,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
-                    ),
+                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, height: 1.2),
                     autoSize: true,
                   ),
                   const SizedBox(height: 6),
                   TranslatedText(
                     _product.description,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      height: 1.2,
-                    ),
+                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w400, height: 1.2),
                   ),
                   const SizedBox(height: 14),
                   const _SectionTitle(text: 'Product Overview'),
-                  ..._product.overviewBullets.map(
-                    (text) => _Bullet(text: text),
-                  ),
+                  ..._product.overviewBullets.map((text) => _Bullet(text: text)),
                   const SizedBox(height: 28),
                   SizedBox(
                     height: 44,
@@ -260,28 +215,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         foregroundColor: Colors.black,
                         elevation: 0,
                         disabledBackgroundColor: const Color(0xFF8C6A13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       child: _adding
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.black,
-                              ),
-                            )
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                           : TranslatedText(
                               'Add to cart',
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.outfit(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                height: 1.2,
-                                color: Colors.white,
-                              ),
+                              style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500, height: 1.2, color: Colors.white),
                             ),
                     ),
                   ),
@@ -316,30 +257,18 @@ class _ProductImage extends StatelessWidget {
             height: height,
             color: const Color(0xFF1E2024),
             alignment: Alignment.center,
-            child: const Icon(
-              Icons.image_not_supported,
-              color: Color(0xFF616775),
-            ),
+            child: const Icon(Icons.image_not_supported, color: Color(0xFF616775)),
           );
         },
       );
     }
 
-    return Image.asset(
-      path,
-      height: height,
-      width: double.infinity,
-      fit: BoxFit.cover,
-    );
+    return Image.asset(path, height: height, width: double.infinity, fit: BoxFit.cover);
   }
 }
 
 class _Thumb extends StatelessWidget {
-  const _Thumb({
-    required this.image,
-    required this.selected,
-    required this.onTap,
-  });
+  const _Thumb({required this.image, required this.selected, required this.onTap});
 
   final String image;
   final bool selected;
@@ -354,10 +283,7 @@ class _Thumb extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF1E2024),
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: selected ? const Color(0xFFF2B31A) : const Color(0xFF3A3F47),
-            width: 1.1,
-          ),
+          border: Border.all(color: selected ? const Color(0xFFF2B31A) : const Color(0xFF3A3F47), width: 1.1),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(4),
@@ -386,11 +312,7 @@ class _ThumbNavButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           border: Border.all(color: const Color(0xFF3A3F47), width: 1.1),
         ),
-        child: Icon(
-          icon,
-          size: 16,
-          color: onTap == null ? const Color(0xFF6C737F) : Colors.white,
-        ),
+        child: Icon(icon, size: 16, color: onTap == null ? const Color(0xFF6C737F) : Colors.white),
       ),
     );
   }
@@ -405,12 +327,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return TranslatedText(
       text,
-      style: GoogleFonts.outfit(
-        color: Colors.white,
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-        height: 1.2,
-      ),
+      style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, height: 1.2),
       autoSize: true,
     );
   }
@@ -430,20 +347,12 @@ class _Bullet extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.only(top: 2),
-            child: TranslatedText(
-              '• ',
-              style: TextStyle(color: Color(0xFF9498A1), fontSize: 13),
-            ),
+            child: TranslatedText('• ', style: TextStyle(color: Color(0xFF9498A1), fontSize: 13)),
           ),
           Expanded(
             child: TranslatedText(
               text,
-              style: GoogleFonts.outfit(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                height: 1.2,
-              ),
+              style: GoogleFonts.outfit(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w400, height: 1.2),
             ),
           ),
         ],
@@ -453,11 +362,7 @@ class _Bullet extends StatelessWidget {
 }
 
 class _SizeChip extends StatelessWidget {
-  const _SizeChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+  const _SizeChip({required this.label, required this.selected, required this.onTap});
 
   final String label;
   final bool selected;
@@ -473,17 +378,11 @@ class _SizeChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? const Color(0xFF2A2513) : const Color(0xFF141517),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: selected ? const Color(0xFFF2B31A) : const Color(0xFF4B505A),
-          ),
+          border: Border.all(color: selected ? const Color(0xFFF2B31A) : const Color(0xFF4B505A)),
         ),
         child: TranslatedText(
           label,
-          style: TextStyle(
-            color: selected ? const Color(0xFFF2B31A) : const Color(0xFF9EA3AD),
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(color: selected ? const Color(0xFFF2B31A) : const Color(0xFF9EA3AD), fontSize: 16, fontWeight: FontWeight.w500),
         ),
       ),
     );

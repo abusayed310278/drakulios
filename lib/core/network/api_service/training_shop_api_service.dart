@@ -95,6 +95,7 @@ class TrainingShopApiService {
     required String productId,
     int quantity = 1,
     String? size,
+    String? flavour,
   }) async {
     final Response res = await _client.post(
       ApiEndpoints.cartAdd,
@@ -102,6 +103,7 @@ class TrainingShopApiService {
         'productId': productId,
         'quantity': quantity,
         if (size != null && size.trim().isNotEmpty) 'size': size,
+        if (flavour != null && flavour.trim().isNotEmpty) 'flavour': flavour,
       },
     );
     return ResponseMapper.toMap(res.data);

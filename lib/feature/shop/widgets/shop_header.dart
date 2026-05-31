@@ -73,8 +73,11 @@ class _ShopHeaderState extends State<ShopHeader> {
   Future<void> _loadAvatar() async {
     try {
       final res = await _userApi.getProfile();
-      final data = (res['data'] ?? {}) as Map;
-      final avatar = (data['avatar']?['url'] ?? '').toString();
+      final rawData = res['data'];
+      final data = rawData is Map ? Map<String, dynamic>.from(rawData) : <String, dynamic>{};
+      final avatarRaw = data['avatar'];
+      final avatarMap = avatarRaw is Map ? Map<String, dynamic>.from(avatarRaw) : const <String, dynamic>{};
+      final avatar = (avatarMap['url'] ?? '').toString();
       if (!mounted) return;
       setState(() => _avatarUrl = avatar);
     } on DioException catch (e) {

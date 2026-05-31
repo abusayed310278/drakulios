@@ -19,8 +19,14 @@ class PurchaseHistoryController {
     final profileRes = await _userApi.getProfile();
     final historyRes = await _api.getPurchaseHistory();
 
-    final profile = Map<String, dynamic>.from((profileRes['data'] ?? {}) as Map);
-    final data = Map<String, dynamic>.from((historyRes['data'] ?? {}) as Map);
+    final profileRaw = profileRes['data'];
+    final historyRaw = historyRes['data'];
+    final profile = profileRaw is Map
+        ? Map<String, dynamic>.from(profileRaw)
+        : <String, dynamic>{};
+    final data = historyRaw is Map
+        ? Map<String, dynamic>.from(historyRaw)
+        : <String, dynamic>{};
     final pendingOrders = (data['pendingOrders'] as num?)?.toInt() ?? 0;
     final lastPurchaseAt = (data['lastPurchaseAt'] ?? '').toString();
     final purchasesRaw = data['purchases'];
@@ -38,7 +44,11 @@ class PurchaseHistoryController {
       profile: profile,
       name: _toTitleCase((profile['name'] ?? 'Member').toString()),
       memberId: (profile['_id'] ?? '').toString(),
-      avatarUrl: (profile['avatar']?['url'] ?? '').toString(),
+      avatarUrl: ((profile['avatar'] is Map
+                  ? (profile['avatar'] as Map)['url']
+                  : null) ??
+              '')
+          .toString(),
       pendingOrders: pendingOrders,
       lastPurchaseText: _formatDate(lastPurchaseAt),
       purchases: purchases,

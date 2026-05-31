@@ -24,10 +24,14 @@ class MemberProfileController {
       _trainingApi.getMembershipSummary(),
     ]);
 
-    final profile = Map<String, dynamic>.from((responses[0]['data'] ?? {}) as Map);
-    final membership = Map<String, dynamic>.from(
-      (responses[1]['data'] ?? {}) as Map,
-    );
+    final profileRaw = responses[0]['data'];
+    final membershipRaw = responses[1]['data'];
+    final profile = profileRaw is Map
+        ? Map<String, dynamic>.from(profileRaw)
+        : <String, dynamic>{};
+    final membership = membershipRaw is Map
+        ? Map<String, dynamic>.from(membershipRaw)
+        : <String, dynamic>{};
 
     final name = _toCamelCase((profile['name'] ?? 'Member').toString());
     final memberId = (profile['_id'] ?? '').toString();
@@ -35,7 +39,9 @@ class MemberProfileController {
     final email = (profile['email'] ?? '').toString();
     final address = (profile['address'] ?? '').toString();
     final memberSince = _formatMemberSince((profile['createdAt'] ?? '').toString());
-    final avatarUrl = (profile['avatar']?['url'] ?? '').toString();
+    final avatarRaw = profile['avatar'];
+    final avatar = avatarRaw is Map ? Map<String, dynamic>.from(avatarRaw) : const <String, dynamic>{};
+    final avatarUrl = (avatar['url'] ?? '').toString();
 
     final hasMembership = membership['hasActiveMembership'] == true;
     final planName = (membership['planName'] ?? 'No Active Plan').toString();

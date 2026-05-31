@@ -321,10 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildShell(LoginRouteTarget routeTarget) {
-    return AppShellScreen(
-      initialTab: routeTarget.initialTab,
-      initialTrainingDestination: routeTarget.initialTrainingDestination,
-    );
+    return const AppShellScreen(initialTab: AppShellTab.home);
   }
 
   Future<void> _handleForgotPassword() async {

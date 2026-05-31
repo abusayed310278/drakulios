@@ -11,7 +11,9 @@ class NotificationApiService {
   final ApiClient _client;
 
   Future<List<Map<String, dynamic>>> getMyNotifications() async {
-    final Response res = await _client.get(ApiEndpoints.notifications);
+    final Response res = await _client
+        .get(ApiEndpoints.notifications)
+        .timeout(const Duration(seconds: 12));
     return ResponseMapper.toList(
       res.data,
       candidateKeys: const <String>['data', 'notifications'],

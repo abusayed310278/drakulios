@@ -65,12 +65,15 @@ class _TrainingHeaderState extends State<TrainingHeader> {
   Future<void> _loadHeaderProfile() async {
     try {
       final res = await _userApi.getProfile();
-      final data = (res['data'] ?? {}) as Map;
+      final rawData = res['data'];
+      final data = rawData is Map ? Map<String, dynamic>.from(rawData) : <String, dynamic>{};
       if (!mounted) return;
       setState(() {
         final name = (data['name'] ?? '').toString().trim();
+        final avatarRaw = data['avatar'];
+        final avatar = avatarRaw is Map ? Map<String, dynamic>.from(avatarRaw) : const <String, dynamic>{};
         _displayName = _toCamelCase(name);
-        _avatarUrl = (data['avatar']?['url'] ?? '').toString();
+        _avatarUrl = (avatar['url'] ?? '').toString();
       });
       return;
     } catch (_) {}

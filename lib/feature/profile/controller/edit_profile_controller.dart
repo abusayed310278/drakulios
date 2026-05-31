@@ -16,7 +16,10 @@ class EditProfileController {
       return formDataFromMap(initial);
     }
     final res = await _userApi.getProfile();
-    final data = Map<String, dynamic>.from((res['data'] ?? {}) as Map);
+    final rawData = res['data'];
+    final data = rawData is Map
+        ? Map<String, dynamic>.from(rawData)
+        : <String, dynamic>{};
     return formDataFromMap(data);
   }
 

@@ -27,9 +27,15 @@ class ProductDetailController {
   Future<ShopActionResult> addToCart({
     required String productId,
     String? size,
+    String? flavour,
   }) async {
     try {
-      await _api.addToCart(productId: productId, quantity: 1, size: size);
+      await _api.addToCart(
+        productId: productId,
+        quantity: 1,
+        size: size,
+        flavour: flavour,
+      );
       return const ShopActionResult(success: true, message: 'Added');
     } on DioException catch (e) {
       final d = e.response?.data;

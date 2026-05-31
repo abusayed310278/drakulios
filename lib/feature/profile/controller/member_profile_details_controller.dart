@@ -19,7 +19,10 @@ class MemberProfileDetailsController {
     final trainings = await _trainingApi.getMyTrainings();
 
     final latest = trainings.isNotEmpty ? trainings.first : <String, dynamic>{};
-    final profileData = Map<String, dynamic>.from((profileRes['data'] ?? {}) as Map);
+    final profileRaw = profileRes['data'];
+    final profileData = profileRaw is Map
+        ? Map<String, dynamic>.from(profileRaw)
+        : <String, dynamic>{};
 
     final healthFromProfile = profileData['personalBodyDetails'] is Map
         ? Map<String, dynamic>.from(profileData['personalBodyDetails'] as Map)
@@ -40,7 +43,11 @@ class MemberProfileDetailsController {
       email: (profileData['email'] ?? '').toString(),
       address: (profileData['address'] ?? '').toString(),
       memberSince: _memberSince((profileData['createdAt'] ?? '').toString()),
-      avatarUrl: (profileData['avatar']?['url'] ?? '').toString(),
+      avatarUrl: ((profileData['avatar'] is Map
+                  ? (profileData['avatar'] as Map)['url']
+                  : null) ??
+              '')
+          .toString(),
     );
   }
 

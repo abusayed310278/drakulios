@@ -132,7 +132,10 @@ class _ShopScreenState extends State<ShopScreen>
       return _searchQuery.isEmpty || title.contains(_searchQuery);
     }).toList();
 
-    Widget buildFallbackList(List<Map<String, String>> items) {
+    Widget buildFallbackList(
+      List<Map<String, String>> items,
+      _ShopCategory category,
+    ) {
       return ListView.separated(
         physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
@@ -140,6 +143,7 @@ class _ShopScreenState extends State<ShopScreen>
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (_, index) {
           final item = items[index];
+          final isDrink = category == _ShopCategory.drink;
           final productPayload = <String, dynamic>{
             'name': item['title']!,
             'priceText': item['price']!,
@@ -147,7 +151,13 @@ class _ShopScreenState extends State<ShopScreen>
             'description':
                 'Premium training product designed for gym performance.',
             'image': [item['image']!],
-            'size': const <String>['M', 'XL', 'XXL'],
+            if (!isDrink) 'size': const <String>['M', 'XL', 'XXL'],
+            if (isDrink)
+              'flavour': const <String>[
+                'Strawberry',
+                'Chocolate',
+                'Vanilla',
+              ],
           };
           return _ProductCard(
             title: item['title']!,
@@ -201,7 +211,7 @@ class _ShopScreenState extends State<ShopScreen>
       }
 
       if (filteredFallbackItems.isNotEmpty) {
-        return buildFallbackList(filteredFallbackItems);
+        return buildFallbackList(filteredFallbackItems, _selectedCategory);
       }
 
       final message = _items.isEmpty
@@ -281,9 +291,9 @@ class _ShopScreenState extends State<ShopScreen>
                     height: 38,
                     child: TabBar(
                       controller: _tabController,
-                      isScrollable: true,
+                      isScrollable: false,
                       dividerColor: Colors.transparent,
-                      labelPadding: const EdgeInsets.only(right: 8),
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                       indicatorPadding: EdgeInsets.zero,
                       indicator: BoxDecoration(
                         color: const Color(0xFF2C6CFF),
@@ -336,7 +346,8 @@ class _CategoryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
         color: selected ? Colors.transparent : const Color(0xFF1E2024),
         borderRadius: BorderRadius.circular(8),
@@ -346,6 +357,7 @@ class _CategoryTab extends StatelessWidget {
         ),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             icon,

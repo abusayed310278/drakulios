@@ -18,8 +18,14 @@ class AttendanceDetailsController {
     final profileRes = await _userApi.getProfile();
     final attendanceRes = await _api.getMyAttendance(year: year, month: month);
 
-    final profile = Map<String, dynamic>.from((profileRes['data'] ?? {}) as Map);
-    final data = Map<String, dynamic>.from((attendanceRes['data'] ?? {}) as Map);
+    final profileRaw = profileRes['data'];
+    final attendanceRaw = attendanceRes['data'];
+    final profile = profileRaw is Map
+        ? Map<String, dynamic>.from(profileRaw)
+        : <String, dynamic>{};
+    final data = attendanceRaw is Map
+        ? Map<String, dynamic>.from(attendanceRaw)
+        : <String, dynamic>{};
 
     final active = ((data['attendedDays'] ?? []) as List)
         .whereType<num>()
@@ -42,7 +48,11 @@ class AttendanceDetailsController {
       profile: profile,
       name: (profile['name'] ?? 'Member').toString(),
       memberId: (profile['_id'] ?? '').toString(),
-      avatarUrl: (profile['avatar']?['url'] ?? '').toString(),
+      avatarUrl: ((profile['avatar'] is Map
+                  ? (profile['avatar'] as Map)['url']
+                  : null) ??
+              '')
+          .toString(),
       totalVisits: (data['totalVisits'] as num?)?.toInt() ?? 0,
       avgStayMinutes: (data['averageStayMinutes'] as num?)?.toInt() ?? 0,
       lastVisitText: relativeTime((data['lastVisitAt'] ?? '').toString()),

@@ -19,9 +19,12 @@ class HomeTrainingController {
   Future<HomeMemberProfileData> loadMemberProfile() async {
     try {
       final response = await _userApi.getProfile();
-      final data = (response['data'] ?? <String, dynamic>{}) as Map;
+      final rawData = response['data'];
+      final data = rawData is Map ? Map<String, dynamic>.from(rawData) : <String, dynamic>{};
       final name = _toCamelCase((data['name'] ?? '').toString().trim());
-      final avatarUrl = (data['avatar']?['url'] ?? '').toString();
+      final avatarRaw = data['avatar'];
+      final avatar = avatarRaw is Map ? Map<String, dynamic>.from(avatarRaw) : const <String, dynamic>{};
+      final avatarUrl = (avatar['url'] ?? '').toString();
       return HomeMemberProfileData(displayName: name, avatarUrl: avatarUrl);
     } catch (_) {
       final savedName = (await TokenManager.getUserName())?.trim() ?? '';

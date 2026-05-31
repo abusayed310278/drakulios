@@ -10,6 +10,10 @@ class ShopProductData {
     required this.description,
     required this.gallery,
     required this.sizes,
+    required this.flavours,
+    required this.optionTitle,
+    required this.optionValues,
+    required this.usesFlavourOptions,
     required this.overviewBullets,
   });
 
@@ -21,6 +25,10 @@ class ShopProductData {
   final String description;
   final List<String> gallery;
   final List<String> sizes;
+  final List<String> flavours;
+  final String optionTitle;
+  final List<String> optionValues;
+  final bool usesFlavourOptions;
   final List<String> overviewBullets;
 
   factory ShopProductData.fromRaw(Map<String, dynamic> raw, String fallbackImage) {
@@ -28,6 +36,14 @@ class ShopProductData {
     final title = (raw['name'] ?? raw['title'] ?? 'Product').toString();
     final priceNum = _numValue(raw['price'] ?? raw['priceMonthly'] ?? 0);
     final sizes = _sizesFromRaw(raw['size']);
+    final flavours = _flavoursFromRaw(raw);
+    final usesFlavourOptions = flavours.isNotEmpty;
+    final optionTitle = usesFlavourOptions
+        ? 'Available Flavours'
+        : 'Available Sizes';
+    final optionValues = List<String>.from(
+      usesFlavourOptions ? flavours : sizes,
+    );
     final description = (raw['description'] ?? 'No description available.')
         .toString()
         .trim();
@@ -38,6 +54,7 @@ class ShopProductData {
       if (raw['stockSell'] != null) 'Stock Sold: ${raw['stockSell']}',
       if (raw['totalStock'] != null) 'Total Stock: ${raw['totalStock']}',
       if (sizes.isNotEmpty) 'Sizes: ${sizes.join(', ')}',
+      if (flavours.isNotEmpty) 'Flavours: ${flavours.join(', ')}',
     ];
 
     if (overview.isEmpty) {
@@ -54,6 +71,10 @@ class ShopProductData {
       description: description.isEmpty ? 'No description available.' : description,
       gallery: gallery,
       sizes: sizes,
+      flavours: flavours,
+      optionTitle: optionTitle,
+      optionValues: optionValues,
+      usesFlavourOptions: usesFlavourOptions,
       overviewBullets: overview,
     );
   }
@@ -79,9 +100,43 @@ class ShopProductData {
   static List<String> _sizesFromRaw(dynamic rawSizes) {
     if (rawSizes is List) {
       return rawSizes
+          .where((e) => e != null)
           .map((e) => e.toString().trim())
-          .where((e) => e.isNotEmpty)
+          .where((e) => e.isNotEmpty && e.toLowerCase() != 'null')
           .toList();
+    }
+    return <String>[];
+  }
+
+  static List<String> _flavoursFromRaw(Map<String, dynamic> raw) {
+    final candidates = <dynamic>[
+      raw['flavour'],
+      raw['flavourOptions'],
+      raw['flavors'],
+      raw['flavorsOptions'],
+      raw['flavourList'],
+      raw['flavor'],
+      raw['flavorOptions'],
+      raw['taste'],
+      raw['tastes'],
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate is List) {
+        final values = candidate
+            .where((e) => e != null)
+            .map((e) => e.toString().trim())
+            .where((e) => e.isNotEmpty && e.toLowerCase() != 'null')
+            .toList();
+        if (values.isNotEmpty) return values;
+      }
+      if (candidate is String && candidate.trim().isNotEmpty) {
+        return candidate
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+      }
     }
     return <String>[];
   }

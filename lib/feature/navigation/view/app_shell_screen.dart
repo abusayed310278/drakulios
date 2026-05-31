@@ -9,9 +9,9 @@ import '../../home/view/home_menu_screen.dart';
 import '../../notifications/view/notification_screen.dart';
 import '../../paymentandsubscription/view/payment_flow_destination.dart';
 import '../../profile/view/member_profile_screen.dart';
-import '../../shop/view/shopping_cart_screen.dart';
+import '../../shop/view/shop_screen.dart';
 
-enum AppShellTab { profile, notifications, cart, trainings, home }
+enum AppShellTab { profile, notifications, shop, trainings, home }
 
 class AppShellScreen extends StatefulWidget {
   const AppShellScreen({super.key, this.initialTab = AppShellTab.home, this.initialTrainingDestination});
@@ -22,7 +22,7 @@ class AppShellScreen extends StatefulWidget {
   static AppShellTab tabForFlowDestination(PaymentFlowDestination destination) {
     switch (destination) {
       case PaymentFlowDestination.shop:
-        return AppShellTab.cart;
+        return AppShellTab.shop;
       case PaymentFlowDestination.onlineCoaching:
       case PaymentFlowDestination.trainingPlan:
       case PaymentFlowDestination.personalTraining:
@@ -40,7 +40,7 @@ class _AppShellScreenState extends State<AppShellScreen> {
   static const List<AppShellTab> _tabsInOrder = <AppShellTab>[
     AppShellTab.home,
     AppShellTab.trainings,
-    AppShellTab.cart,
+    AppShellTab.shop,
     AppShellTab.notifications,
     AppShellTab.profile,
   ];
@@ -50,11 +50,13 @@ class _AppShellScreenState extends State<AppShellScreen> {
   };
 
   late AppShellTab _currentTab;
+  final Set<AppShellTab> _initializedTabs = <AppShellTab>{};
 
   @override
   void initState() {
     super.initState();
     _currentTab = widget.initialTab;
+    _initializedTabs.add(_currentTab);
   }
 
   Future<bool> _onWillPop() async {
@@ -85,7 +87,10 @@ class _AppShellScreenState extends State<AppShellScreen> {
       return;
     }
 
-    setState(() => _currentTab = tab);
+    setState(() {
+      _currentTab = tab;
+      _initializedTabs.add(tab);
+    });
     if (tab == AppShellTab.home || tab == AppShellTab.trainings) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -100,8 +105,8 @@ class _AppShellScreenState extends State<AppShellScreen> {
         return const MemberProfileScreen(showBackButton: false);
       case AppShellTab.notifications:
         return const NotificationScreen(showBackButton: false);
-      case AppShellTab.cart:
-        return const ShoppingCartScreen(showBackButton: false);
+      case AppShellTab.shop:
+        return const ShopScreen();
       case AppShellTab.trainings:
         return CurrentTrainingPlansScreen(
           showBackButton: false,
@@ -136,7 +141,16 @@ class _AppShellScreenState extends State<AppShellScreen> {
         backgroundColor: const Color(0xFF050608),
         body: IndexedStack(
           index: _tabsInOrder.indexOf(_currentTab),
-          children: _tabsInOrder.map((tab) => TranslationScope(enabled: _currentTab == tab, child: _buildTabNavigator(tab))).toList(),
+          children: _tabsInOrder
+              .map(
+                (tab) => _initializedTabs.contains(tab)
+                    ? TranslationScope(
+                        enabled: _currentTab == tab,
+                        child: _buildTabNavigator(tab),
+                      )
+                    : const SizedBox.shrink(),
+              )
+              .toList(),
         ),
         bottomNavigationBar: SafeArea(
           top: false,
@@ -181,7 +195,7 @@ class _PersistentBottomNavigationBar extends StatelessWidget {
         children: [
           _BottomNavAction(label: 'Home', icon: Icons.home_rounded, selected: currentTab == AppShellTab.home, onTap: () => onTabTap(AppShellTab.home)),
           _BottomNavAction(label: 'Trainings', icon: Icons.fitness_center_rounded, selected: currentTab == AppShellTab.trainings, onTap: () => onTabTap(AppShellTab.trainings)),
-          _BottomNavAction(label: 'Shopping', icon: Icons.shopping_bag_rounded, selected: currentTab == AppShellTab.cart, onTap: () => onTabTap(AppShellTab.cart)),
+          _BottomNavAction(label: 'Shopping', icon: Icons.shopping_bag_rounded, selected: currentTab == AppShellTab.shop, onTap: () => onTabTap(AppShellTab.shop)),
           _BottomNavAction(label: 'Notifications', icon: Icons.notifications_rounded, selected: currentTab == AppShellTab.notifications, onTap: () => onTabTap(AppShellTab.notifications)),
           _BottomNavAction(label: 'Profile', icon: Icons.person_rounded, selected: currentTab == AppShellTab.profile, onTap: () => onTabTap(AppShellTab.profile)),
         ],

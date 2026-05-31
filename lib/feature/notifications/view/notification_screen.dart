@@ -3,12 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/common/widgets/custom_snackbar.dart';
 import '../../../core/language/translated_text.dart';
-import '../../../core/network/socket/notification_socket_service.dart';
 import '../controller/notification_controller.dart';
 import '../model/notification_item.dart';
-import '../../shop/widgets/shop_badge_state.dart';
 import 'notification_details_screen.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -22,56 +19,36 @@ class NotificationScreen extends StatefulWidget {
 
 class _NotificationScreenState extends State<NotificationScreen> {
   final NotificationController _controller = NotificationController();
-  final NotificationSocketService _socket = NotificationSocketService.instance;
   bool _loading = true;
   List<NotificationItem> _items = <NotificationItem>[];
-  StreamSubscription<NotificationSocketEvent>? _socketSub;
+  Timer? _loadingWatchdog;
+  bool _requestInFlight = false;
 
   @override
   void initState() {
     super.initState();
-    _initSocket();
+    _loadingWatchdog = Timer(const Duration(seconds: 18), () {
+      if (!mounted || !_loading) return;
+      setState(() => _loading = false);
+    });
     _loadNotifications();
   }
 
-  Future<void> _initSocket() async {
-    await _socket.connect();
-    if (!mounted) return;
-    _socketSub = _socket.events.listen((event) {
-      if (!mounted) return;
-      switch (event.type) {
-        case NotificationSocketEventType.created:
-        case NotificationSocketEventType.updated:
-        case NotificationSocketEventType.deleted:
-          _loadNotifications();
-          break;
-        case NotificationSocketEventType.connected:
-        case NotificationSocketEventType.disconnected:
-          break;
-      }
-    });
-  }
-
   Future<void> _loadNotifications() async {
+    if (_requestInFlight) return;
+    _requestInFlight = true;
+    if (mounted) setState(() => _loading = true);
     try {
-      final items = await _controller.loadNotifications();
-      final unreadIds = items
-          .where((e) => !e.isRead && e.id != null)
-          .map((e) => e.id!)
-          .toList();
-      if (unreadIds.isNotEmpty) {
-        ShopBadgeState.setNotificationCount(0);
-        unawaited(_controller.markAllAsRead(unreadIds));
-      } else {
-        ShopBadgeState.setNotificationCount(0);
-      }
+      final items = await _controller
+          .loadNotifications()
+          .timeout(const Duration(seconds: 15));
       if (!mounted) return;
       setState(() => _items = items);
-    } catch (error) {
-      CustomSnackbar.show(
-        _controller.parseError(error, fallback: 'Failed to load notifications'),
-      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _items = <NotificationItem>[]);
     } finally {
+      _requestInFlight = false;
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -85,11 +62,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _openDetails(NotificationItem item) async {
-    if (item.id != null && !item.isRead) {
-      try {
-        await _controller.markAsRead(item.id!);
-      } catch (_) {}
-    }
     if (!mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -107,7 +79,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   void dispose() {
-    _socketSub?.cancel();
+    _loadingWatchdog?.cancel();
     super.dispose();
   }
 
